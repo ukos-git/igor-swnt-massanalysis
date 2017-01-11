@@ -2,24 +2,29 @@
 
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
-#pragma IndependentModule=SMA
+//#pragma IndependentModule=SMA
 
-#include "ILAv2main"
+// requires FILO (igor-file-loader)
+// https://github.com/ukos-git/igor-file-loader
+//
+// requires PLEM (igor-swnt-plem)
+// https://github.com/ukos-git/igor-swnt-plem
 
 Function load()
-	ILAv2#Load()
+    FILO#load(fileType = ".ibw", packageID = 1)
 End
 
 Function read()
-	STRUCT ILAv2#ILAv2experiment ila
 	String file
 	Variable numFiles, i
-	ILAv2#StructureLoad(ila)
+	STRUCT FILO#experiment filos
 
-	numFiles = ItemsInList(ila.strFileList)
-	for(i = 0; i < numFiles; i+=1)
-		file = StringFromList(i, ila.strFileList)
-		PLEMd2Open(strFile = ila.strFolder + file, display = 0)
+    FILO#structureLoad(filos)
+
+	numFiles = ItemsInList(filos.strFileList)
+	for(i = 0; i < numFiles; i += 1)
+		file = StringFromList(i, filos.strFileList)
+		PLEMd2Open(strFile = filos.strFolder + file, display = 0)
 	endfor
 End
 
