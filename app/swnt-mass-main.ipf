@@ -43,6 +43,7 @@ Function SMAcorrection()
 		PLEMd2BuildMaps(strPLEM)
 	endfor
 End
+
 Function SMAreset()
 	String strPLEM
 	Variable i
@@ -56,7 +57,6 @@ Function SMAreset()
 		stats.wavPLEM = stats.wavmeasure - stats.wavbackground
 	endfor
 End
-
 
 Function SMAbackground()
 	String strPLEM, strPLEM2
