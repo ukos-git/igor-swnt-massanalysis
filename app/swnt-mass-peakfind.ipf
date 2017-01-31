@@ -10,6 +10,8 @@ Function SMApeakFindMass(wv)
 
     STRUCT SMAinfo info
     SMAstructureLoad(info)
+    STRUCT SMAprefs prefs
+    SMAloadPackagePrefs(prefs)
 
     info.numSpectra = DimSize(wv, 0)
     for(i = 0; i < info.numSpectra; i += 1)
