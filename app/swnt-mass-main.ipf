@@ -1,8 +1,5 @@
-// Version 0: rough analysis tool
-
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
-//#pragma IndependentModule=SMA
 
 // requires FILO (igor-file-loader)
 // https://github.com/ukos-git/igor-file-loader
@@ -10,11 +7,11 @@
 // requires PLEM (igor-swnt-plem)
 // https://github.com/ukos-git/igor-swnt-plem
 
-Function load()
+Function SMAload()
     FILO#load(fileType = ".ibw", packageID = 1)
 End
 
-Function read()
+Function SMAread()
 	String file
 	Variable numFiles, i
 	STRUCT FILO#experiment filos
@@ -28,7 +25,7 @@ Function read()
 	endfor
 End
 
-Function myCorrection()
+Function SMAcorrection()
 	String strPLEM
 	Variable i
 
@@ -46,7 +43,7 @@ Function myCorrection()
 		PLEMd2BuildMaps(strPLEM)
 	endfor
 End
-Function reset()
+Function SMAreset()
 	String strPLEM
 	Variable i
 
@@ -61,7 +58,7 @@ Function reset()
 End
 
 
-Function myBackground()
+Function SMAbackground()
 	String strPLEM, strPLEM2
 	Variable i, previousmax
 
@@ -89,7 +86,7 @@ Function myBackground()
 	endfor
 End
 
-Function analyse(min, max)
+Function SMAanalyse(min, max)
 	Variable min, max
 
 	Struct PLEMd2Stats stats
@@ -109,7 +106,7 @@ Function analyse(min, max)
 	endfor
 End
 
-Function killAllWindows()
+Function SMAkillAllWindows()
 	String myWindow
 	Variable i
 

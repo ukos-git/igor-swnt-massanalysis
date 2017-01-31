@@ -1,4 +1,4 @@
-Window intensity_analysis() : Graph
+Window SMAintensityAnalysis() : Graph
 	PauseUpdate; Silent 1		// building window...
 	Display /W=(240,50,784.5,445.25) as "intensity_analysis"
 	AppendImage nanotubes_transposed
