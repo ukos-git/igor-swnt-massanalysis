@@ -6,10 +6,13 @@
 Function SMApeakFindMass(wv)
     WAVE/WAVE wv
 
-    variable numWaves, i
+    variable i
 
-    numWaves = DimSize(wv, 0)
-    for(i = 0; i < numWaves; i += 1)
+    STRUCT SMAinfo info
+    SMAstructureLoad(info)
+
+    info.numSpectra = DimSize(wv, 0)
+    for(i = 0; i < info.numSpectra; i += 1)
         SMApeakFind(wv[i])
     endfor
 End
@@ -17,4 +20,3 @@ End
 Function SMApeakFind(wv)
     WAVE wv
 End
-

@@ -10,6 +10,8 @@
 // requires PLEM (igor-swnt-plem)
 // https://github.com/ukos-git/igor-swnt-plem
 
+strConstant  cSMApackage    = "swnt-mass-analysis"
+
 Function SMAload()
     FILO#load(fileType = ".ibw", packageID = 1)
 End
