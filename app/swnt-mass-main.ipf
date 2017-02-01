@@ -1,9 +1,12 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
-// requires FILO (igor-file-loader)
+// requires IM FILO (igor-file-loader)
 // https://github.com/ukos-git/igor-file-loader
-//
+#include "FILOmain"
+#include "FILOprefs"
+#include "FILOstructure"
+#include "FILOtools"
 // requires PLEM (igor-swnt-plem)
 // https://github.com/ukos-git/igor-swnt-plem
 
