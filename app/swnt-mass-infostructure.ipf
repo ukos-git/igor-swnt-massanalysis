@@ -10,13 +10,15 @@
 #include "utilities-globalvar"
 
 static strConstant cstructure = "structure" // path for global vars in Package dfr
-static Constant    cversion   = 0001
+static Constant    cversion   = 0002
 
 Structure SMAinfo
     Variable numVersion, numSpectra
 
     DFREF dfrPackage
     DFREF dfrStructure
+
+    WAVE/WAVE wavSpectra
 EndStructure
 
 static Function SMAstructureInitGlobalVariables()
@@ -26,6 +28,15 @@ static Function SMAstructureInitGlobalVariables()
     Utilities#createNVAR("numSpectra", dfr = dfrStructure, init = 0)
 End
 
+static Function SMAstructureInitWaves()
+    DFREF dfrStructure = $SMAstructureDF()
+
+    WAVE/Z/WAVE/SDFR=dfrStructure wavSpectra = spectra
+    if(!WaveExists(wavSpectra))
+        Make/WAVE dfrStructure:spectra/WAVE=wavSpectra
+    endif
+End
+
 Function SMAstructureLoad(info)
     STRUCT SMAinfo &info
     Variable SetDefault = 0
@@ -33,6 +44,7 @@ Function SMAstructureLoad(info)
     if(!SMAstructureIsInit())
         SMAstructureInitDF(info)
         SMAstructureInitGlobalVariables()
+        SMAstructureInitWaves()
     endif
 
     DFREF info.dfrStructure = $SMAstructureDF()
@@ -51,6 +63,8 @@ Function SMAstructureLoad(info)
     info.numVersion = numVersion
 
     info.numSpectra = Utilities#loadNVAR("numSpectra", dfr = info.dfrStructure)
+
+    WAVE/WAVE/SDFR=info.dfrStructure info.wavSpectra = spectra
 End
 
 Function SMAstructureSave(info)

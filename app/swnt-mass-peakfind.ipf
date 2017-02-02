@@ -1,8 +1,8 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
-#include <Peak AutoFind>
-
+// require igor-common-utilities
+// https://github.com/ukos-git/igor-common-utilities
 Function SMApeakFindMass(wv)
     WAVE/WAVE wv
 
