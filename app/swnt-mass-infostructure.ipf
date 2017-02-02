@@ -43,8 +43,7 @@ Function SMAstructureLoad(info)
 
     if(!SMAstructureIsInit())
         SMAstructureInitDF(info)
-        SMAstructureInitGlobalVariables()
-        SMAstructureInitWaves()
+        SMAstructureUpdate(info)
     endif
 
     DFREF info.dfrStructure = $SMAstructureDF()
@@ -112,4 +111,5 @@ static Function SMAstructureUpdate(info)
     STRUCT SMAinfo &info
 
     SMAstructureInitGlobalVariables()
+    SMAstructureInitWaves()
 End
