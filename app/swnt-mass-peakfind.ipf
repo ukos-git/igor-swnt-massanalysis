@@ -6,7 +6,7 @@
 #include "utilities-peakfind"
 
 Function SMApeakFindMass()
-    variable i, numPeaks
+    variable i
 
     STRUCT SMAinfo info
     SMAstructureLoad(info)
