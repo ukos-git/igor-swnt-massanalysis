@@ -62,8 +62,9 @@ Function SMAcorrection()
     for(i = 0; i < gnumMapsAvailable; i += 1)
         strPLEM = PLEMd2strPLEM(i)
         PLEMd2statsLoad(stats, strPLEM)
-        stats.booBackground = 0
+        stats.booBackground = 1
         stats.booPhoton = 0
+        stats.booPower = 0
         stats.booGrating = 0
         PLEMd2statsSave(stats)
         PLEMd2BuildMaps(strPLEM)

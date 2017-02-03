@@ -29,12 +29,40 @@ Function/WAVE SMApeakFind(wv)
 
     variable numResults, i
 
-    WAVE result = Utilities#PeakFind(wv)
+    WAVE result = Utilities#PeakFind(wv, maxPeaks = 4, minPeakPercent = 90, noiselevel = 10, smoothingFactor = 1)
+
     numResults = Dimsize(result, 0)
     for(i = 0; i < numResults; i += 1)
         printf "%d,\t" result[i][%wavelength]
     endfor
     printf "\r"
-
     return result
+End
+
+Function SMApeakAnalysis()
+    variable i, j, numPeaks, offset
+
+    STRUCT SMAinfo info
+    SMAstructureLoad(info)
+
+    for(i = 0; i < info.numSpectra; i += 1)
+        numPeaks += DimSize(info.wavPeakFind[i], 0)
+    endfor
+
+    Make/O/N=(numPeaks) root:peakfind_wl/WAVE=wl
+    Make/O/N=(numPeaks) root:peakfind_int/WAVE=int
+    Make/O/N=(numPeaks) root:peakfind_fwhm/WAVE=fwhm
+
+    for(i = 0; i < info.numSpectra; i += 1)
+        wave peakfind = info.wavPeakFind[i]
+        numPeaks = DimSize(peakfind, 0)
+        for(j = 0; j < numPeaks; j += 1)
+            //PLEMd2DisplayByNum(i)
+            wl[offset + j]  = peakfind[j][0]
+            int[offset + j] = peakfind[j][1]
+            fwhm[offset + j] = peakfind[j][2]
+        endfor
+        offset += numPeaks
+    endfor
+
 End
