@@ -24,18 +24,26 @@ Function SMApeakFindMass()
     endfor
 End
 
-Function/WAVE SMApeakFind(wv)
+Function/WAVE SMApeakFind(wv, [verbose])
     WAVE wv
+    variable verbose
 
     variable numResults, i
 
+    if(ParamIsDefault(verbose))
+        verbose = 0
+    endif
+
     WAVE result = Utilities#PeakFind(wv, maxPeaks = 4, minPeakPercent = 90, noiselevel = 10, smoothingFactor = 1)
 
-    numResults = Dimsize(result, 0)
-    for(i = 0; i < numResults; i += 1)
-        printf "%d,\t" result[i][%wavelength]
-    endfor
-    printf "\r"
+    if(verbose)
+        numResults = Dimsize(result, 0)
+        for(i = 0; i < numResults; i += 1)
+            printf "%d,\t" result[i][%wavelength]
+        endfor
+        printf "\r"
+    endif
+
     return result
 End
 
