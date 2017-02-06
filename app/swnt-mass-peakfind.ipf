@@ -24,8 +24,8 @@ Function SMApeakFindMass()
     endfor
 End
 
-Function/WAVE SMApeakFind(wv, [verbose])
-    WAVE wv
+Function/WAVE SMApeakFind(input, [verbose])
+    WAVE input
     variable verbose
 
     variable numResults, i
@@ -33,6 +33,9 @@ Function/WAVE SMApeakFind(wv, [verbose])
     if(ParamIsDefault(verbose))
         verbose = 0
     endif
+
+    Duplicate/FREE input, wv
+    SMAremoveSpikes(wv)
 
     WAVE result = Utilities#PeakFind(wv, maxPeaks = 4, minPeakPercent = 90, noiselevel = 10, smoothingFactor = 1)
 
@@ -73,4 +76,12 @@ Function SMApeakAnalysis()
         offset += numPeaks
     endfor
 
+End
+
+Function/WAVE SMAremoveSpikes(wv)
+    WAVE wv
+
+    Smooth/M=0 3, wv
+
+    return wv
 End
