@@ -10,6 +10,8 @@
 // requires PLEM (igor-swnt-plem)
 // https://github.com/ukos-git/igor-swnt-plem
 
+strConstant  cSMApackage    = "swnt-mass-analysis"
+
 Function SMAload()
     FILO#load(fileType = ".ibw", packageID = 1)
 End
@@ -28,6 +30,27 @@ Function SMAread()
     endfor
 End
 
+Function SMAmapInfo()
+    String strPLEM
+    Variable i
+
+    NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+    STRUCT PLEMd2Stats stats
+    STRUCT SMAinfo info
+
+    SMAstructureLoad(info)
+    info.numSpectra = gnumMapsAvailable
+    Redimension/N=(info.numSpectra) info.wavSpectra
+
+    for(i = 0; i < gnumMapsAvailable; i += 1)
+        strPLEM = PLEMd2strPLEM(i)
+        PLEMd2statsLoad(stats, strPLEM)
+        info.wavSpectra[i] = stats.wavPLEM
+    endfor
+
+    SMAstructureSave(info)
+End
+
 Function SMAcorrection()
     String strPLEM
     Variable i
@@ -39,8 +62,9 @@ Function SMAcorrection()
     for(i = 0; i < gnumMapsAvailable; i += 1)
         strPLEM = PLEMd2strPLEM(i)
         PLEMd2statsLoad(stats, strPLEM)
-        stats.booBackground = 0
+        stats.booBackground = 1
         stats.booPhoton = 0
+        stats.booPower = 0
         stats.booGrating = 0
         PLEMd2statsSave(stats)
         PLEMd2BuildMaps(strPLEM)
