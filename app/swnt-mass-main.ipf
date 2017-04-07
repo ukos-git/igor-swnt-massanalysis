@@ -51,6 +51,39 @@ Function SMAmapInfo()
 	SMAstructureSave(info)
 End
 
+Function SMAgetBestSpectra(bestEnergy)
+	variable bestEnergy
+
+	variable i, j, numPeaks
+	variable peakEnergy, peakIntensity
+	variable bestIntensity
+	string bestPLEM, currentPLEM
+
+	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
+	STRUCT PLEMd2Stats stats
+
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+
+	for(i = 0; i < numSpec; i += 1)
+		currentPLEM = PLEMd2strPLEM(i)
+		PLEMd2statsLoad(stats, currentPLEM)
+		WAVE peaks = SMApeakFind(stats.wavPLEM, createwaves = 0)
+		numPeaks = DimSize(peaks, 0)
+		for(j = 0; j < numPeaks; j += 1)
+			peakEnergy = peaks[i][%position]
+			peakIntensity = peaks[i][%intensity]
+			if(abs(peakEnergy - bestEnergy) < 2)
+				if(peakIntensity > bestIntensity)
+					bestIntensity = peakIntensity
+					bestPLEM = currentPLEM
+					print currentPLEM
+				endif
+			endif
+		endfor
+	endfor
+	PLEMd2Display(bestPLEM)
+End
+
 Function SMAcovariance()
 	variable i, numXvalues
 
