@@ -133,7 +133,7 @@ Function SMAcorrection()
 		PLEMd2statsLoad(stats, strPLEM)
 		stats.booBackground = 1
 		stats.booPhoton = 0
-		stats.booPower = 0
+		stats.booPower = 1
 		stats.booGrating = 0
 		PLEMd2statsSave(stats)
 		PLEMd2BuildMaps(strPLEM)
