@@ -11,7 +11,7 @@
 
 static strConstant cstructure = "structure" // path for global vars in Package dfr
 static strConstant cpeakfit   = "peakFit"   // path for temp peakfit waves
-static Constant    cversion   = 0004
+static Constant	cversion   = 0004
 
 Structure SMAinfo
 	Variable numVersion, numSpectra
