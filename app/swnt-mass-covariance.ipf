@@ -3,6 +3,7 @@
 
 Function SMAcovariance()
 	variable i, numXvalues
+	variable numPoints
 
 	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
 	STRUCT PLEMd2Stats stats
@@ -12,27 +13,39 @@ Function SMAcovariance()
 	MAKE/O/N=(numSpec, numXvalues) root:source/WAVE=source
 	MAKE/O/N=(numXvalues) root:sum1/WAVE=sum1
 	MAKE/O/N=(numXvalues) root:sum2/WAVE=sum2
+	Duplicate/O stats.wavWavelength root:wavelength/WAVE=wavelength
+	Duplicate/O stats.wavWavelength root:wavelengthImage/WAVE=wavelength_graph
+	numPoints = DimSize(wavelength, 0)
+	Redimension/N=(numPoints + 1) wavelength_graph
+	wavelength_graph[numPoints] = wavelength_graph[numPoints - 1] + 1
 
-	for(i = numSpec - 1; i > -1; i -= 1)
+	for(i = 0; i < numSpec; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		WAVE peaks = SMApeakFind(stats.wavPLEM, createwaves = 1)
-		WAVE original = root:original
-		WAVE nospikes = root:nospikes
-		//WAVE nobackground = root:nobackground
-		WAVE peakfit = root:peakfit
-		WAVE residuum = root:residuum
+		WAVE nospikes = Utilities#removeSpikes(stats.wavPLEM)
 
 		source[i][] = nospikes[q]
 		sum1[] += nospikes[p]
 		sum2[] += nospikes[p]^2
 	endfor
 
-	sum1 /= (numSpec - i)
-	sum2 = sqrt(sum2)
+	sum1 = sum1 / numSpec
+	sum2 = sqrt(sum2 / numSpec)
+
+	ImageFilter NanZapMedian source
 
 	MatrixOP/O root:covariance_sym/WAVE=sym = syncCorrelation(source)
 	MatrixOP/O root:covariance_asym/WAVE=asym = asyncCorrelation(source)
 
-	MatrixOP/O root:covariance_sym_diag = getDiag(sym, 0)
+	MatrixOP/O root:covariance_sym_diag/WAVE=symdiag = getDiag(sym, 0)
 	MatrixOP/O root:covariance_asym_diag = getDiag(asym, 0)
+
+	DoWindow SMAcovarianceGraph
+	if(V_flag == 0)
+		Display/N=SMAcovarianceGraph
+		AppendImage sym vs {wavelength_graph, wavelength_graph}
+	endif
+	DoWindow SMAcovarianceGraphDiagonal
+	if(V_flag == 0)
+		Display/N=SMAcovarianceGraphDiagonal symdiag vs wavelength
+	endif
 End
