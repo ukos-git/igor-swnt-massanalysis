@@ -179,14 +179,12 @@ Function SMAancestorBackground()
 	for(i = 2; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i-1)
 		PLEMd2statsLoad(stats, strPLEM)
-		Wavestats/Q stats.wavPLEM
-		previousmax = V_max
+		previousmax = WaveMax(stats.wavPLEM)
 
 		strPLEM2= PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats2, strPLEM2)
-		Wavestats/Q stats2.wavPLEM
 
-		stats.wavPLEM = stats.wavPLEM - stats2.wavPLEM/V_max * previousmax
+		stats.wavPLEM = stats.wavPLEM - stats2.wavPLEM/WaveMax(stats.wavPLEM) * previousmax
 	endfor
 End
 
