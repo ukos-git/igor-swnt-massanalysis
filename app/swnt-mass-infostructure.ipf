@@ -14,142 +14,142 @@ static strConstant cpeakfit   = "peakFit"   // path for temp peakfit waves
 static Constant    cversion   = 0004
 
 Structure SMAinfo
-    Variable numVersion, numSpectra
+	Variable numVersion, numSpectra
 
-    DFREF dfrStructure
-    DFREF dfrPeakFit
+	DFREF dfrStructure
+	DFREF dfrPeakFit
 
-    WAVE/WAVE wavSpectra, wavPeakFind
+	WAVE/WAVE wavSpectra, wavPeakFind
 EndStructure
 
 static Function SMAstructureInitGlobalVariables()
-    DFREF dfrStructure = $SMAstructureDF()
-    DFREF dfrPeakFit   = $SMApeakfitDF()
+	DFREF dfrStructure = $SMAstructureDF()
+	DFREF dfrPeakFit   = $SMApeakfitDF()
 
-    Utilities#createNVAR("numVersion", dfr = dfrStructure, set = cversion)
-    Utilities#createNVAR("numSpectra", dfr = dfrStructure, init = 0)
+	Utilities#createNVAR("numVersion", dfr = dfrStructure, set = cversion)
+	Utilities#createNVAR("numSpectra", dfr = dfrStructure, init = 0)
 End
 
 static Function SMAstructureInitWaves()
-    DFREF dfrStructure = $SMAstructureDF()
+	DFREF dfrStructure = $SMAstructureDF()
 
-    WAVE/Z/WAVE/SDFR=dfrStructure wavSpectra = spectra
-    if(!WaveExists(wavSpectra))
-        Make/WAVE dfrStructure:spectra/WAVE=wavSpectra
-    endif
-    WAVE/Z/WAVE/SDFR=dfrStructure wavPeakFind = peakfind
-    if(!WaveExists(wavPeakFind))
-        Make/WAVE dfrStructure:peakfind/WAVE=wavPeakFind
-    endif
+	WAVE/Z/WAVE/SDFR=dfrStructure wavSpectra = spectra
+	if(!WaveExists(wavSpectra))
+		Make/WAVE dfrStructure:spectra/WAVE=wavSpectra
+	endif
+	WAVE/Z/WAVE/SDFR=dfrStructure wavPeakFind = peakfind
+	if(!WaveExists(wavPeakFind))
+		Make/WAVE dfrStructure:peakfind/WAVE=wavPeakFind
+	endif
 End
 
 Function SMAstructureLoad(info)
-    STRUCT SMAinfo &info
-    Variable SetDefault = 0
+	STRUCT SMAinfo &info
+	Variable SetDefault = 0
 
-    if(!SMAstructureIsInit())
-        SMApackageInitDF(info)
-        SMAstructureUpdate(info)
-    endif
+	if(!SMAstructureIsInit())
+		SMApackageInitDF(info)
+		SMAstructureUpdate(info)
+	endif
 
-    DFREF info.dfrStructure = $SMAstructureDF()
-    if(DataFolderRefStatus(info.dfrStructure) == 0)
-        print "SMAstructureLoad: \tUnexpected Behaviour."
-    endif
-    DFREF info.dfrPeakFit   = $SMApeakfitDF()
-    if(DataFolderRefStatus(info.dfrStructure) == 0)
-        print "SMAstructureLoad: \tUnexpected Behaviour."
-    endif
+	DFREF info.dfrStructure = $SMAstructureDF()
+	if(DataFolderRefStatus(info.dfrStructure) == 0)
+		print "SMAstructureLoad: \tUnexpected Behaviour."
+	endif
+	DFREF info.dfrPeakFit   = $SMApeakfitDF()
+	if(DataFolderRefStatus(info.dfrStructure) == 0)
+		print "SMAstructureLoad: \tUnexpected Behaviour."
+	endif
 
-    NVAR/Z/SDFR=info.dfrStructure numVersion
+	NVAR/Z/SDFR=info.dfrStructure numVersion
 
-    if(numVersion < cversion)
-        print "SMAstructureLoad: \tVersion Change detected."
-        printf "current Version: \t%04d\r", numVersion
-        SMAstructureUpdate(info)
-        printf "new Version: \t%04d\r", numVersion
-    endif
-    info.numVersion = numVersion
+	if(numVersion < cversion)
+		print "SMAstructureLoad: \tVersion Change detected."
+		printf "current Version: \t%04d\r", numVersion
+		SMAstructureUpdate(info)
+		printf "new Version: \t%04d\r", numVersion
+	endif
+	info.numVersion = numVersion
 
-    info.numSpectra = Utilities#loadNVAR("numSpectra", dfr = info.dfrStructure)
+	info.numSpectra = Utilities#loadNVAR("numSpectra", dfr = info.dfrStructure)
 
-    WAVE/WAVE/SDFR=info.dfrStructure info.wavSpectra = spectra
-    WAVE/WAVE/SDFR=info.dfrStructure info.wavPeakFind = peakfind
+	WAVE/WAVE/SDFR=info.dfrStructure info.wavSpectra = spectra
+	WAVE/WAVE/SDFR=info.dfrStructure info.wavPeakFind = peakfind
 End
 
 Function SMAstructureSave(info)
-    STRUCT SMAinfo &info
+	STRUCT SMAinfo &info
 
-    DFREF dfrstructure = $SMAstructureDF()
+	DFREF dfrstructure = $SMAstructureDF()
 
-    Utilities#saveNVAR("numVersion", info.numVersion, dfr = dfrStructure)
-    Utilities#saveNVAR("numSpectra", info.numSpectra, dfr = dfrStructure)
+	Utilities#saveNVAR("numVersion", info.numVersion, dfr = dfrStructure)
+	Utilities#saveNVAR("numSpectra", info.numSpectra, dfr = dfrStructure)
 End
 
 static Function/S SMApackageDF()
-    return "root:Packages:" + PossiblyQuoteName(cSMApackage)
+	return "root:Packages:" + PossiblyQuoteName(cSMApackage)
 End
 
 static Function/S SMAstructureDF()
-    return SMApackageDF() + ":" + cstructure
+	return SMApackageDF() + ":" + cstructure
 End
 
 static Function/S SMApeakfitDF()
-    return SMApackageDF() + ":" + cpeakfit
+	return SMApackageDF() + ":" + cpeakfit
 End
 
 static Function SMAstructureIsInit()
-    String strDataFolder = SMAstructureDF()
+	String strDataFolder = SMAstructureDF()
 
-    if(!DataFolderExists(strDataFolder))
-        return 0
-    endif
+	if(!DataFolderExists(strDataFolder))
+		return 0
+	endif
 
-    DFREF dfrStructure = $SMAstructureDF()
-    NVAR/Z/SDFR=dfrStructure numVersion
-    if(!NVAR_EXISTS(numVersion))
-        return 0
-    endif
+	DFREF dfrStructure = $SMAstructureDF()
+	NVAR/Z/SDFR=dfrStructure numVersion
+	if(!NVAR_EXISTS(numVersion))
+		return 0
+	endif
 
-    return 1
+	return 1
 End
 
 static Function SMApackageInitDF(info)
-    STRUCT SMAinfo &info
-    DFREF dfrSave = GetDataFolderDFR()
+	STRUCT SMAinfo &info
+	DFREF dfrSave = GetDataFolderDFR()
 
-    SetDataFolder root:
-    NewDataFolder/O/S Packages
-    NewDataFolder/O $cSMApackage
+	SetDataFolder root:
+	NewDataFolder/O/S Packages
+	NewDataFolder/O $cSMApackage
 
-    SetDataFolder dfrSave
+	SetDataFolder dfrSave
 End
 
 static Function SMAstructureInitDF(info)
-    STRUCT SMAinfo &info
+	STRUCT SMAinfo &info
 
-    DFREF dfr = $SMApackageDF()
-    DFREF new = dfr:$cstructure
-    if(DataFolderRefStatus(new) == 0)
-        NewDataFolder dfr:$cstructure
-    endif
+	DFREF dfr = $SMApackageDF()
+	DFREF new = dfr:$cstructure
+	if(DataFolderRefStatus(new) == 0)
+		NewDataFolder dfr:$cstructure
+	endif
 End
 
 static Function SMApeakfitInitDF(info)
-    STRUCT SMAinfo &info
+	STRUCT SMAinfo &info
 
-    DFREF dfr = $SMApackageDF()
-    DFREF new = dfr:$cpeakfit
-    if(DataFolderRefStatus(new) == 0)
-        NewDataFolder dfr:$cpeakfit
-    endif
+	DFREF dfr = $SMApackageDF()
+	DFREF new = dfr:$cpeakfit
+	if(DataFolderRefStatus(new) == 0)
+		NewDataFolder dfr:$cpeakfit
+	endif
 End
 
 static Function SMAstructureUpdate(info)
-    STRUCT SMAinfo &info
+	STRUCT SMAinfo &info
 
-    SMAstructureInitDF(info)
-    SMApeakfitInitDF(info)
-    SMAstructureInitGlobalVariables()
-    SMAstructureInitWaves()
+	SMAstructureInitDF(info)
+	SMApeakfitInitDF(info)
+	SMAstructureInitGlobalVariables()
+	SMAstructureInitWaves()
 End
