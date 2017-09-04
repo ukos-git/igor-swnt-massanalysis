@@ -51,6 +51,114 @@ Function SMAmapInfo()
 	SMAstructureSave(info)
 End
 
+Function SMAgetBestSpectra(bestEnergy)
+	variable bestEnergy
+
+	variable i, j, numPeaks
+	variable peakEnergy, peakIntensity
+	variable bestIntensity
+	string bestPLEM, currentPLEM
+
+	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
+	STRUCT PLEMd2Stats stats
+
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+
+	for(i = 0; i < numSpec; i += 1)
+		currentPLEM = PLEMd2strPLEM(i)
+		PLEMd2statsLoad(stats, currentPLEM)
+		WAVE peaks = SMApeakFind(stats.wavPLEM, createwaves = 0)
+		numPeaks = DimSize(peaks, 0)
+		for(j = 0; j < numPeaks; j += 1)
+			peakEnergy = peaks[i][%position]
+			peakIntensity = peaks[i][%intensity]
+			if(abs(peakEnergy - bestEnergy) < 2)
+				if(peakIntensity > bestIntensity)
+					bestIntensity = peakIntensity
+					bestPLEM = currentPLEM
+					print currentPLEM
+				endif
+			endif
+		endfor
+	endfor
+	PLEMd2Display(bestPLEM)
+End
+
+Function SMAgetCoordinates()
+	String strPLEM
+	Variable i, j, k, startX, numPeaks, numCoords
+
+	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	STRUCT PLEMd2Stats stats
+	STRUCT SMAinfo info
+
+	SMAstructureLoad(info)
+	info.numSpectra = gnumMapsAvailable * 40
+	Redimension/N=(info.numSpectra) info.wavSpectra
+	Make/N=(10240, 4) root:coordinates/Wave=wavCoordinates
+	for(i = 0; i < gnumMapsAvailable; i += 1)
+		strPLEM = PLEMd2strPLEM(i)
+		PLEMd2statsLoad(stats, strPLEM)
+		startX = round(stats.numPositionX) - 40
+		startX -= mod(startX, 2)
+		for(j = startX; j < startX + 80; j += 2)
+			Duplicate/FREE/R=[][ScaleToIndex(stats.wavPLEM, j, 1)] stats.wavPLEM, currentLine
+			Redimension/N=(DimSize(stats.wavPLEM, 0)) currentLine
+			//SetScale/P x, DimOffset(stats.wavPLEM, 1), DimDelta(stats.wavPLEM, 1), currentLine
+			wave peakResult = SMApeakFind(currentLine, verbose = 0)
+			numPeaks = DimSize(peakResult, 0)
+			if(DimSize(wavCoordinates, 0) < numCoords + numPeaks)
+				Redimension/N=(numcoords) wavCoordinates
+			endif
+			for(k = 0; k < numPeaks; k += 1)
+				wavCoordinates[(numCoords + k)][0] = peakResult[k][%position]
+				wavCoordinates[(numCoords + k)][1] = j
+				wavCoordinates[(numCoords + k)][2] = stats.numPositionZ
+				wavCoordinates[(numCoords + k)][3] = peakResult[k][%intensity]
+			endfor
+			numCoords += numPeaks
+		endfor
+	endfor
+
+	SMAstructureSave(info)
+End
+
+Function SMAcovariance()
+	variable i, numXvalues
+
+	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
+	STRUCT PLEMd2Stats stats
+
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+	numXvalues = DimSize(stats.wavPLEM, 0)
+	MAKE/O/N=(numSpec, numXvalues) root:source/WAVE=source
+	MAKE/O/N=(numXvalues) root:sum1/WAVE=sum1
+	MAKE/O/N=(numXvalues) root:sum2/WAVE=sum2
+
+	for(i = numSpec - 1; i > -1; i -= 1)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+		WAVE peaks = SMApeakFind(stats.wavPLEM, createwaves = 1)
+		WAVE original = root:original
+		WAVE nospikes = root:nospikes
+		//WAVE nobackground = root:nobackground
+		WAVE peakfit = root:peakfit
+		WAVE residuum = root:residuum
+
+		source[i][] = nospikes[q]
+		sum1[] += nospikes[p]
+		sum2[] += nospikes[p]^2
+	endfor
+
+	sum1 /= (numSpec - i)
+	sum2 = sqrt(sum2)
+
+	MatrixOP/O root:covariance_sym/WAVE=sym = syncCorrelation(source)
+	MatrixOP/O root:covariance_asym/WAVE=asym = asyncCorrelation(source)
+
+	MatrixOP/O root:covariance_sym_diag = getDiag(sym, 0)
+	MatrixOP/O root:covariance_asym_diag = getDiag(asym, 0)
+End
+
 Function SMAcorrection()
 	String strPLEM
 	Variable i
@@ -64,7 +172,7 @@ Function SMAcorrection()
 		PLEMd2statsLoad(stats, strPLEM)
 		stats.booBackground = 1
 		stats.booPhoton = 0
-		stats.booPower = 0
+		stats.booPower = 1
 		stats.booGrating = 0
 		PLEMd2statsSave(stats)
 		PLEMd2BuildMaps(strPLEM)
