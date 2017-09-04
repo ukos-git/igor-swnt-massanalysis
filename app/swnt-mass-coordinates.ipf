@@ -563,3 +563,24 @@ Function SMAaddCoordinates(currentCoordinates, [text])
 
 	return numCoords
 End
+
+Function SMAcamerascanCoordinates([zmin])
+	Variable zmin
+
+	Variable xstep = 50, ystep = 80, zstep = 0.5
+
+	zmin = ParamIsDefault(zmin) ? 148.5 : zmin
+
+	// 4 scans in x = 300/80
+	// 6 scans in y = 300/50
+	// 8 scans in z direction (148.5um to 152.5um in 0.5um steps) = 5 um 0.5um
+	// --> 16 hours when integrating 300s.
+
+	Make/O/N=(4*6*8, 3) root:fullscan/WAVE=wv
+
+	wv[][0] = 25 + mod(floor(p / 4) * xstep, 300)
+	wv[][1] = 30 + mod(p, 4) * ystep
+	wv[][2] = zmin + floor(p/24) * zstep + mod(p, 4) * round(abs(146 - 150.750) / 3 / 0.25) * 0.25
+
+	Duplicate/o/R=[0,4*6-1] wv root:camerascan
+End
