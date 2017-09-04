@@ -152,10 +152,13 @@ Function SMAmedianBackground()
 	NVAR gnumMapsAvailable	 = $(cstrPLEMd2root + ":gnumMapsAvailable")
 	Struct PLEMd2Stats stats
 
+	SMAreset()
+	WAVE globalMedian = SMAmedian(overwrite = 1)
+
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
-		stats.wavPLEM = stats.wavmeasure - stats.wavbackground
+		stats.wavPLEM = stats.wavMeasure - stats.wavBackground - globalMedian
 	endfor
 End
 
