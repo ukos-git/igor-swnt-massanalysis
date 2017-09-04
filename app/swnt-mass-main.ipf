@@ -57,7 +57,8 @@ Function SMAgetBestSpectra(bestEnergy)
 	variable i, j, numPeaks
 	variable peakEnergy, peakIntensity
 	variable bestIntensity
-	string bestPLEM, currentPLEM
+	string secondBestPLEM, currentPLEM
+	string bestPLEM = ""
 
 	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
 	STRUCT PLEMd2Stats stats
@@ -70,18 +71,20 @@ Function SMAgetBestSpectra(bestEnergy)
 		WAVE peaks = SMApeakFind(stats.wavPLEM, createwaves = 0)
 		numPeaks = DimSize(peaks, 0)
 		for(j = 0; j < numPeaks; j += 1)
-			peakEnergy = peaks[i][%position]
-			peakIntensity = peaks[i][%intensity]
-			if(abs(peakEnergy - bestEnergy) < 2)
+			peakEnergy = peaks[j][%position]
+			peakIntensity = peaks[j][%intensity]
+			if(abs(peakEnergy - bestEnergy) < 5)
+				print currentPLEM
 				if(peakIntensity > bestIntensity)
 					bestIntensity = peakIntensity
+					secondBestPLEM = bestPLEM
 					bestPLEM = currentPLEM
-					print currentPLEM
 				endif
 			endif
 		endfor
 	endfor
 	PLEMd2Display(bestPLEM)
+	PLEMd2Display(secondBestPLEM)
 End
 
 Function SMAgetCoordinates()
