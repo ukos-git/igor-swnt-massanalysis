@@ -87,45 +87,6 @@ Function SMAgetBestSpectra(bestEnergy)
 	PLEMd2Display(secondBestPLEM)
 End
 
-Function SMAgetCoordinates()
-	String strPLEM
-	Variable i, j, k, startX, numPeaks, numCoords
-
-	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
-	STRUCT PLEMd2Stats stats
-	STRUCT SMAinfo info
-
-	SMAstructureLoad(info)
-	info.numSpectra = gnumMapsAvailable * 40
-	Redimension/N=(info.numSpectra) info.wavSpectra
-	Make/N=(10240, 4) root:coordinates/Wave=wavCoordinates
-	for(i = 0; i < gnumMapsAvailable; i += 1)
-		strPLEM = PLEMd2strPLEM(i)
-		PLEMd2statsLoad(stats, strPLEM)
-		startX = round(stats.numPositionX) - 40
-		startX -= mod(startX, 2)
-		for(j = startX; j < startX + 80; j += 2)
-			Duplicate/FREE/R=[][ScaleToIndex(stats.wavPLEM, j, 1)] stats.wavPLEM, currentLine
-			Redimension/N=(DimSize(stats.wavPLEM, 0)) currentLine
-			//SetScale/P x, DimOffset(stats.wavPLEM, 1), DimDelta(stats.wavPLEM, 1), currentLine
-			wave peakResult = SMApeakFind(currentLine, verbose = 0)
-			numPeaks = DimSize(peakResult, 0)
-			if(DimSize(wavCoordinates, 0) < numCoords + numPeaks)
-				Redimension/N=(numcoords) wavCoordinates
-			endif
-			for(k = 0; k < numPeaks; k += 1)
-				wavCoordinates[(numCoords + k)][0] = peakResult[k][%position]
-				wavCoordinates[(numCoords + k)][1] = j
-				wavCoordinates[(numCoords + k)][2] = stats.numPositionZ
-				wavCoordinates[(numCoords + k)][3] = peakResult[k][%intensity]
-			endfor
-			numCoords += numPeaks
-		endfor
-	endfor
-
-	SMAstructureSave(info)
-End
-
 Function SMAreset()
 	String strPLEM
 	Variable i
