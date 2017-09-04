@@ -87,6 +87,46 @@ Function SMAgetBestSpectra(bestEnergy)
 	PLEMd2Display(secondBestPLEM)
 End
 
+Function SMAgetMaximum(bestEnergy)
+	variable bestEnergy
+
+	variable i, j, numPeaks
+	variable peakEnergy, peakIntensity
+	variable bestIntensity
+	string secondBestPLEM, currentPLEM
+	string bestPLEM = ""
+
+	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
+	STRUCT PLEMd2Stats stats
+
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+
+	for(i = 0; i < numSpec; i += 1)
+		currentPLEM = PLEMd2strPLEM(i)
+		PLEMd2statsLoad(stats, currentPLEM)
+		WAVE nospikes = Utilities#removeSpikes(stats.wavPLEM)
+		WAVE guess = Utilities#PeakFind(nospikes, maxPeaks = 10, minPeakPercent = 0.2, smoothingFactor = 1, verbose = 0)
+		//WAVE peaks = SMApeakFind(stats.wavPLEM, createwaves = 0)
+		numPeaks = DimSize(guess, 0)
+		for(j = 0; j < numPeaks; j += 1)
+			//peakEnergy = peaks[j][%position]
+			//peakIntensity = peaks[j][%intensity]
+			peakEnergy = guess[j][%wavelength]
+			peakIntensity = guess[j][%height]
+			if(abs(peakEnergy - bestEnergy) < 5)
+				print currentPLEM
+				if(peakIntensity > bestIntensity)
+					bestIntensity = peakIntensity
+					secondBestPLEM = bestPLEM
+					bestPLEM = currentPLEM
+				endif
+			endif
+		endfor
+	endfor
+	PLEMd2Display(bestPLEM)
+	PLEMd2Display(secondBestPLEM)
+End
+
 Function SMAreset()
 	String strPLEM
 	Variable i
