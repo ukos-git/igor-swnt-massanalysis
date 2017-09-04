@@ -1,0 +1,565 @@
+#pragma TextEncoding = "Windows-1252"
+#pragma rtGlobals=3		// Use modern global access method and strict wave access.
+
+Menu "CameraImage"
+	// CTRL+0 is the keyboard shortcut
+	"AddCoordinates/1", /Q, AddCoordinatesFromGraph()
+	"Set WaveScale zero", /Q, SetScaleToCursor()
+	"Process Coordinates", /Q, SMAprocessCoordinates()
+	"PeakFind for coordinates", /Q, GetCoordinates()
+End
+
+Menu "GraphMarquee"
+	"Erase Points", SMA_EraseMarqueeArea()
+End
+
+// see ACW_EraseMarqueeArea.
+Function SMA_EraseMarqueeArea()
+	variable dim0, dim1, numMatches, i
+	variable Pstart, Pend, Qstart, Qend
+
+	GetMarquee left, bottom //V_bottom, V_top, V_left and V_right
+	if (V_flag == 0)
+		return 0
+	endif
+	WAVE coordinates = SMA_PromptTrace()
+
+	// get X coordinates
+	dim0 = DimSize(coordinates, 0)
+	Make/FREE/N=(dim0) indices = p
+	Duplicate/FREE/R=[][0] coordinates, coordinateX
+	Duplicate/FREE/R=[][1] coordinates, coordinateY
+	Sort/R coordinateX, indices, coordinateX, coordinateY
+	Pend = ceil(FindLevelWrapper(coordinateX, V_top, verbose = 0))
+	if(Pend < 0)
+		Pend = 0
+	endif
+	Pend = dim0 - Pend - 1
+	Sort coordinateX, indices, coordinateX, coordinateY
+	Pstart = ceil(FindLevelWrapper(coordinateX, V_bottom, verbose = 0))
+	if(Pstart < 0)
+		Pstart = 0
+	endif
+
+	// get Y coordinates
+	dim1 = Pend - Pstart + 1
+	Duplicate/FREE/R=[Pstart, Pend] coordinateX, coordinateX1
+	Duplicate/FREE/R=[Pstart, Pend] coordinateY, coordinateY1
+	Duplicate/FREE/R=[Pstart, Pend] indices,     indices1
+	print "between", V_bottom, "and", V_top, ":", indices1
+	Sort/R coordinateY1, indices1, coordinateX1, coordinateY1
+	Qend = ceil(FindLevelWrapper(coordinateY1, V_right, verbose = 0))
+	if(Qend < 0)
+		Qend = 0
+	endif
+	Qend = dim1 - Qend - 1
+	Sort coordinateY1, indices1, coordinateX1, coordinateY1
+	Qstart = ceil(FindLevelWrapper(coordinateY1, V_left, verbose = 0))
+	if(Qstart < 0)
+		Qstart = 0
+	endif
+
+	// delete Points
+	Duplicate/FREE/R=[Qstart, Qend] indices1, indices2
+	print "between", V_left, "and", V_right, ":", indices2
+	SMAorderAsc(Qstart, Qend)
+	numMatches = Qend - Qstart + 1
+	if(numMatches == 0)
+		return 0
+	endif
+	WAVE/Z deleted = root:coordinates_deleted
+	if(!WaveExists(deleted))
+		dim0 = 0
+		Make/N=(numMatches, 3) root:coordinates_deleted/WAVE=deleted
+	else
+		dim0 = DimSize(deleted, 0)
+		dim0 = 0 // reset
+		Redimension/N=(dim0 + numMatches, -1) deleted
+	endif
+	Sort/R indices2, indices2
+	if(!cmpstr(NameOfWave(coordinates), "coordinates"))
+		WAVE/Z l1 = root:legende
+		WAVE/Z l2 = root:legend_text
+	endif
+	for(i = 0; i < numMatches; i += 1)
+		deleted[dim0 + i][] = coordinates[indices2[i]][q]
+		DeletePoints/M=0 indices2[i], 1, coordinates
+		if(!cmpstr(NameOfWave(coordinates), "coordinates"))
+			if(WaveExists(l1) && WaveExists(l2))
+				DeletePoints/M=0 indices2[i], 1, l1, l2
+			endif
+		endif
+	endfor
+
+	// Append coordinates_deleted wave to top graph if not present
+	CheckDisplayed deleted
+	if(V_flag == 0)
+		AppendToGraph deleted[][0]/TN=deleted vs deleted[][1]
+		ModifyGraph mode(deleted)=4,marker(deleted)=8,opaque(deleted)=1,rgb(deleted)=(0,65535,0)
+	endif
+End
+
+Function/Wave SMA_PromptTrace()
+	string traceName
+    string traces = TraceNameList("", ";", 1)
+
+	if(ItemsInList(traces) == 0)
+		print "No traces found in top graph"
+		return $""
+	endif
+
+	if(ItemsInList(traces) == 1)
+		WAVE wv = TraceNameToWaveRef("", StringFromList(0, traces))
+		return wv
+	endif
+
+	traceName = "coordinates"
+    Prompt traceName, "Choose Trace", popup traces
+    DoPrompt "Enter wave", traceName
+    WAVE wv = TraceNameToWaveRef("", traceName)
+
+    return wv
+End
+
+Function SetScaleToCursor()
+	Variable aExists = 0
+	String topWindowImages =	ImageNameList("",";")
+
+	if(ItemsInList(topWindowImages) == 0)
+		print "no Image found in top graph"
+		return 0
+	endif
+
+	WAVE/Z image = ImageNameToWaveRef("", StringFromList(0, topWindowImages))
+	if(!WaveExists(image))
+		print "image wave does not exist."
+		return 0
+	endif
+
+	aExists = strlen(CsrInfo(A)) > 0
+	if(!aExists)
+		print "Cursor A not in Graph"
+		return 0
+	endif
+
+	SetScale/P x, - pcsr(A) * DimDelta(image, 0), DimDelta(image, 0), image
+	SetScale/P y, - qcsr(A) * DimDelta(image, 1), DimDelta(image, 1), image
+End
+
+Function GetCoordinates()
+	Variable temp, i, j
+	Variable numCoords, numPeaks
+	Variable numSize = 1024
+	String topWindowImages =	ImageNameList("", ";")
+	String topWindowTraces =	TraceNameList("", ";", 1)
+
+	if(ItemsInList(topWindowImages) == 0)
+		print "no Image found in top graph"
+		return 0
+	endif
+
+	WAVE/Z image = ImageNameToWaveRef("", StringFromList(0, topWindowImages))
+	if(!WaveExists(image))
+		print "image wave does not exist."
+		return 0
+	endif
+
+	STRUCT PLEMd2Stats stats
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+
+	// start fresh
+	Make/O/N=(numSize, 3) root:coordinates/Wave=wavCoordinates = NaN
+	Make/O/N=(numSize, 3) root:legende/Wave=wavLegend = NaN
+	Make/O/T/N=(numSize) root:legend_text/Wave=wavLegendText = ""
+
+	// display coordinates
+	if(FindListItem("coordinates", topWindowTraces) == -1)
+		AppendToGraph wavCoordinates[][0]/TN=coordinates vs wavCoordinates[][1]
+		ModifyGraph mode(coordinates)=3,marker(coordinates)=1,msize(coordinates)=2
+	endif
+	if(FindListItem("legend", topWindowTraces) == -1)
+		AppendToGraph wavLegend[][0]/TN=legend vs wavLegend[][1]
+		ModifyGraph mode(legend)=3
+		ModifyGraph textMarker(legend)={wavLegendText,"default",0,0,5,0.00,0.00}
+		ModifyGraph msize(legend)=3
+	endif
+
+	Duplicate/FREE image, currentImage
+
+	// prepare: remove offset
+	ImageFilter/O/N=5 gauss currentImage
+	temp = WaveMin(currentImage)
+	currentImage -= temp
+
+	for(i = 0; i <= 300; i += 4)
+		Duplicate/FREE/R=(0, 300)(i) currentImage lineProfile
+		WAVE peaks = SMApeakFind(lineProfile, maxPeaks = 30, minPeakPercent = 0.1, smoothingfactor = NaN)
+		WaveClear lineProfile
+		numPeaks = DimSize(peaks, 0)
+		for(j = 0; j < numPeaks; j += 1)
+			if(peaks[j][%fwhm] > 5)
+				continue
+			endif
+			if(numSize < numCoords)
+				Redimension/N=(numCoords + 10, -1) wavCoordinates, wavLegend, wavLegendText
+				numSize = numCoords + 10
+			endif
+
+			wavCoordinates[numCoords][0] = i
+			wavCoordinates[numCoords][1] = peaks[j][%position]
+			wavCoordinates[numCoords][2] = stats.numPositionZ
+
+			wavLegend[numCoords][0] = wavCoordinates[numCoords][0]
+			wavLegend[numCoords][1] = wavCoordinates[numCoords][1]
+			wavLegendText[numCoords] = "i=" + num2str(peaks[j][%intensity]) + "\r f=" + num2str(peaks[j][%fwhm])
+			numCoords += 1
+		endfor
+		DoUpdate
+		WaveClear peaks
+	endfor
+
+	Redimension/N=(numCoords, -1) wavCoordinates, wavLegendText, wavLegend
+	SortColumns/KNDX={0,1} sortwaves=wavCoordinates
+End
+
+Function AddCoordinatesFromGraph()
+	Variable numItems
+	Variable aExists = 0
+	WAVE/Z coordinates = root:coordinates
+	WAVE/T/Z legende = root:legend_text
+
+	if(!WaveExists(coordinates))
+		print "required waves do not exist. Start SMAgetCoordinates first"
+		return 0
+	endif
+	aExists= strlen(CsrInfo(A)) > 0
+	if(!aExists)
+		print "Cursor A not in Graph"
+		return 0
+	endif
+
+	numItems = DimSize(coordinates, 0)
+	Redimension/N=(numItems + 1, 3) coordinates
+	coordinates[numItems][0]=vcsr(A)
+	coordinates[numItems][1]=hcsr(A)
+	coordinates[numItems][2]=150
+	
+	if(WaveExists(legende))
+		Redimension/N=(numItems + 1, -1) legende
+		legende[numItems]="manual"
+	endif
+	
+	// Append coordinates_deleted wave to top graph if not present
+	CheckDisplayed coordinates
+	if(V_flag == 0)
+		AppendToGraph coordinates[][0]/TN=coordinates vs coordinates[][1]
+		ModifyGraph mode(coordinates)=4,marker(coordinates)=8
+	endif
+End
+
+Function DeleteCoordinates(rangeMin, rangeMax)
+	Variable rangeMin, rangeMax
+	Variable numItems, i, deleteMe
+	Variable numDelete = 0
+
+	WAVE/Z coordinates = root:coordinates
+	WAVE/T/Z legende = root:legend_text
+
+	if(!WaveExists(coordinates))
+		print "required waves do not exist. Start SMAgetCoordinates first"
+		return 0
+	endif
+
+	Duplicate/FREE coordinates original
+	numItems = DimSize(original, 0)
+	for(i = 0; i < numItems; i += 1)
+		deleteMe = 0
+		if((coordinates[i - numDelete][0] < rangeMin) || (coordinates[i - numDelete][0] > rangeMax))
+			deleteMe = 1
+		endif
+		if((coordinates[i - numDelete][1] < rangeMin) || (coordinates[i - numDelete][1] > rangeMax))
+			deleteMe = 1
+		endif
+		if(deleteMe)
+			DeletePoints/M=0 i - numDelete, 1, coordinates
+			if(WaveExists(legende))
+				DeletePoints/M=0 i - numDelete, 1, legende
+			endif
+			numDelete += 1
+		endif
+	endfor
+End
+
+Function SortCoordinates()
+	WAVE/Z coordinates = root:coordinates
+	WAVE/T/Z legende = root:legend_text
+
+	if(!WaveExists(coordinates))
+		print "required waves do not exist. Start SMAgetCoordinates first"
+		return 0
+	endif
+
+	if(WaveExists(legende))
+		SortColumns/KNDX={0,1} keyWaves=coordinates, sortWaves={coordinates, legende}
+	else
+		SortColumns/KNDX={0,1} sortWaves=coordinates
+	endif
+End
+
+Function RoundCoordinates([accuracy])
+	Variable accuracy
+	
+	WAVE/Z coordinates = root:coordinates
+	
+	accuracy = ParamIsDefault(accuracy) ? 4 : accuracy
+
+	if(!WaveExists(coordinates))
+		print "required waves do not exist. Start SMAgetCoordinates first"
+		return 0
+	endif
+
+	coordinates[][0] = round(coordinates[p][0] / accuracy) * accuracy
+End
+
+Function SMAprocessCoordinates()
+	RoundCoordinates(accuracy = 4)
+	SortCoordinates()
+	DeleteCoordinates(0, 300)
+End
+
+Function SMAgetCoordinates()
+	Variable i
+	STRUCT PLEMd2Stats stats
+
+	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+
+	SMAresetCoordinates()
+	SMAbuildGraphPLEM()
+	//WAVE fullimage = SMAmergeImages(createNew = 0)
+	//Duplicate/FREE fullimage, currentImage
+	//SMAparticleAnalysis(currentImage)
+
+	wave background = SMAestimateBackground()
+	for(i = 0; i < gnumMapsAvailable; i += 1)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+		Duplicate/FREE stats.wavPLEM, currentImage
+		ImageFilter/O /N=5 median currentImage // remove spikes
+		currentImage -= background
+		SMAsearchTrenches(currentImage, trenchpitch = 4)
+	endfor
+
+	return 1
+End
+
+Function SMAsearchTrenches(currentImage, [trenchpitch])
+	WAVE currentImage
+	Variable trenchpitch 	// distance from one trench to the next
+
+	Variable i, numPeaks, numCoords
+	Variable dim0, dim0offset, dim0delta, dim1
+	Variable Pmin, Pmax, Ymin, Ymax, Qdelta
+	Variable rangePdelta, rangeYdelta
+	Variable currentY, QcenterTrench
+
+	Variable rangeXmin = 5, rangeXmax = 300
+	Variable rangeYmin = 0, rangeYmax = 300
+	Variable Ydelta = 4/3 * 1 // size of trench area in y-direction
+
+	trenchpitch = ParamIsDefault(trenchpitch) ? 4 : trenchpitch
+
+	dim0 = DimSize(currentImage, 0)
+	dim0delta = DimDelta(currentImage, 0)
+	dim0offset = DimOffset(currentImage, 0)
+	Pmin = limit(ScaleToIndex(currentImage, rangeXmin, 0), 0, dim0 - 1)
+	Pmax = limit(ScaleToIndex(currentImage, rangeXmax, 0), 0, dim0 - 1)
+	Qdelta = floor(abs(ScaleToIndex(currentImage, Ydelta, 1) - ScaleToIndex(currentImage, 0, 1)))
+
+	dim1 = DimSize(currentImage, 1)
+	Ymin = IndexToScale(currentImage, 0, 1)
+	Ymax = IndexToScale(currentImage, dim1 - 1, 1)
+	SMAorderAsc(Ymin, Ymax)
+	Ymin = limit(ceil((Ymin + Ydelta) / trenchpitch) * trenchpitch, rangeYmin, rangeYmax)
+	Ymax = limit(floor((Ymax - Ydelta) / trenchpitch) * trenchpitch, rangeYmin, rangeYmax)
+
+	rangePdelta = abs(Pmax - Pmin) + 1
+	rangeYdelta = abs(Ymax - Ymin) / trenchpitch + 1
+
+	// differentiate 2 times along trench area
+	ImageFilter/O/N=5 gauss currentImage
+	Differentiate/DIM=0 currentImage
+	Differentiate/DIM=0 currentImage
+	ImageFilter/O/N=11 gauss currentImage
+
+	// extract all trenches. Trench width is Qdelta
+	Make/O/N=(rangePdelta, rangeYdelta) root:trenches/WAVE=wavTrenches = NaN
+	for(i = 0; i < rangeYdelta; i += 1)
+		currentY = Ymin + trenchpitch * i
+		QcenterTrench = ScaleToIndex(currentImage, currentY, 1)
+		Duplicate/FREE/R=[Pmin, Pmax][floor(QcenterTrench - Qdelta), ceil(QcenterTrench + Qdelta)] currentImage, currentTrench
+		MatrixOP/FREE currentTrenchAvg = sumRows(currentTrench)
+		wavTrenches[][i] = currentTrenchAvg[p]
+	endfor
+
+	// substract a median trench to see the peaks better
+	Make/O/N=(rangePdelta) root:averageTrench/WAVE=averageTrench
+	for(i = 0; i < rangePdelta; i += 1)
+		MatrixOP/FREE currentPixel = row(wavTrenches, i)
+		averageTrench[i] = median(currentPixel)
+	endfor
+	Smooth 50, averageTrench
+	wavTrenches[][] -= averageTrench[p]
+
+	// find the peaks and store them
+	Make/FREE/N=(rangePdelta) positionX = dim0offset + (Pmin + p) * dim0delta
+	Make/FREE/N=(0, 2)   currentCoordinates
+	Make/FREE/N=(0, 0)/T description
+	for(i = 0; i < rangeYdelta; i += 1)
+		currentY = Ymin + trenchpitch * i
+		Duplicate/FREE/R=[][i] wavTrenches, currentTrenchAvg
+		WAVE peaks = Utilities#PeakFind(currentTrenchAvg, wvXdata = positionX, maxPeaks = 10, minPeakPercent = 90, differentiate2 = 0)
+		numPeaks = DimSize(peaks, 0)
+		if(numPeaks == 0)
+			continue
+		endif
+
+		Redimension/N=(numPeaks, -1) currentCoordinates, description
+		currentCoordinates[][0] = currentY
+		currentCoordinates[][1] = peaks[p][%wavelength]
+		description[] = num2str(round(peaks[p][%height]))
+
+		SMAaddCoordinates(currentCoordinates, text = description)
+		numCoords += numPeaks
+	endfor
+
+	return numCoords
+End
+
+Function SMAparticleAnalysis(currentImage)
+	WAVE currentImage
+
+	variable numPeaks
+
+	// differentiate 2 times to get the peaks without background
+	ImageFilter/O/N=5 gauss currentImage
+	Differentiate/DIM=0 currentImage
+	Differentiate/DIM=0 currentImage
+	ImageFilter/O/N=11 gauss currentImage
+
+	// remove 2nd derivative sattelites
+	currentImage *= -1 // inverted image
+	currentImage[][] = currentImage[p][q] < 0 ? 0 : currentImage[p][q]
+
+	// calculate Threshold
+	//StatsQuantiles/Q/ALL currentImage
+	//Wave W_StatsQuantiles
+	//myThreshold = W_StatsQuantiles[%upperOuterFence]
+	//print "Threshold set to ", myThreshold
+	//MatrixFilter/O NanZapMedian currentImage
+	//ImageThreshold/I/O/Q/M=0/T=(myThreshold) currentImage
+	ImageThreshold/I/O/Q/M=5 currentImage
+
+	// particle size: elipse with defined circularity, min and max area
+	ImageAnalyzeParticles/A=20/MAXA=500/CIRC={0.75 , 1.75}/W/M=2 stats currentImage
+
+	WAVE W_SpotX, W_spotY
+	WAVE W_BoundaryX, W_BoundaryY
+	WAVE W_ImageObjArea, M_rawMoments, W_circularity
+
+	numPeaks = DimSize(W_SpotX, 0)
+
+	if((numPeaks == 0) || (numPeaks > 3000))
+		print "Error: non reasonable peak count", numPeaks
+		return 0
+	endif
+
+	Make/FREE/N=(numPeaks, 2) currentCoordinates
+	currentCoordinates[][0] = IndexToScale(currentImage, M_rawMoments[p][1] / W_ImageObjArea[p], 1)
+	currentCoordinates[][1] = IndexToScale(currentImage, M_rawMoments[p][0] / W_ImageObjArea[p], 0)
+
+	return SMAaddCoordinates(currentCoordinates)
+End
+
+Function SMAresetCoordinates()
+	WAVE/Z wavCoordinates = root:coordinates
+	if(WaveExists(wavCoordinates))
+		Make/O/N=(0, 3) root:coordinates/Wave=wavCoordinates = NaN
+	endif
+End
+
+Function SMAaddCoordinates(currentCoordinates, [text])
+	WAVE currentCoordinates
+	WAVE/T text
+
+	Variable j, k, numPeaks, numCoords, numSize
+	Variable coordinateX, coordinateY, duplicateValue
+
+	numPeaks = DimSize(currentCoordinates, 0)
+	if(numPeaks == 0)
+		return 0
+	endif
+	WAVE/Z wavCoordinates = root:coordinates
+	if(!WaveExists(wavCoordinates))
+		Make/O/N=(0, 3) root:coordinates/Wave=wavCoordinates = NaN
+	endif
+	numCoords = DimSize(wavCoordinates, 0)
+	numSize = numCoords + numPeaks
+
+	WAVE/T/Z wavLegendText = root:legend_text
+	if(!WaveExists(wavLegendText))
+		Make/O/T/N=(numSize) root:legend_text/Wave=wavLegendText = ""
+	endif
+	Make/FREE/D/N=(numSize) coordinatesX = 0, coordinatesY = 0
+
+	Redimension/N=(numSize, -1) wavCoordinates, wavLegendText, coordinatesX, coordinatesY
+	for(j = 0; j < numPeaks; j += 1)
+		if(numSize < numCoords)
+			numSize = numCoords + 10
+		endif
+
+		// get coordinates (rounded to 0.1)
+		coordinateX = round(currentCoordinates[j][0]/0.1)*0.1
+		coordinateY = round(currentCoordinates[j][1]/0.1)*0.1
+
+		// compare to currently saved coordinates
+		k = -1
+		duplicateValue = 0
+		do
+			FindValue/S=(k+1)/T=1/V=(coordinateX) coordinatesX
+			k = V_Value
+			if(k == -1)
+				break
+			endif
+			// min. range for a new coordinate is 2 µm
+			if(round(coordinatesY[k]/2)*2 == round(coordinateY/2)*2)
+				duplicateValue = 1
+				break
+			endif
+		while(k < numCoords)
+
+		if(duplicateValue)
+			wavCoordinates[k][0] = (wavCoordinates[V_Value][0] + coordinateX) / 2
+			wavCoordinates[k][1] = (wavCoordinates[V_Value][1] + coordinateY) / 2
+			continue
+		endif
+
+		coordinatesX[numCoords] = coordinateX
+		coordinatesY[numCoords] = coordinateY
+
+		wavCoordinates[numCoords][0] = coordinateX
+		wavCoordinates[numCoords][1] = coordinateY
+		wavCoordinates[numCoords][2] = 150 // fixed
+
+		if(!ParamIsDefault(text))
+			wavLegendText[numCoords] = text[j]
+		else
+			wavLegendText[numCoords] = "(" + num2str(coordinateX) + ", " + num2str(coordinateY) + ")"
+		endif
+
+		numCoords += 1
+	endfor
+
+	Redimension/N=(numCoords, -1) wavCoordinates, wavLegendText
+	SortColumns/KNDX={0,1} sortwaves=wavCoordinates
+
+	return numCoords
+End

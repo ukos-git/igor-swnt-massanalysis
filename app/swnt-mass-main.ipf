@@ -57,7 +57,8 @@ Function SMAgetBestSpectra(bestEnergy)
 	variable i, j, numPeaks
 	variable peakEnergy, peakIntensity
 	variable bestIntensity
-	string bestPLEM, currentPLEM
+	string secondBestPLEM, currentPLEM
+	string bestPLEM = ""
 
 	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
 	STRUCT PLEMd2Stats stats
@@ -70,67 +71,69 @@ Function SMAgetBestSpectra(bestEnergy)
 		WAVE peaks = SMApeakFind(stats.wavPLEM, createwaves = 0)
 		numPeaks = DimSize(peaks, 0)
 		for(j = 0; j < numPeaks; j += 1)
-			peakEnergy = peaks[i][%position]
-			peakIntensity = peaks[i][%intensity]
-			if(abs(peakEnergy - bestEnergy) < 2)
+			peakEnergy = peaks[j][%position]
+			peakIntensity = peaks[j][%intensity]
+			if(abs(peakEnergy - bestEnergy) < 5)
+				print currentPLEM
 				if(peakIntensity > bestIntensity)
 					bestIntensity = peakIntensity
+					secondBestPLEM = bestPLEM
 					bestPLEM = currentPLEM
-					print currentPLEM
 				endif
 			endif
 		endfor
 	endfor
 	PLEMd2Display(bestPLEM)
+	PLEMd2Display(secondBestPLEM)
 End
 
-Function SMAgetCoordinates()
-	String strPLEM
-	Variable i, j, k, startX, numPeaks, numCoords
+Function SMAgetMaximum(bestEnergy)
+	variable bestEnergy
 
-	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	variable i, j, numPeaks
+	variable peakEnergy, peakIntensity
+	variable bestIntensity
+	string secondBestPLEM, currentPLEM
+	string bestPLEM = ""
+
+	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
 	STRUCT PLEMd2Stats stats
-	STRUCT SMAinfo info
 
-	SMAstructureLoad(info)
-	info.numSpectra = gnumMapsAvailable * 40
-	Redimension/N=(info.numSpectra) info.wavSpectra
-	Make/N=(10240, 4) root:coordinates/Wave=wavCoordinates
-	for(i = 0; i < gnumMapsAvailable; i += 1)
-		strPLEM = PLEMd2strPLEM(i)
-		PLEMd2statsLoad(stats, strPLEM)
-		startX = round(stats.numPositionX) - 40
-		startX -= mod(startX, 2)
-		for(j = startX; j < startX + 80; j += 2)
-			Duplicate/FREE/R=[][ScaleToIndex(stats.wavPLEM, j, 1)] stats.wavPLEM, currentLine
-			Redimension/N=(DimSize(stats.wavPLEM, 0)) currentLine
-			//SetScale/P x, DimOffset(stats.wavPLEM, 1), DimDelta(stats.wavPLEM, 1), currentLine
-			wave peakResult = SMApeakFind(currentLine, verbose = 0)
-			numPeaks = DimSize(peakResult, 0)
-			if(DimSize(wavCoordinates, 0) < numCoords + numPeaks)
-				Redimension/N=(numcoords) wavCoordinates
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+
+	for(i = 0; i < numSpec; i += 1)
+		currentPLEM = PLEMd2strPLEM(i)
+		PLEMd2statsLoad(stats, currentPLEM)
+		WAVE nospikes = Utilities#removeSpikes(stats.wavPLEM)
+		WAVE guess = Utilities#PeakFind(nospikes, maxPeaks = 10, minPeakPercent = 0.2, smoothingFactor = 1, verbose = 0)
+		//WAVE peaks = SMApeakFind(stats.wavPLEM, createwaves = 0)
+		numPeaks = DimSize(guess, 0)
+		for(j = 0; j < numPeaks; j += 1)
+			//peakEnergy = peaks[j][%position]
+			//peakIntensity = peaks[j][%intensity]
+			peakEnergy = guess[j][%wavelength]
+			peakIntensity = guess[j][%height]
+			if(abs(peakEnergy - bestEnergy) < 5)
+				print currentPLEM
+				if(peakIntensity > bestIntensity)
+					bestIntensity = peakIntensity
+					secondBestPLEM = bestPLEM
+					bestPLEM = currentPLEM
+				endif
 			endif
-			for(k = 0; k < numPeaks; k += 1)
-				wavCoordinates[(numCoords + k)][0] = peakResult[k][%position]
-				wavCoordinates[(numCoords + k)][1] = j
-				wavCoordinates[(numCoords + k)][2] = stats.numPositionZ
-				wavCoordinates[(numCoords + k)][3] = peakResult[k][%intensity]
-			endfor
-			numCoords += numPeaks
 		endfor
 	endfor
-
-	SMAstructureSave(info)
+	PLEMd2Display(bestPLEM)
+	PLEMd2Display(secondBestPLEM)
 End
 
-Function SMAcorrection()
+Function SMAreset()
 	String strPLEM
 	Variable i
 
 	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
 	Struct PLEMd2Stats stats
 
-	print gnumMapsAvailable
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
@@ -143,21 +146,24 @@ Function SMAcorrection()
 	endfor
 End
 
-Function SMAreset()
+Function SMAmedianBackground()
 	String strPLEM
 	Variable i
 
 	NVAR gnumMapsAvailable	 = $(cstrPLEMd2root + ":gnumMapsAvailable")
 	Struct PLEMd2Stats stats
 
+	SMAreset()
+	WAVE globalMedian = SMAmedian(overwrite = 1)
+
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
-		stats.wavPLEM = stats.wavmeasure - stats.wavbackground
+		stats.wavPLEM = stats.wavMeasure - stats.wavBackground - globalMedian
 	endfor
 End
 
-Function SMAbackground()
+Function SMAancestorBackground()
 	String strPLEM, strPLEM2
 	Variable i, previousmax
 
@@ -174,14 +180,12 @@ Function SMAbackground()
 	for(i = 2; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i-1)
 		PLEMd2statsLoad(stats, strPLEM)
-		Wavestats/Q stats.wavPLEM
-		previousmax = V_max
+		previousmax = WaveMax(stats.wavPLEM)
 
 		strPLEM2= PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats2, strPLEM2)
-		Wavestats/Q stats2.wavPLEM
 
-		stats.wavPLEM = stats.wavPLEM - stats2.wavPLEM/V_max * previousmax
+		stats.wavPLEM = stats.wavPLEM - stats2.wavPLEM/WaveMax(stats.wavPLEM) * previousmax
 	endfor
 End
 

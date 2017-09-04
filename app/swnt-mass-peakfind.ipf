@@ -28,10 +28,10 @@ Function SMApeakFindMass(verbose)
 	endfor
 End
 
-Function/WAVE SMApeakFind(input, [info, verbose, createWaves])
+Function/WAVE SMApeakFind(input, [info, verbose, createWaves, maxPeaks, minPeakPercent, smoothingFactor])
 	WAVE input
 	STRUCT SMAinfo &info
-	variable verbose, createWaves
+	variable verbose, createWaves, maxPeaks, minPeakPercent, smoothingFactor
 
 	variable numResults, i
 
@@ -47,7 +47,16 @@ Function/WAVE SMApeakFind(input, [info, verbose, createWaves])
 	if(ParamIsDefault(createWaves))
 		createWaves = 0
 	endif
-
+	if(ParamIsDefault(maxPeaks))
+		maxPeaks = 2
+	endif
+	if(ParamIsDefault(minPeakPercent))
+		minPeakPercent = 0.9
+	endif
+	if(ParamIsDefault(smoothingFactor))
+		smoothingFactor = 1
+	endif
+	
 	Duplicate/FREE input, wv
 
 	if(verbose)
@@ -55,9 +64,9 @@ Function/WAVE SMApeakFind(input, [info, verbose, createWaves])
 	endif
 
 	WAVE nospikes = Utilities#removeSpikes(wv)
-	//WAVE nobackground = Utilities#RemoveBackground(nospikes)
+	 //WAVE nobackground = Utilities#RemoveBackground(nospikes)
 
-	WAVE guess = Utilities#PeakFind(nospikes, maxPeaks = 2, minPeakPercent = 0.9, smoothingFactor = 1, verbose = verbose)
+	WAVE guess = Utilities#PeakFind(nospikes, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
 	WAVE/WAVE coef = Utilities#BuildCoefWv(nospikes, peaks = guess, dfr = info_copy.dfrPeakFit, verbose = verbose)
 	WAVE/WAVE peakParam = Utilities#fitGauss(nospikes, wvCoef = coef, verbose = verbose)
 	
