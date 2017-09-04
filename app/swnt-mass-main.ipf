@@ -123,14 +123,13 @@ Function SMAgetCoordinates()
 	SMAstructureSave(info)
 End
 
-Function SMAcorrection()
+Function SMAreset()
 	String strPLEM
 	Variable i
 
 	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
 	Struct PLEMd2Stats stats
 
-	print gnumMapsAvailable
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
@@ -143,7 +142,7 @@ Function SMAcorrection()
 	endfor
 End
 
-Function SMAreset()
+Function SMAmedianBackground()
 	String strPLEM
 	Variable i
 
@@ -157,7 +156,7 @@ Function SMAreset()
 	endfor
 End
 
-Function SMAbackground()
+Function SMAancestorBackground()
 	String strPLEM, strPLEM2
 	Variable i, previousmax
 
