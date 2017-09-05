@@ -584,3 +584,77 @@ Function SMAcamerascanCoordinates([zmin])
 
 	Duplicate/o/R=[0,4*6-1] wv root:camerascan
 End
+
+Function SMAcameraGetIntensity()
+	variable i
+	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
+	STRUCT PLEMd2Stats stats
+
+	Make/O/N=(numSpec) root:SMAcameraIntensity/WAVE=intensity
+	Make/O/N=(numSpec, 3) root:SMAcameraIntensityCoordinates/WAVE=coordinates
+
+	for(i = 0; i < numSpec; i += 1)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+		intensity[i] = WaveMax(stats.wavPLEM)
+		coordinates[i][0] = stats.numPositionX
+		coordinates[i][1] = stats.numPositionY
+		coordinates[i][2] = stats.numPositionZ
+	endfor
+End
+
+Function/WAVE SMAcameraGetTiltPlaneParameters()
+	variable i, numPeaks
+
+	WAVE/Z intensity = root:SMAcameraIntensity
+	WAVE/Z coordinates = root:SMAcameraIntensityCoordinates
+	if(!WaveExists(intensity) || !WaveExists(coordinates))
+		SMAcameraGetIntensity()
+		WAVE intensity = root:SMAcameraIntensity
+		WAVE coordinates = root:SMAcameraIntensityCoordinates
+	endif
+
+	WAVE/WAVE peakfind = SMApeakFind(intensity, maxPeaks = 3, verbose = 0)
+	if(!WaveExists(peakfind))
+		print "Error in peakfind"
+		return $""
+	endif
+
+	numPeaks = DimSize(peakfind, 0)
+	Make/O/N=(3,3) root:SMAcameraFocusPoints/WAVE=focuspoints
+	focuspoints[][] = coordinates[round(peakfind[limit(p, 0, numPeaks - 1)][%position])][q]
+
+	if(numPeaks != 3)
+		print "3 peaks have to be present to calculate 3-axis-tilt plane"
+		return $""
+	endif
+	Make/O/N=3 root:SMAcameraPlaneNormal/WAVE=normal
+	Make/O/N=1 root:SMAcameraPlaneDistance/WAVE=distance
+
+	MatrixOP/FREE row0 = row(focuspoints, 0)^t
+	MatrixOP/FREE row1 = row(focuspoints, 1)^t
+	MatrixOP/FREE row2 = row(focuspoints, 2)^t
+	MatrixOP/FREE temp1 = row1 - row0
+	MatrixOP/FREE temp2 = row2 - row0
+	Cross/T/DEST=normal temp1, temp2
+
+	MatrixOP/O distance = normal . averageCols(focuspoints)
+
+	print "calculated plane in Hesse Normal form"
+
+	return focuspoints
+End
+
+Function SMAcameraGetTiltPlane(coordinateX, coordinateY)
+	variable coordinateX, coordinateY
+
+	variable coordinateZ
+
+	WAVE/Z normal = root:SMAcameraPlaneNormal
+	WAVE/Z distance = root:SMAcameraPlaneDistance
+	if(!WaveExists(normal) || !WaveExists(distance))
+		SMAcameraGetTiltPlaneParameters()
+		print "calculated tilt plane parameters"
+	endif
+
+	return (distance[0] - normal[0] * coordinateX - normal[1] * coordinateY) / normal[2]
+End
