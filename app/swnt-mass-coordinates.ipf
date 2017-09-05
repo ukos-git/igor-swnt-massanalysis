@@ -626,6 +626,10 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 	endif
 
 	numPeaks = DimSize(peakfind, 0)
+	print "SMAcameraGetTiltPlaneParameters(): focus maxima"
+	for(i = 0; i < numPeaks; i += 1)
+		printf "peak%d: \t file-number:\t%06.2f \t x-Axis: \t%06.2f \ty-Axis: \t%06.2f \tz-Axis: \t%06.2f\r", i, peakfind[i][%position], coordinates[round(peakfind[i][%position])][0], coordinates[round(peakfind[i][%position])][1], coordinates[round(peakfind[i][%position])][2]
+	endfor
 	Make/O/N=(3,3) root:SMAcameraFocusPoints/WAVE=focuspoints
 	focuspoints[][] = coordinates[round(peakfind[limit(p, 0, numPeaks - 1)][%position])][q]
 
