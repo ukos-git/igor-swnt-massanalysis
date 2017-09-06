@@ -119,11 +119,20 @@ Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose])
 	WAVE coordinates
 	Variable xVal, yVal, zVal, verbose
 
+	Variable accuracy = 0.25
+
 	verbose = ParamIsDefault(verbose) ? 0 : !!verbose
 
 	Duplicate/FREE/R=[][0] coordinates, coordinateX
 	Duplicate/FREE/R=[][1] coordinates, coordinateY
 	Duplicate/FREE/R=[][2] coordinates, coordinateZ
+
+	coordinateX = round(coordinateX[p] / accuracy) * accuracy
+	coordinateY = round(coordinateY[p] / accuracy) * accuracy
+	coordinateZ = round(coordinateZ[p] / accuracy) * accuracy
+	xVal = round(xVal / accuracy) * accuracy
+	yVal = round(yVal / accuracy) * accuracy
+	zVal = round(zVal / accuracy) * accuracy
 
 	Extract/INDX/FREE coordinateX, indicesX, coordinateX == xVal
 	Extract/INDX/FREE coordinateY, indicesY, coordinateY == yVal
