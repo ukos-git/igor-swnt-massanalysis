@@ -551,6 +551,7 @@ Function SMAcameraCoordinates([Zzero])
 	wv[][2] = Zzero + SMAcameraGetTiltPlane(wv[p][0], wv[p][1]) + floor(p/24) * zstep
 
 	Duplicate/o/R=[0,4*6-1] wv root:SMAsinglescan
+	print "created root:SMAsinglescan and root:SMAfullscan"
 End
 
 Function SMAcameraGetIntensity()
