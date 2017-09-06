@@ -574,6 +574,15 @@ End
 Function/WAVE SMAcameraGetTiltPlaneParameters()
 	variable i, numPeaks, step
 
+	WAVE/Z normal = root:SMAcameraPlaneNormal
+	WAVE/Z distance = root:SMAcameraPlaneDistance
+	WAVE/Z focuspoints = root:SMAcameraFocusPoints
+	if(WaveExists(normal) && WaveExists(distance) && WaveExists(focuspoints))
+		print "tilt plane parameters already calculated"
+		return focuspoints
+	endif
+	WaveClear normal, distance, focuspoints
+
 	WAVE/Z intensity = root:SMAcameraIntensity
 	WAVE/Z coordinates = root:SMAcameraIntensityCoordinates
 	if(!WaveExists(intensity) || !WaveExists(coordinates))
@@ -638,7 +647,8 @@ Function SMAcameraGetTiltPlane(coordinateX, coordinateY)
 	WAVE/Z distance = root:SMAcameraPlaneDistance
 	if(!WaveExists(normal) || !WaveExists(distance))
 		SMAcameraGetTiltPlaneParameters()
-		print "calculated tilt plane parameters"
+		WAVE normal = root:SMAcameraPlaneNormal
+		WAVE distance = root:SMAcameraPlaneDistance
 	endif
 
 	return (distance[0] - normal[0] * coordinateX - normal[1] * coordinateY) / normal[2]
