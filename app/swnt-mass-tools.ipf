@@ -92,7 +92,7 @@ Function/WAVE CoordinateFinderV1(coordinates, xmin, xmax, ymin, ymax, [verbose])
 	return indices2
 End
 
-Function/WAVE CoordinateFinder(coordinates, xmin, xmax, ymin, ymax, [verbose])
+Function/WAVE CoordinateFinderXYrange(coordinates, xmin, xmax, ymin, ymax, [verbose])
 	WAVE coordinates
 	Variable xmin, xmax, ymin, ymax, verbose
 
@@ -113,4 +113,29 @@ Function/WAVE CoordinateFinder(coordinates, xmin, xmax, ymin, ymax, [verbose])
 		print indices
 	endif
 	return indices
+End
+
+Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose])
+	WAVE coordinates
+	Variable xVal, yVal, zVal, verbose
+
+	verbose = ParamIsDefault(verbose) ? 0 : !!verbose
+
+	Duplicate/FREE/R=[][0] coordinates, coordinateX
+	Duplicate/FREE/R=[][1] coordinates, coordinateY
+	Duplicate/FREE/R=[][2] coordinates, coordinateZ
+
+	Extract/INDX/FREE coordinateX, indicesX, coordinateX == xVal
+	Extract/INDX/FREE coordinateY, indicesY, coordinateY == yVal
+	Extract/INDX/FREE coordinateZ, indicesZ, coordinateZ == zVal
+
+	Make/FREE/N=0 indicesXYZ
+	Concatenate {indicesX, indicesY, indicesZ}, indicesXYZ
+
+	FindDuplicates/DN=indices indicesXYZ
+
+	if(verbose)
+		print indices
+	endif
+	return indices[0]
 End
