@@ -150,6 +150,8 @@ Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose])
 		return NaN
 	endif
 
+	Sort indices, indices
+
 	if(verbose)
 		print "CoordinateFinderXYZ: found the following indices in the input wave:"
 		print indices
