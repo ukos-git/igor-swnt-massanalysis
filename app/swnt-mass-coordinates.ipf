@@ -23,7 +23,6 @@ Function SMA_EraseMarqueeArea()
 	endif
 	WAVE coordinates = SMA_PromptTrace()
 
-	/// @todo try using Extract with INDX flag
 	WAVE indices2 = CoordinateFinder(coordinates, V_bottom, V_top, V_left, V_right, verbose = 1)
 	numMatches = DimSize(indices2, 0)
 	if(!numMatches)

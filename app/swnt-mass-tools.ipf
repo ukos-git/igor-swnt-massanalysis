@@ -37,8 +37,8 @@ Function FindLevelWrapper(wv, level, [verbose])
 	return V_levelX
 End
 
-/// deprecated due to better solution using extract
-Function/WAVE CoordinateFinder(coordinates, xmin, xmax, ymin, ymax, [verbose])
+/// deprecated due to better solution using CoordinateFinder() with Extract
+Function/WAVE CoordinateFinderV1(coordinates, xmin, xmax, ymin, ymax, [verbose])
 	WAVE coordinates
 	Variable xmin, xmax, ymin, ymax, verbose
 
@@ -90,4 +90,27 @@ Function/WAVE CoordinateFinder(coordinates, xmin, xmax, ymin, ymax, [verbose])
 	endif
 
 	return indices2
+End
+
+Function/WAVE CoordinateFinder(coordinates, xmin, xmax, ymin, ymax, [verbose])
+	WAVE coordinates
+	Variable xmin, xmax, ymin, ymax, verbose
+
+	verbose = ParamIsDefault(verbose) ? 0 : !!verbose
+
+	Duplicate/FREE/R=[][0] coordinates, coordinateX
+	Duplicate/FREE/R=[][1] coordinates, coordinateY
+
+	Extract/INDX/FREE coordinateX, indicesX, coordinateX > xmin && coordinateX < xmax
+	Extract/INDX/FREE coordinateY, indicesY, coordinateY > ymin && coordinateY < ymax
+
+	Make/FREE/N=0 indicesXY
+	Concatenate {indicesX, indicesY}, indicesXY
+
+	FindDuplicates/DN=indices indicesXY
+
+	if(verbose)
+		print indices
+	endif
+	return indices
 End
