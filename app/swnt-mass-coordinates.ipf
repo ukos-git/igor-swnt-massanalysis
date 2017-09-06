@@ -572,7 +572,7 @@ Function SMAcameraGetIntensity()
 End
 
 Function/WAVE SMAcameraGetTiltPlaneParameters()
-	variable i, numPeaks
+	variable i, numPeaks, step
 
 	WAVE/Z intensity = root:SMAcameraIntensity
 	WAVE/Z coordinates = root:SMAcameraIntensityCoordinates
@@ -597,8 +597,15 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 	for(i = 0; i < numPeaks; i += 1)
 		printf "peak%d: \t file-number:\t%06.2f \t x-Axis: \t%06.2f \ty-Axis: \t%06.2f \tz-Axis: \t%06.2f\r", i, peakfind[i][%position], focuspoints[i][0], focuspoints[i][1], focuspoints[i][2]
 	endfor
-	Make/O/N=(3,3) root:SMAcameraFocusPoints/WAVE=focuspoints
-	focuspoints[][] = coordinates[round(peakfind[limit(p, 0, numPeaks - 1)][%position])][q]
+
+	//output the results as graph
+	Make/O/N=(numPeaks) root:SMAcameraPlanePeakMaximum = peakfind[p][%position]
+	Make/O/T/N=(numPeaks) root:SMAcameraPlanePeakMaximumT = "(" + num2str(focuspoints[p][0]) + "," + num2str(focuspoints[p][1]) + ")"
+	step = floor(DimSize(coordinates, 0) / 10 / 2) * 2
+	Make/O/N=10 root:SMAcameraPlanePeakMaximumZ/WAVE=zWave = step / 2 + p * step
+	Make/O/T/N=10 root:SMAcameraPlanePeakMaximumZT = num2str(round(coordinates[zWave[p]][2]))
+	Execute/Z "SMAcameraFocusPointsGraph()"
+	SavePICT/O/P=home/E=-5/B=72
 
 	if(numPeaks != 3)
 		print "3 peaks have to be present to calculate 3-axis-tilt plane"
