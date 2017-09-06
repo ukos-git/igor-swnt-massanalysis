@@ -119,7 +119,7 @@ Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose])
 	WAVE coordinates
 	Variable xVal, yVal, zVal, verbose
 
-	Variable accuracy = 0.25
+	Variable accuracy = 0.5
 
 	verbose = ParamIsDefault(verbose) ? 0 : !!verbose
 
@@ -151,6 +151,7 @@ Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose])
 	endif
 
 	if(verbose)
+		print "CoordinateFinderXYZ: found the following indices in the input wave:"
 		print indices
 	endif
 	return indices[0]
