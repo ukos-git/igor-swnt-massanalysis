@@ -15,8 +15,7 @@ End
 
 // see ACW_EraseMarqueeArea.
 Function SMA_EraseMarqueeArea()
-	variable dim0, dim1, numMatches, i
-	variable Pstart, Pend, Qstart, Qend
+	variable dim0, numMatches, i
 
 	GetMarquee left, bottom //V_bottom, V_top, V_left and V_right
 	if (V_flag == 0)
@@ -24,56 +23,19 @@ Function SMA_EraseMarqueeArea()
 	endif
 	WAVE coordinates = SMA_PromptTrace()
 
-	// get X coordinates
-	dim0 = DimSize(coordinates, 0)
-	Make/FREE/N=(dim0) indices = p
-	Duplicate/FREE/R=[][0] coordinates, coordinateX
-	Duplicate/FREE/R=[][1] coordinates, coordinateY
-	Sort/R coordinateX, indices, coordinateX, coordinateY
-	Pend = ceil(FindLevelWrapper(coordinateX, V_top, verbose = 0))
-	if(Pend < 0)
-		Pend = 0
-	endif
-	Pend = dim0 - Pend - 1
-	Sort coordinateX, indices, coordinateX, coordinateY
-	Pstart = ceil(FindLevelWrapper(coordinateX, V_bottom, verbose = 0))
-	if(Pstart < 0)
-		Pstart = 0
-	endif
-
-	// get Y coordinates
-	dim1 = Pend - Pstart + 1
-	Duplicate/FREE/R=[Pstart, Pend] coordinateX, coordinateX1
-	Duplicate/FREE/R=[Pstart, Pend] coordinateY, coordinateY1
-	Duplicate/FREE/R=[Pstart, Pend] indices,     indices1
-	print "between", V_bottom, "and", V_top, ":", indices1
-	Sort/R coordinateY1, indices1, coordinateX1, coordinateY1
-	Qend = ceil(FindLevelWrapper(coordinateY1, V_right, verbose = 0))
-	if(Qend < 0)
-		Qend = 0
-	endif
-	Qend = dim1 - Qend - 1
-	Sort coordinateY1, indices1, coordinateX1, coordinateY1
-	Qstart = ceil(FindLevelWrapper(coordinateY1, V_left, verbose = 0))
-	if(Qstart < 0)
-		Qstart = 0
+	WAVE indices2 = CoordinateFinderXYrange(coordinates, V_bottom, V_top, V_left, V_right, verbose = 1)
+	numMatches = DimSize(indices2, 0)
+	if(!numMatches)
+		return 0
 	endif
 
 	// delete Points
-	Duplicate/FREE/R=[Qstart, Qend] indices1, indices2
-	print "between", V_left, "and", V_right, ":", indices2
-	SMAorderAsc(Qstart, Qend)
-	numMatches = Qend - Qstart + 1
-	if(numMatches == 0)
-		return 0
-	endif
 	WAVE/Z deleted = root:coordinates_deleted
 	if(!WaveExists(deleted))
-		dim0 = 0
 		Make/N=(numMatches, 3) root:coordinates_deleted/WAVE=deleted
 	else
 		dim0 = DimSize(deleted, 0)
-		dim0 = 0 // reset
+		dim0 = 0 // reset deleted wave
 		Redimension/N=(dim0 + numMatches, -1) deleted
 	endif
 	Sort/R indices2, indices2
@@ -589,6 +551,7 @@ Function SMAcameraCoordinates([Zzero])
 	wv[][2] = Zzero + SMAcameraGetTiltPlane(wv[p][0], wv[p][1]) + floor(p/24) * zstep
 
 	Duplicate/o/R=[0,4*6-1] wv root:SMAsinglescan
+	print "created root:SMAsinglescan and root:SMAfullscan"
 End
 
 Function SMAcameraGetIntensity()
@@ -649,7 +612,8 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 
 	MatrixOP/O distance = normal . averageCols(focuspoints)
 
-	print "calculated plane in Hesse Normal form"
+	print "calculated plane in Hesse Normal form. Saving to home folder."
+	Save/C/O/P=home distance, normal
 
 	return focuspoints
 End
@@ -668,3 +632,21 @@ Function SMAcameraGetTiltPlane(coordinateX, coordinateY)
 
 	return (distance[0] - normal[0] * coordinateX - normal[1] * coordinateY) / normal[2]
 End
+
+Function/WAVE SMAfindCoordinatesInPLEM(wavFindMe, [verbose])
+	WAVE wavFindMe
+	Variable verbose
+
+	Variable i, dim0
+
+	verbose = ParamIsDefault(verbose) ? 1 : !!verbose
+
+	WAVE coordinates = PLEMd2getCoordinates()
+
+	dim0 = DimSize(wavFindMe, 0)
+	Make/FREE/N=(dim0) indices
+	indices[] = CoordinateFinderXYZ(coordinates, wavFindMe[p][0], wavFindMe[p][1], wavFindMe[p][2], verbose = verbose)
+
+	return indices
+End
+
