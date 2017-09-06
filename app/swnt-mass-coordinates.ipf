@@ -607,7 +607,8 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 
 	MatrixOP/O distance = normal . averageCols(focuspoints)
 
-	print "calculated plane in Hesse Normal form"
+	print "calculated plane in Hesse Normal form. Saving to home folder."
+	Save/C/O/P=home distance, normal
 
 	return focuspoints
 End
