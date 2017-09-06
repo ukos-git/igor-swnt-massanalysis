@@ -129,10 +129,17 @@ Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose])
 	Extract/INDX/FREE coordinateY, indicesY, coordinateY == yVal
 	Extract/INDX/FREE coordinateZ, indicesZ, coordinateZ == zVal
 
+	if(!DimSize(indicesX, 0) || !DimSize(indicesY, 0) || !DimSize(indicesZ, 0))
+		return NaN
+	endif
+
 	Make/FREE/N=0 indicesXYZ
 	Concatenate {indicesX, indicesY, indicesZ}, indicesXYZ
 
 	FindDuplicates/DN=indices indicesXYZ
+	if(!DimSize(indices, 0))
+		return NaN
+	endif
 
 	if(verbose)
 		print indices
