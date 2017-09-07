@@ -5,7 +5,7 @@ Function SMAcovariance()
 	variable i, numXvalues
 	variable numPoints
 
-	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
+	Variable numSpec = PLEMd2getMapsAvailable()
 	STRUCT PLEMd2Stats stats
 
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
