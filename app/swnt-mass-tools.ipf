@@ -145,12 +145,13 @@ Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose])
 	Make/FREE/N=0 indicesXYZ
 	Concatenate {indicesX, indicesY, indicesZ}, indicesXYZ
 
-	FindDuplicates/DN=indices indicesXYZ
+	Sort indicesXYZ, indicesXYZ
+	Redimension/N=(numpnts(indicesXYZ))/E=1 indicesXYZ
+
+	Extract/FREE indicesXYZ, indices, (p > 1 && (indicesXYZ[p] == indicesXYZ[p - 1]) && (indicesXYZ[p] == indicesXYZ[p - 2]))
 	if(!DimSize(indices, 0))
 		return NaN
 	endif
-
-	Sort indices, indices
 
 	if(verbose)
 		print "CoordinateFinderXYZ: found the following indices in the input wave:"
