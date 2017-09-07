@@ -1,18 +1,6 @@
 #pragma TextEncoding = "Windows-1252"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 
-Menu "CameraImage"
-	// CTRL+0 is the keyboard shortcut
-	"AddCoordinates/1", /Q, AddCoordinatesFromGraph()
-	"Set WaveScale zero", /Q, SetScaleToCursor()
-	"Process Coordinates", /Q, SMAprocessCoordinates()
-	"PeakFind for coordinates", /Q, GetCoordinates()
-End
-
-Menu "GraphMarquee"
-	"Erase Points", SMA_EraseMarqueeArea()
-End
-
 // see ACW_EraseMarqueeArea.
 Function SMA_EraseMarqueeArea()
 	variable dim0, numMatches, i
