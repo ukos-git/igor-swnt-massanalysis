@@ -1,14 +1,18 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
-Function/WAVE SMAmergeImages([createNew])
+Function/WAVE SMAmergeImages([createNew, indices])
 	Variable createNew
+	WAVE indices
 
 	Variable pixelX, pixelY, resolution
+	Variable numMaps
 	Variable i, j, k, dim0, dim1
 	STRUCT PLEMd2Stats stats
 
-	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	if(ParamIsDefault(indices))
+		Make/FREE/N=(PLEMd2getMapsAvailable()) indices = p
+	endif
 
 	createNew = ParamIsDefault(createNew) ? 1 : !!createNew
 
@@ -35,8 +39,12 @@ Function/WAVE SMAmergeImages([createNew])
 	SetScale/I x, -5, 325, fullimage
 	SetScale/I y, -5, 325, fullimage
 
-	for(i = 0; i < gnumMapsAvailable; i += 1)
-		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+	numMaps = DimSize(indices, 0)
+	for(i = 0; i < numMaps; i += 1)
+		if(numtype(indices[i]) != 0)
+			continue
+		endif
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(indices[i]))
 		Duplicate/FREE stats.wavPLEM, currentImage
 		ImageFilter/O /N=5 median currentImage // remove spikes
 		currentImage -= background
