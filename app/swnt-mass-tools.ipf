@@ -134,9 +134,9 @@ Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose])
 	yVal = round(yVal / accuracy) * accuracy
 	zVal = round(zVal / accuracy) * accuracy
 
-	Extract/INDX/FREE coordinateX, indicesX, coordinateX == xVal
-	Extract/INDX/FREE coordinateY, indicesY, coordinateY == yVal
-	Extract/INDX/FREE coordinateZ, indicesZ, coordinateZ == zVal
+	Extract/INDX/FREE coordinateX, indicesX, (coordinateX[p] == xVal)
+	Extract/INDX/FREE coordinateY, indicesY, (coordinateY[p] == yVal)
+	Extract/INDX/FREE coordinateZ, indicesZ, (coordinateZ[p] == zVal)
 
 	if(!DimSize(indicesX, 0) || !DimSize(indicesY, 0) || !DimSize(indicesZ, 0))
 		return NaN
