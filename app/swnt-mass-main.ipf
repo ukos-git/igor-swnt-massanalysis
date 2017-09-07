@@ -12,8 +12,12 @@
 
 strConstant cSMApackage = "swnt-mass-analysis"
 
+// call SMAread() directly.
 Function SMAload()
 	FILO#load(fileType = ".ibw", packageID = 1)
+	if(!PLEMd2getMapsAvailable())
+		SMAread()
+	endif
 End
 
 Function SMAread()
@@ -24,6 +28,10 @@ Function SMAread()
 	FILO#structureLoad(filos)
 
 	numFiles = ItemsInList(filos.strFileList)
+	if(numFiles == 0)
+		SMAload()
+		return 0
+	endif
 	for(i = 0; i < numFiles; i += 1)
 		file = StringFromList(i, filos.strFileList)
 		PLEMd2Open(strFile = filos.strFolder + file, display = 0)
