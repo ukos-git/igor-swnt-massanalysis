@@ -70,11 +70,45 @@ Function/WAVE SMAmergeImages([createNew, indices])
 		endfor
 		WaveClear currentImage
 	endfor
+
+	// interpolate values, that were not found directly
 	fullimage[][] = fullimagenorm[p][q] == 0 ? NaN : fullimage[p][q] / fullimagenorm[p][q]
 	ImageFilter/O NanZapMedian fullimage
+
+	SMAconvertWaveToUint(fullimage, bit = 16)
 	SMAbuildGraphFullImage()
 
 	return fullimage
+End
+
+// save storage by converting image to full uint
+Function SMAconvertWaveToUint(wv, [bit])
+	WAVE wv
+	Variable bit
+
+	Variable wMin, wMax
+	Variable numSpace
+
+	bit = ParamIsDefault(bit) ? 32 : bit
+	numSpace = 2^bit - 1
+
+	wMin = WaveMin(wv)
+	wv -= wMin
+
+	wMax = WaveMax(wv)
+	wv[][] = round(wv[p][q] / wMax * bit)
+
+	switch(bit)
+		case 16:
+			Redimension/W/U wv // 16bit
+			break
+		case 8:
+			Redimension/B/U wv // 8bit
+			break
+		case 32:
+		default:
+			Redimension/I/U wv // 32bit
+	endswitch
 End
 
 Function/S SMAbuildGraphPLEM()
