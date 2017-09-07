@@ -212,12 +212,6 @@ Function/WAVE SMAmedian([overwrite])
 
 	overwrite = ParamIsDefault(overwrite) ? 0 : !!overwrite
 
-	WAVE/Z source = root:source
-	if(!WaveExists(source) || overwrite)
-		SMAcovariance()
-		WAVE source = root:source
-	endif
-
 	WAVE/Z myMedian = root:SMAmedian
 	if(WaveExists(myMedian) && !overwrite)
 		return myMedian
