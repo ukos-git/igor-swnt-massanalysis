@@ -660,7 +660,7 @@ Function/WAVE SMAfindCoordinatesInPLEM(wavFindMe, [verbose])
 
 	Variable i, dim0
 
-	verbose = ParamIsDefault(verbose) ? 1 : !!verbose
+	verbose = ParamIsDefault(verbose) ? 0 : !!verbose
 
 	WAVE coordinates = PLEMd2getCoordinates()
 
