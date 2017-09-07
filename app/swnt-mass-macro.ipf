@@ -24,6 +24,7 @@ Window SMAcameraFocusPointsGraph() : Graph
 	ModifyGraph lSize(SMAcameraIntensity)=2,lSize(SMAcameraIntensity#2)=2,lSize(SMAcameraIntensity#3)=2
 	ModifyGraph rgb(SMAcameraIntensity#2)=(0,0,0),rgb(SMAcameraIntensity#3)=(1,16019,65535)
 	ModifyGraph msize(SMAcameraIntensity#1)=2,msize(SMAcameraIntensity#2)=2,msize(SMAcameraIntensity#3)=2
+	ModifyGraph grid(bottom)=1
 	Label left "laser spot intensity"
 	Label bottom "(x,y) position"
 	Label top "z position"
