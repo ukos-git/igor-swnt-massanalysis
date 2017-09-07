@@ -538,8 +538,9 @@ Function SMAcameraCoordinates([Zzero])
 	wv[][1] = 30 + mod(p, 4) * ystep
 	wv[][2] = Zzero + SMAcameraGetTiltPlane(wv[p][0], wv[p][1]) + floor(p/24) * zstep
 
-	Duplicate/o/R=[0,4*6-1] wv root:SMAsinglescan
-	print "created root:SMAsinglescan and root:SMAfullscan"
+	Duplicate/O/R=[0,4*6-1] wv root:SMAsinglescan
+	print "created root:SMAsinglescan and root:SMAfullscan. Saving to home folder"
+	Save/J/O/DLIM=","/P=home wv as "SMAfullscan.csv"
 End
 
 Function SMAcameraGetIntensity()
