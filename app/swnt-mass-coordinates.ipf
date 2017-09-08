@@ -175,18 +175,18 @@ End
 Function AddCoordinatesFromGraph()
 	Variable numItems
 	Variable aExists = 0
-	WAVE/Z coordinates = root:coordinates
-	WAVE/T/Z legende = root:legend_text
 
-	if(!WaveExists(coordinates))
-		print "required waves do not exist. Start SMAgetCoordinates first"
-		return 0
-	endif
 	aExists= strlen(CsrInfo(A)) > 0
 	if(!aExists)
 		print "Cursor A not in Graph"
 		return 0
 	endif
+	WAVE/Z coordinates = root:coordinates
+	if(!WaveExists(coordinates))
+		SMAresetCoordinates()
+		WAVE coordinates = root:coordinates
+	endif
+	WAVE/T/Z legende = root:legend_text
 
 	numItems = DimSize(coordinates, 0)
 	Redimension/N=(numItems + 1, 3) coordinates
@@ -430,10 +430,7 @@ Function SMAparticleAnalysis(currentImage)
 End
 
 Function SMAresetCoordinates()
-	WAVE/Z wavCoordinates = root:coordinates
-	if(WaveExists(wavCoordinates))
-		Make/O/N=(0, 3) root:coordinates/Wave=wavCoordinates = NaN
-	endif
+	Make/O/N=(0, 3) root:coordinates/Wave=wavCoordinates = NaN
 End
 
 Function SMAaddCoordinates(currentCoordinates, [text])
