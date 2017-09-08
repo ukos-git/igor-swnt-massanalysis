@@ -75,7 +75,7 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	fullimage[][] = fullimagenorm[p][q] == 0 ? NaN : fullimage[p][q] / fullimagenorm[p][q]
 	ImageFilter/O NanZapMedian fullimage
 
-	SMAconvertWaveToUint(fullimage, bit = 16)
+	SMAconvertWaveToUint(fullimage, bit = 8)
 	SMAbuildGraphFullImage()
 
 	return fullimage
@@ -96,7 +96,7 @@ Function SMAconvertWaveToUint(wv, [bit])
 	wv -= wMin
 
 	wMax = WaveMax(wv)
-	wv[][] = round(wv[p][q] / wMax * bit)
+	wv[][] = round(wv[p][q] / wMax * 2^bit)
 
 	switch(bit)
 		case 16:
