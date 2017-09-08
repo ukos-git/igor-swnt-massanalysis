@@ -541,6 +541,7 @@ Function SMAcameraCoordinates([Zzero])
 	Duplicate/O/R=[0,4*6-1] wv root:SMAsinglescan
 	print "created root:SMAsinglescan and root:SMAfullscan. Saving to home folder"
 	Save/J/O/DLIM=","/P=home wv as "SMAfullscan.csv"
+	Save/C/O/P=home wv as "SMAfullscan.ibw"
 End
 
 Function SMAcameraGetIntensity()
