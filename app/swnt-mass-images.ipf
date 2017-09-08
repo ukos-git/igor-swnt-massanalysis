@@ -81,6 +81,46 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	return fullimage
 End
 
+// input a wave stackCoordinates and search for the coordinates included in it.
+// the wave stackCoordinates is split to coordinate lists that have the size stackSize.
+// the function can be called multiple times with varying stackNumber to merge differnt
+// parts of the coordinate list.
+Function SMAmergeAndRename(stackCoordinates, stackNumber, stackSize)
+	WAVE stackCoordinates
+	Variable stackNumber, stackSize
+
+	Variable rangeStart, rangeEnd
+
+	rangeStart = stackNumber * stackSize
+	rangeEnd   = (stackNumber + 1) * stackSize - 1
+	Duplicate/FREE/R=[rangeStart, rangeEnd][] stackCoordinates scan
+	WAVE found = SMAfindCoordinatesInPLEM(scan)
+	make/free/n=(stackSize) normalnumber = numType(found[p]) == 0
+	if(sum(normalnumber) < stackSize / 4)
+		return 0
+	endif
+	Duplicate/O found 	root:found/WAVE=found
+	WAVE fullimage = SMAmergeImages(indices = found)
+	Rename fullimage $UniqueName("fullimage", 1, 0)
+End
+
+Function SMAimageStack([wv])
+	WAVE wv
+
+	Variable i
+	Variable numImages = PLEMd2getMapsAvailable()
+
+	if(ParamIsDefault(wv))
+		WAVE wv = root:SMAfullscan
+	endif
+	if(!WaveExists(wv))
+		Abort "please import or create the fullscan data first"
+	endif
+	for(i = 0; i < floor(numImages / 24); i += 1)
+		SMAmergeAndRename(wv, i, 24)
+	endfor
+End
+
 // save storage by converting image to full uint
 Function SMAconvertWaveToUint(wv, [bit])
 	WAVE wv

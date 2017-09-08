@@ -15,6 +15,7 @@ End
 
 Menu "MassAnalysis"
 	"Calculate camerascan from TiltPlane", /Q, SMAtasksGetTiltPlane()
+	"Create from Image Stack", SMAimageStack()
 End
 
 Function SMAtasksGetTiltPlane()
