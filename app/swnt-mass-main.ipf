@@ -36,6 +36,9 @@ Function SMAread()
 		file = StringFromList(i, filos.strFileList)
 		PLEMd2Open(strFile = filos.strFolder + file, display = 0)
 	endfor
+	// hotfix for file load
+	file = StringFromList(0, filos.strFileList)
+	PLEMd2Open(strFile = filos.strFolder + file, display = 0)
 End
 
 Function SMAmapInfo()
