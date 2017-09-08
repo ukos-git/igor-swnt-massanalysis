@@ -246,7 +246,7 @@ Function/WAVE SMAmedian([overwrite])
 
 	overwrite = ParamIsDefault(overwrite) ? 0 : !!overwrite
 
-	WAVE/U/I/Z myMedian = root:SMAmedian
+	WAVE/U/I/Z myMedian = root:SMAmedianBackground
 	if(WaveExists(myMedian) && !overwrite)
 		return myMedian
 	endif
@@ -257,7 +257,7 @@ Function/WAVE SMAmedian([overwrite])
 	dim0 = DimSize(stats.wavPLEM, 0)
 	dim1 = DimSize(stats.wavPLEM, 1)
 	dim1 = !!dim1 ? dim1 : 1 // dim1 = 0 and dim1 = 1 is the same
-	Make/O/U/I/N=(dim0, dim1) root:SMAmedian/WAVE=myMedian
+	Make/O/U/I/N=(dim0, dim1) root:SMAmedianBackground/WAVE=myMedian
 
 	// calculate median of all images
 	Make/FREE/U/I/N=(dim0, dim1, gnumMapsAvailable) bgMatrix
