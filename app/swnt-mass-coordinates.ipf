@@ -193,12 +193,12 @@ Function AddCoordinatesFromGraph()
 	coordinates[numItems][0]=vcsr(A)
 	coordinates[numItems][1]=hcsr(A)
 	coordinates[numItems][2]=150
-	
+
 	if(WaveExists(legende))
 		Redimension/N=(numItems + 1, -1) legende
 		legende[numItems]="manual"
 	endif
-	
+
 	// Append coordinates_deleted wave to top graph if not present
 	CheckDisplayed coordinates
 	if(V_flag == 0)
@@ -258,9 +258,9 @@ End
 
 Function RoundCoordinates([accuracy])
 	Variable accuracy
-	
+
 	WAVE/Z coordinates = root:coordinates
-	
+
 	accuracy = ParamIsDefault(accuracy) ? 4 : accuracy
 
 	if(!WaveExists(coordinates))
