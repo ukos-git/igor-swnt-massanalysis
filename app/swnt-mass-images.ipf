@@ -136,7 +136,7 @@ Function SMAconvertWaveToUint(wv, [bit])
 	wv -= wMin
 
 	wMax = WaveMax(wv)
-	wv[][] = round(wv[p][q] / wMax * 2^bit)
+	wv[][] = round(wv[p][q] / wMax * numSpace)
 
 	switch(bit)
 		case 16:
