@@ -31,7 +31,7 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	// append all Images to one big Image (fullimage)
 	wave background = SMAestimateBackground()
 	resolution = (abs(DimDelta(stats.wavPLEM, 0)) + abs(DimDelta(stats.wavPLEM, 1))) / 2
-	resolution = ceil(331 / resolution)
+	resolution = ceil(331 / resolution) // data points from -5µm to 330µm
 
 	Make/O/N=(resolution, resolution) root:fullimage/WAVE=fullimage = 0
 	Make/FREE/U/N=(resolution, resolution) fullimagenorm = 0
