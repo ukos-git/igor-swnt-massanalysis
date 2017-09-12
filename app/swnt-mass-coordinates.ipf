@@ -285,7 +285,7 @@ Function SMAgetCoordinates()
 
 	SMAresetCoordinates()
 	SMAbuildGraphPLEM()
-	//WAVE fullimage = SMAmergeImages(createNew = 0)
+	//WAVE fullimage = SMAmergeImages(0, createNew = 0)
 	//Duplicate/FREE fullimage, currentImage
 	//SMAparticleAnalysis(currentImage)
 

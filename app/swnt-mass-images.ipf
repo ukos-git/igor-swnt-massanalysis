@@ -1,8 +1,10 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
-Function/WAVE SMAmergeImages([createNew, indices])
-	Variable createNew
+#include "utilities-time"
+
+Function/WAVE SMAmergeImages(quick, [createNew, indices])
+	Variable createNew, quick
 	WAVE indices
 
 	Variable pixelX, pixelY, resolution
@@ -14,6 +16,8 @@ Function/WAVE SMAmergeImages([createNew, indices])
 		Make/FREE/N=(PLEMd2getMapsAvailable()) indices = p
 	endif
 
+	quick = !!quick
+
 	createNew = ParamIsDefault(createNew) ? 1 : !!createNew
 
 	if(!createNew)
@@ -24,6 +28,8 @@ Function/WAVE SMAmergeImages([createNew, indices])
 		WaveClear fullimage
 	endif
 
+	Variable timerRefNum = StartMSTimer
+
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 	dim0 = DimSize(stats.wavPLEM, 0)
 	dim1 = DimSize(stats.wavPLEM, 1)
@@ -31,13 +37,14 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	// append all Images to one big Image (fullimage)
 	wave background = SMAestimateBackground()
 	resolution = (abs(DimDelta(stats.wavPLEM, 0)) + abs(DimDelta(stats.wavPLEM, 1))) / 2
-	resolution = ceil(331 / resolution) // data points from -5µm to 330µm
+	resolution = ceil(311 / resolution) // data points from -5µm to 330µm
 
 	Make/O/N=(resolution, resolution) root:fullimage/WAVE=fullimage = 0
-	Make/FREE/U/N=(resolution, resolution) fullimagenorm = 0
+	Make/FREE/B/U/N=(resolution, resolution) fullimagenorm = 0
+	Make/FREE/N=(dim0, dim1) currentImage
 
-	SetScale/I x, -5, 325, fullimage
-	SetScale/I y, -5, 325, fullimage
+	SetScale/I x, -5, 305, fullimage
+	SetScale/I y, -5, 305, fullimage
 
 	numMaps = DimSize(indices, 0)
 	for(i = 0; i < numMaps; i += 1)
@@ -45,22 +52,21 @@ Function/WAVE SMAmergeImages([createNew, indices])
 			continue
 		endif
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(indices[i]))
-		Duplicate/FREE stats.wavPLEM, currentImage
-		ImageFilter/O /N=5 median currentImage // remove spikes
-		currentImage -= background
+		MultiThread currentImage[][] = stats.wavPLEM[p][q] - background[p][q]
+		if(!quick)
+			ImageFilter/O /N=5 median currentImage // remove spikes
+		endif
 		for(j = 0; j < dim0; j += 1)
+			pixelX = ScaleToIndex(fullimage, IndexToScale(stats.wavPLEM, j, 0), 0)
+			if((pixelX < 0) || (pixelX >= resolution))
+				continue
+			endif
 			for(k = 0; k < dim1; k += 1)
 				if(numtype(currentImage[j][k]) != 0)
 					continue
 				endif
-				pixelX = IndexToScale(currentImage, j, 0)
-				pixelX = ScaleToIndex(fullimage, pixelX, 0)
-				pixelY = IndexToScale(currentImage, k, 1)
-				pixelY = ScaleToIndex(fullimage, pixelY, 1)
-				if((pixelX < 0) || (pixelY < 0))
-					continue
-				endif
-				if((pixelX >= resolution) || (pixelY >= resolution))
+				pixelY = ScaleToIndex(fullimage, IndexToScale(stats.wavPLEM, k, 1), 1)
+				if((pixelY < 0) || (pixelY >= resolution))
 					continue
 				endif
 
@@ -68,15 +74,21 @@ Function/WAVE SMAmergeImages([createNew, indices])
 				fullimagenorm[pixelX][pixelY] += 1
 			endfor
 		endfor
-		WaveClear currentImage
 	endfor
 
-	// interpolate values, that were not found directly
-	fullimage[][] = fullimagenorm[p][q] == 0 ? NaN : fullimage[p][q] / fullimagenorm[p][q]
-	ImageFilter/O NanZapMedian fullimage
+	MultiThread fullimage[][] = fullimagenorm[p][q] == 0 ? NaN : fullimage[p][q] / fullimagenorm[p][q]
 
-	SMAconvertWaveToUint(fullimage, bit = 8)
+	// interpolate values, that were not found directly
+	if(!quick)
+		MultiThread fullimagenorm[][] = numtype(fullimage[p][q]) == 2
+		if(sum(fullimagenorm) / (dim0 * dim1) < 0.01)
+			ImageFilter/O NanZapMedian fullimage
+		endif
+	endif
+
 	SMAbuildGraphFullImage()
+
+	Utilities#lap(timerRefNum, "SMAmergeImages")
 
 	return fullimage
 End
@@ -100,7 +112,8 @@ Function SMAmergeAndRename(stackCoordinates, stackNumber, stackSize)
 		return 0
 	endif
 	Duplicate/O found 	root:found/WAVE=found
-	WAVE fullimage = SMAmergeImages(indices = found)
+	WAVE fullimage = SMAmergeImages(1, indices = found)
+	SMAconvertWaveToUint(fullimage, bit = 8)
 	Rename fullimage $UniqueName("fullimage", 1, 0)
 End
 
@@ -216,14 +229,14 @@ Function SMAtestSizeAdjustment()
 		NVAR/Z numSizeAdjustment = root:numSizeAdjustment
 	endif
 
-	WAVE fullimage = SMAmergeImages(createNew = 0)
+	WAVE fullimage = SMAmergeImages(1, createNew = 0)
 	graphName1 = SMAbuildGraphPLEM()
 	graphName2 = SMAbuildGraphFullImage()
 
 	for(i = 0; i < 10; i += 1)
 		numSizeAdjustment = (0.940 + i * 0.005)
 		SMAread()
-		WAVE fullimage = SMAmergeImages(createNew = 1)
+		WAVE fullimage = SMAmergeImages(1, createNew = 1)
 		Duplicate/O fullimage $("root:fullImage_" + num2str(numSizeAdjustment * 1e3))
 
 		SavePICT/WIN=$graphName1/O/P=home/E=-5/B=72 as "fullImage_" + num2str(numSizeAdjustment * 1e3) + ".png"
