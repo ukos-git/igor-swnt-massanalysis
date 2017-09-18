@@ -5,7 +5,7 @@ Menu "CameraImage"
 	// CTRL+0 is the keyboard shortcut
 	"AddCoordinates/1", /Q, AddCoordinatesFromGraph()
 	"Set WaveScale zero", /Q, SetScaleToCursor()
-	"Process Coordinates", /Q, SMAprocessCoordinates()
+	"Process xyz coordinates", /Q, SMAprocessCoordinates()
 	"PeakFind for coordinates", /Q, GetCoordinates()
 End
 
@@ -27,6 +27,7 @@ Function SMAtasksGetTiltPlane()
 	if(!WaveExists(normal) || !WaveExists(distance))
 		if(numMaps == 0)
 			Execute "SMAread()"
+			Execute "SMAreset()"
 		endif
 	endif
 	Execute "SMAcameraCoordinates()"
