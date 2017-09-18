@@ -573,14 +573,11 @@ End
 Function/WAVE SMAcameraGetTiltPlaneParameters()
 	variable i, numPeaks, step
 
-	WAVE/Z normal = root:SMAcameraPlaneNormal
-	WAVE/Z distance = root:SMAcameraPlaneDistance
 	WAVE/Z focuspoints = root:SMAcameraFocusPoints
-	if(WaveExists(normal) && WaveExists(distance) && WaveExists(focuspoints))
-		print "tilt plane parameters already calculated"
-		return focuspoints
+	if(WaveExists(focuspoints))
+		return SMAHessePlaneParameters(focuspoints)
 	endif
-	WaveClear normal, distance, focuspoints
+	WaveClear focuspoints
 
 	WAVE/Z intensity = root:SMAcameraIntensity
 	WAVE/Z coordinates = root:SMAcameraIntensityCoordinates
@@ -591,20 +588,28 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 	endif
 
 	WAVE/WAVE peakfind = SMApeakFind(intensity, maxPeaks = 3, verbose = 0)
-	if(!WaveExists(peakfind))
-		print "Error in peakfind"
-		return $""
-	endif
-	numPeaks = DimSize(peakfind, 0)
-
 	Make/O/N=(3,3) root:SMAcameraFocusPoints/WAVE=focuspoints
-	focuspoints[][] = coordinates[round(peakfind[limit(p, 0, numPeaks - 1)][%position])][q]
+	if(!WaveExists(peakfind))
+		edit focuspoints
+		edit intensity, coordinates
+		print "SMAcameraGetTiltPlaneParameters(): Please correct manually and call again."
+		Abort "Error in peakfind"
+	endif
 
-	//output the results to cli
+	numPeaks = DimSize(peakfind, 0)
 	print "SMAcameraGetTiltPlaneParameters(): focus maxima"
 	for(i = 0; i < numPeaks; i += 1)
 		printf "peak%d: \t file-number:\t%06.2f \t x-Axis: \t%06.2f \ty-Axis: \t%06.2f \tz-Axis: \t%06.2f\r", i, peakfind[i][%position], focuspoints[i][0], focuspoints[i][1], focuspoints[i][2]
 	endfor
+
+	if(numPeaks != 3)
+		edit focuspoints
+		edit intensity, coordinates
+		print "SMAcameraGetTiltPlaneParameters(): Please correct manually and call again."
+		Abort "Error in peakfind"
+	endif
+
+	focuspoints[][] = coordinates[round(peakfind[limit(p, 0, numPeaks - 1)][%position])][q]
 
 	//output the results as graph
 	Make/O/N=(numPeaks) root:SMAcameraPlanePeakMaximum = peakfind[p][%position]
@@ -619,6 +624,13 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 		print "3 peaks have to be present to calculate 3-axis-tilt plane"
 		return $""
 	endif
+	
+	return SMAHessePlaneParameters(focuspoints)
+End
+
+Function/WAVE SMAHessePlaneParameters(focuspoints)
+	WAVE focuspoints
+
 	Make/O/N=3 root:SMAcameraPlaneNormal/WAVE=normal
 	Make/O/N=1 root:SMAcameraPlaneDistance/WAVE=distance
 
