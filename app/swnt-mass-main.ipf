@@ -148,16 +148,16 @@ Function SMAreset()
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
-		stats.booBackground = 1
+		stats.booBackground = 0
 		stats.booPhoton = 0
-		stats.booPower = 1
+		stats.booPower = 0
 		stats.booGrating = 0
 		PLEMd2statsSave(stats)
 		PLEMd2BuildMaps(strPLEM)
 	endfor
 End
 
-Function SMAmedianBackground()
+Function SMAbackgroundMedian()
 	String strPLEM
 	Variable i
 
@@ -165,7 +165,7 @@ Function SMAmedianBackground()
 	Struct PLEMd2Stats stats
 
 	SMAreset()
-	WAVE globalMedian = SMAmedian(overwrite = 1)
+	WAVE globalMedian = SMAgetMedian(overwrite = 1)
 
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
@@ -174,7 +174,7 @@ Function SMAmedianBackground()
 	endfor
 End
 
-Function SMAancestorBackground()
+Function SMABackgroundAncestor()
 	String strPLEM, strPLEM2
 	Variable i, previousmax
 

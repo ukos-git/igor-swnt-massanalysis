@@ -266,7 +266,7 @@ Function/WAVE SMAestimateBackground()
 	dim1 = DimSize(stats.wavPLEM, 1)
 	Make/N=(dim0, dim1) root:background/WAVE=background
 
-	WAVE median = SMAmedian()
+	WAVE median = SMAgetMedian()
 	background = median
 
 	// remove gaussian background from illumination
@@ -289,7 +289,7 @@ Function/WAVE SMAestimateBackground()
 	return background
 End
 
-Function/WAVE SMAmedian([overwrite])
+Function/WAVE SMAgetMedian([overwrite])
 	Variable overwrite
 
 	Variable i, dim0, dim1
@@ -299,7 +299,7 @@ Function/WAVE SMAmedian([overwrite])
 
 	overwrite = ParamIsDefault(overwrite) ? 0 : !!overwrite
 
-	WAVE/U/I/Z myMedian = root:SMAmedianBackground
+	WAVE/U/I/Z myMedian = root:SMAmedian
 	if(WaveExists(myMedian) && !overwrite)
 		return myMedian
 	endif
