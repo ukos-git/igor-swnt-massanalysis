@@ -274,7 +274,19 @@ End
 Function SMAprocessCoordinates()
 	RoundCoordinates(accuracy = 4)
 	SortCoordinates()
-	DeleteCoordinates(0, 300)
+	DeleteCoordinates(-5, 305)
+	SMAcalcZcoordinateFromTiltPlane()
+End
+
+Function SMAcalcZcoordinateFromTiltPlane()
+	WAVE/Z normal = root:SMAcameraPlaneNormal
+	WAVE/Z distance = root:SMAcameraPlaneDistance
+	if(!WaveExists(normal) || !WaveExists(distance))
+		print "SMAtasksFillTiltPlane: nothing done"
+		return 0
+	endif
+	WAVE coordinates = root:coordinates
+	coordinates[][2] = SMAcameraGetTiltPlane(coordinates[p][0],coordinates[p][1])
 End
 
 Function SMAgetCoordinates()
