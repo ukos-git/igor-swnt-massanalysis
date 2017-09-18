@@ -309,7 +309,7 @@ Function/WAVE SMAmedian([overwrite])
 
 	dim0 = DimSize(stats.wavPLEM, 0)
 	dim1 = DimSize(stats.wavPLEM, 1)
-	dim1 = !!dim1 ? dim1 : 1 // dim1 = 0 and dim1 = 1 is the same
+	dim1 = dim1 != 0 ? dim1 : 1 // dim1 = 0 and dim1 = 1 is the same
 	Make/O/U/I/N=(dim0, dim1) root:SMAmedianBackground/WAVE=myMedian
 
 	// calculate median of all images
