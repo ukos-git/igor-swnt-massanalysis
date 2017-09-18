@@ -299,7 +299,7 @@ Function/WAVE SMAgetMedian([overwrite])
 
 	overwrite = ParamIsDefault(overwrite) ? 0 : !!overwrite
 
-	WAVE/U/I/Z myMedian = root:SMAmedian
+	WAVE/Z myMedian = root:SMAmedian
 	if(WaveExists(myMedian) && !overwrite)
 		return myMedian
 	endif
@@ -310,16 +310,16 @@ Function/WAVE SMAgetMedian([overwrite])
 	dim0 = DimSize(stats.wavPLEM, 0)
 	dim1 = DimSize(stats.wavPLEM, 1)
 	dim1 = dim1 != 0 ? dim1 : 1 // dim1 = 0 and dim1 = 1 is the same
-	Make/O/U/I/N=(dim0, dim1) root:SMAmedianBackground/WAVE=myMedian
+	Make/O/N=(dim0, dim1) root:SMAmedianBackground/WAVE=myMedian
 
 	// calculate median of all images
-	Make/FREE/U/I/N=(dim0, dim1, gnumMapsAvailable) bgMatrix
+	Make/FREE/N=(dim0, dim1, gnumMapsAvailable) bgMatrix
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		if(dim1 == 1)
-			bgMatrix[][0][i] = floor(stats.wavPLEM[p])
+			bgMatrix[][0][i] = stats.wavPLEM[p]
 		else
-			bgMatrix[][][i] = floor(stats.wavPLEM[p][q])
+			bgMatrix[][][i] = stats.wavPLEM[p][q]
 		endif
 	endfor
 	for(i = 0; i < dim0 * dim1; i += 1)
@@ -329,6 +329,7 @@ Function/WAVE SMAgetMedian([overwrite])
 		myMedian[pVal][qVal] = median(currentPixel)
 		WaveClear currentPixel
 	endfor
+	duplicate/o bgmatrix root:temp
 	WaveClear bgMatrix
 
 	if(dim1 == 1)
