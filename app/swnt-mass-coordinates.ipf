@@ -587,7 +587,14 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 		WAVE coordinates = root:SMAcameraIntensityCoordinates
 	endif
 
-	WAVE/WAVE peakfind = SMApeakFind(intensity, maxPeaks = 3, verbose = 0)
+	Duplicate/FREE intensity intensity_smooth
+	Smooth 3, intensity_smooth
+
+	WAVE guess = Utilities#PeakFind(intensity_smooth, maxPeaks = 3, minPeakPercent = 0.2, smoothingFactor = 1, verbose = 0)
+	WAVE/WAVE coef = Utilities#BuildCoefWv(intensity, peaks = guess, verbose = 0)
+	WAVE/WAVE peakParam = Utilities#GaussCoefToPeakParam(coef)
+	WAVE peakfind = Utilities#peakParamToResult(peakParam)
+
 	Make/O/N=(3,3) root:SMAcameraFocusPoints/WAVE=focuspoints
 	if(!WaveExists(peakfind))
 		edit focuspoints
