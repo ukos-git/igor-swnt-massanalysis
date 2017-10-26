@@ -597,7 +597,7 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 
 	Make/O/N=(3,3) root:SMAcameraFocusPoints/WAVE=focuspoints
 	if(!WaveExists(peakfind))
-		edit focuspoints
+		KillWaves/z focuspoints
 		edit intensity, coordinates
 		print "SMAcameraGetTiltPlaneParameters(): Please correct manually and call again."
 		Abort "Error in peakfind"
@@ -610,7 +610,7 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 	endfor
 
 	if(numPeaks != 3)
-		edit focuspoints
+		KillWaves/Z focuspoints
 		edit intensity, coordinates
 		print "SMAcameraGetTiltPlaneParameters(): Please correct manually and call again."
 		Abort "Error in peakfind"
