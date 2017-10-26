@@ -39,7 +39,7 @@ Function SMAcovariance()
 	Variable numSpec = PLEMd2getMapsAvailable()
 	STRUCT PLEMd2Stats stats
 
-	WAVE source = SMAgetSourceWave()
+	WAVE source = SMAgetSourceWave(overwrite = 1)
 
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 	numXvalues = DimSize(stats.wavPLEM, 0)
