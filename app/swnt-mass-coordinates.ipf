@@ -561,7 +561,9 @@ Function SMAcameraGetIntensity()
 
 	for(i = 0; i < numSpec; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		intensity[i] = WaveMax(stats.wavPLEM)
+		CurveFit/Q/M=0/W=2 Gauss2D stats.wavPLEM
+		WAVE W_Coef
+		intensity[i] = W_Coef[1]
 		coordinates[i][0] = stats.numPositionX
 		coordinates[i][1] = stats.numPositionY
 		coordinates[i][2] = stats.numPositionZ
