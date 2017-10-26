@@ -6,6 +6,48 @@
 #include "utilities-peakfind"
 #include "utilities-peakfit"
 
+Function SMAsinglePeakAction(startX, endX)
+	Variable startX, endX
+	
+	smareset()
+
+	WAVE source = SMAgetSourceWave(overwrite = 1)
+
+	STRUCT PLEMd2Stats stats
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+	Duplicate/O stats.wavWavelength root:wavelength/WAVE=wl
+
+	findvalue/V=(startX)/T=1 wl
+	variable start = V_Value
+	findvalue/V=(endX)/T=1 wl
+	variable ende = V_value
+
+	// sync correlation
+	Duplicate/O/R=[0,*][start, ende] source root:source_extracted/wave=source2
+	matrixop/O root:timecorrelation_extracted = getdiag(synccorrelation(source2^t), 0)
+
+	// lor fit
+	variable dim0 = DimSize(source, 0)
+	variable i
+	variable height, position, fwhm
+	Duplicate/O source root:source_fit/WAVE=myfitwave
+	myfitwave = NaN
+	Make/FREE/N=4 coefWave
+	Make/O/N=(dim0) root:source_maxHeight/WAVE=wvHeight
+	Make/O/N=(dim0) root:source_maxPosition/WAVE=wvPosition
+	Make/O/N=(dim0) root:source_maxFWHM/WAVE=wvFwhm
+	for(i = 0; i < dim0; i += 1)
+		CurveFit/Q lor, kwCWave=coefWave source[i][start, ende] /X=wl[start, ende] /D=myfitwave[i][start, ende]
+		wvHeight[i]   = coefWave[0] + coefWave[1] / coefWave[3]
+		wvPosition[i] = coefWave[2]
+		wvFwhm[i]     = 2 * sqrt(2 / ((1 / coefWave[3]) - (coefWave[0] / coefWave[1])) - coefWave[3])
+	endfor
+	dowindow/F $stats.strPLEM
+	if(!V_flag)
+		Display/N=$stats.strPLEM wvHeight as stats.strPLEM
+	endif
+end
+
 Function SMApeakFindMass(verbose)
 	variable verbose
 	variable i
