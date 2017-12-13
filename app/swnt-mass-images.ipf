@@ -12,6 +12,11 @@ Function/WAVE SMAmergeImages(quick, [createNew, indices])
 	Variable i, j, k, dim0, dim1
 	STRUCT PLEMd2Stats stats
 
+	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	if(!NVAR_EXISTS(gnumMapsAvailable) || !gnumMapsAvailable)
+		SMAread()
+	endif
+
 	if(ParamIsDefault(indices))
 		Make/FREE/N=(PLEMd2getMapsAvailable()) indices = p
 	endif
