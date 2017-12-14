@@ -47,7 +47,6 @@ End
 
 Function SMAcovariance()
 	variable i, numXvalues
-	variable numPoints
 
 	Variable numSpec = PLEMd2getMapsAvailable()
 	STRUCT PLEMd2Stats stats
@@ -58,11 +57,8 @@ Function SMAcovariance()
 	numXvalues = DimSize(stats.wavPLEM, 0)
 	MAKE/O/N=(numXvalues) root:sum1/WAVE=sum1
 	MAKE/O/N=(numXvalues) root:sum2/WAVE=sum2
-	Duplicate/O stats.wavWavelength root:wavelength/WAVE=wavelength
-	Duplicate/O stats.wavWavelength root:wavelengthImage/WAVE=wavelength_graph
-	numPoints = DimSize(wavelength, 0)
-	Redimension/N=(numPoints + 1) wavelength_graph
-	wavelength_graph[numPoints] = wavelength_graph[numPoints - 1] + 1
+
+	SMAcopyWavelengthToRoot()
 
 	for(i = 0; i < numSpec; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
@@ -86,10 +82,23 @@ Function SMAcovariance()
 	DoWindow SMAcovarianceGraph
 	if(V_flag == 0)
 		Display/N=SMAcovarianceGraph
-		AppendImage sym vs {wavelength_graph, wavelength_graph}
+		AppendImage sym vs {root:wavelengthImage, root:wavelengthImage}
 	endif
 	DoWindow SMAcovarianceGraphDiagonal
 	if(V_flag == 0)
-		Display/N=SMAcovarianceGraphDiagonal symdiag vs wavelength
+		Display/N=SMAcovarianceGraphDiagonal symdiag vs root:wavelength
 	endif
+End
+
+Function SMAcopyWavelengthToRoot()
+	variable numPoints
+	STRUCT PLEMd2Stats stats
+
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+
+	Duplicate/O stats.wavWavelength root:wavelength/WAVE=wavelength
+	Duplicate/O stats.wavWavelength root:wavelengthImage/WAVE=wavelength_graph
+	numPoints = DimSize(wavelength, 0)
+	Redimension/N=(numPoints + 1) wavelength_graph
+	wavelength_graph[numPoints] = wavelength_graph[numPoints - 1] + 1
 End
