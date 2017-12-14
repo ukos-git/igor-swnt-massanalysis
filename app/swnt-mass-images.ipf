@@ -206,8 +206,10 @@ Function/S SMAbuildGraphPLEM()
 	graphName = S_name
 
 	WAVE wavCoordinates = root:coordinates
-	AppendToGraph/W=$graphName wavCoordinates[][0]/TN=coordinates vs wavCoordinates[][1]
-	ModifyGraph/W=$graphName mode(coordinates)=3,marker(coordinates)=1,msize(coordinates)=2
+	if(WaveExists(wavCoordinates))
+		AppendToGraph/W=$graphName wavCoordinates[][0]/TN=coordinates vs wavCoordinates[][1]
+		ModifyGraph/W=$graphName mode(coordinates)=3,marker(coordinates)=1,msize(coordinates)=2
+	endif
 
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
