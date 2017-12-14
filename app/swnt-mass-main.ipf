@@ -138,19 +138,23 @@ Function SMAgetMaximum(bestEnergy)
 	PLEMd2Display(secondBestPLEM)
 End
 
-Function SMAreset()
+Function SMAreset([power])
+	variable power
+
 	String strPLEM
 	Variable i
 
 	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
 	Struct PLEMd2Stats stats
 
+	power = ParamIsDefault(power) ? 1 : !!power
+
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
 		stats.booBackground = 1
 		stats.booPhoton = 0
-		stats.booPower = 0
+		stats.booPower = power
 		stats.booGrating = 0
 		PLEMd2statsSave(stats)
 		PLEMd2BuildMaps(strPLEM)
@@ -164,13 +168,13 @@ Function SMAbackgroundMedian()
 	NVAR gnumMapsAvailable	 = $(cstrPLEMd2root + ":gnumMapsAvailable")
 	Struct PLEMd2Stats stats
 
-	SMAreset()
+	SMAreset(power = 1)
 	WAVE globalMedian = SMAgetMedian(overwrite = 1)
 
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
-		stats.wavPLEM = stats.wavMeasure - stats.wavBackground - globalMedian
+		stats.wavPLEM -= globalMedian
 	endfor
 End
 

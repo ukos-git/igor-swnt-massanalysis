@@ -330,14 +330,17 @@ Function/WAVE SMAgetMedian([overwrite])
 	endif
 	WaveClear myMedian
 
-	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
 
 	dim0 = DimSize(stats.wavPLEM, 0)
 	dim1 = DimSize(stats.wavPLEM, 1)
 	dim1 = dim1 != 0 ? dim1 : 1 // dim1 = 0 and dim1 = 1 is the same
 	Make/O/N=(dim0, dim1) root:SMAmedianBackground/WAVE=myMedian
+	SetScale/P x, 0, 1, myMedian
+	SetScale/P y, 0, 1, myMedian
 
 	// calculate median of all images
+	//Make/O/N=(dim0, dim1, gnumMapsAvailable) root:SMAmedianMatrix/WAVE=bgMatrix
 	Make/FREE/N=(dim0, dim1, gnumMapsAvailable) bgMatrix
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
@@ -359,7 +362,6 @@ Function/WAVE SMAgetMedian([overwrite])
 
 	if(dim1 == 1)
 		Redimension/N=(dim0) myMedian
-		SetScale/P x, DimOffset(stats.wavPLEM, 0), DimDelta(stats.wavPLEM, 0), myMedian
 	endif
 
 	return myMedian
