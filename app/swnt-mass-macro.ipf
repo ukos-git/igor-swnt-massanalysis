@@ -21,6 +21,7 @@ Window SMAcameraFocusPointsGraph() : Graph
 	Display /W=(825.75,299.75,1220.25,508.25) SMAcameraIntensity[160,*] as "zAxisIntensityv2"
 	AppendToGraph/T SMAcameraIntensity
 	AppendToGraph SMAcameraIntensity[0,79],SMAcameraIntensity[80,159]
+	AppendToGraph SMAcameraIntensitySmth
 	ModifyGraph userticks(bottom)={SMAcameraPlanePeakMaximum,SMAcameraPlanePeakMaximumT}
 	ModifyGraph userticks(top)={SMAcameraPlanePeakMaximumZ,SMAcameraPlanePeakMaximumZT}
 	ModifyGraph mode(SMAcameraIntensity#1)=3
