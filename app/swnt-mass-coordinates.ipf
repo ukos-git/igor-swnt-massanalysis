@@ -578,13 +578,18 @@ End
 
 Function SMAcameraGetIntensity()
 	variable i
-	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
 	STRUCT PLEMd2Stats stats
+	variable numMaps = PLEMd2getMapsAvailable()
 
-	Make/O/N=(numSpec) root:SMAcameraIntensity/WAVE=intensity
-	Make/O/N=(numSpec, 3) root:SMAcameraIntensityCoordinates/WAVE=coordinates
+	if(numMaps == 0)
+		SMAload()
+		numMaps = PLEMd2getMapsAvailable()
+	endif
 
-	for(i = 0; i < numSpec; i += 1)
+	Make/O/N=(numMaps) root:SMAcameraIntensity/WAVE=intensity
+	Make/O/N=(numMaps, 3) root:SMAcameraIntensityCoordinates/WAVE=coordinates
+
+	for(i = 0; i < numMaps; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		CurveFit/Q/M=0/W=2 Gauss2D stats.wavPLEM
 		WAVE W_Coef
