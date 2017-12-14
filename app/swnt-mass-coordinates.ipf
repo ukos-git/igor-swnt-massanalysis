@@ -1,18 +1,6 @@
 #pragma TextEncoding = "Windows-1252"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 
-Menu "CameraImage"
-	// CTRL+0 is the keyboard shortcut
-	"AddCoordinates/1", /Q, AddCoordinatesFromGraph()
-	"Set WaveScale zero", /Q, SetScaleToCursor()
-	"Process Coordinates", /Q, SMAprocessCoordinates()
-	"PeakFind for coordinates", /Q, GetCoordinates()
-End
-
-Menu "GraphMarquee"
-	"Erase Points", SMA_EraseMarqueeArea()
-End
-
 // see ACW_EraseMarqueeArea.
 Function SMA_EraseMarqueeArea()
 	variable dim0, numMatches, i
@@ -187,30 +175,37 @@ End
 Function AddCoordinatesFromGraph()
 	Variable numItems
 	Variable aExists = 0
-	WAVE/Z coordinates = root:coordinates
-	WAVE/T/Z legende = root:legend_text
 
-	if(!WaveExists(coordinates))
-		print "required waves do not exist. Start SMAgetCoordinates first"
-		return 0
-	endif
 	aExists= strlen(CsrInfo(A)) > 0
 	if(!aExists)
 		print "Cursor A not in Graph"
 		return 0
 	endif
+	WAVE/Z coordinates = root:coordinates
+	if(!WaveExists(coordinates))
+		SMAresetCoordinates()
+		WAVE coordinates = root:coordinates
+	endif
+	WAVE/T/Z legende = root:legend_text
 
 	numItems = DimSize(coordinates, 0)
 	Redimension/N=(numItems + 1, 3) coordinates
 	coordinates[numItems][0]=vcsr(A)
 	coordinates[numItems][1]=hcsr(A)
-	coordinates[numItems][2]=150
-	
+	WAVE/Z normal = root:SMAcameraPlaneNormal
+	WAVE/Z distance = root:SMAcameraPlaneDistance
+	if(!WaveExists(normal) || !WaveExists(distance))
+		coordinates[numItems][2]=150
+		print "AddCoordinatesFromGraph: missing tilt plane parameters"
+	else
+		coordinates[numItems][2]= SMAcameraGetTiltPlane(coordinates[numItems][0],coordinates[numItems][1])
+	endif
+
 	if(WaveExists(legende))
 		Redimension/N=(numItems + 1, -1) legende
 		legende[numItems]="manual"
 	endif
-	
+
 	// Append coordinates_deleted wave to top graph if not present
 	CheckDisplayed coordinates
 	if(V_flag == 0)
@@ -270,9 +265,9 @@ End
 
 Function RoundCoordinates([accuracy])
 	Variable accuracy
-	
+
 	WAVE/Z coordinates = root:coordinates
-	
+
 	accuracy = ParamIsDefault(accuracy) ? 4 : accuracy
 
 	if(!WaveExists(coordinates))
@@ -283,26 +278,44 @@ Function RoundCoordinates([accuracy])
 	coordinates[][0] = round(coordinates[p][0] / accuracy) * accuracy
 End
 
-Function SMAprocessCoordinates()
-	RoundCoordinates(accuracy = 4)
-	SortCoordinates()
-	DeleteCoordinates(0, 300)
+Function SMAcalcZcoordinateFromTiltPlane([wv, zOffset])
+	WAVE wv
+	variable zOffset
+
+	zOffset = ParamIsDefault(zOffset) ? SMAcameraGetTiltPlane(0,0) : zOffset
+
+	if(ParamIsDefault(wv))
+		WAVE wv = root:coordinates
+	endif
+	if(!WaveExists(wv))
+		print "SMAcalcZcoordinateFromTiltPlane: input wave does not exist"
+		return 0
+	endif
+
+	WAVE/Z normal = root:SMAcameraPlaneNormal
+	WAVE/Z distance = root:SMAcameraPlaneDistance
+	if(!WaveExists(normal) || !WaveExists(distance))
+		print "SMAcalcZcoordinateFromTiltPlane: nothing done"
+		return 0
+	endif
+
+	wv[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zOffset)
 End
 
 Function SMAgetCoordinates()
 	Variable i
 	STRUCT PLEMd2Stats stats
 
-	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	variable numMaps = PLEMd2getMapsAvailable()
 
 	SMAresetCoordinates()
 	SMAbuildGraphPLEM()
-	//WAVE fullimage = SMAmergeImages(createNew = 0)
+	//WAVE fullimage = SMAmergeImages(0, createNew = 0)
 	//Duplicate/FREE fullimage, currentImage
 	//SMAparticleAnalysis(currentImage)
 
 	wave background = SMAestimateBackground()
-	for(i = 0; i < gnumMapsAvailable; i += 1)
+	for(i = 0; i < numMaps; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		Duplicate/FREE stats.wavPLEM, currentImage
 		ImageFilter/O /N=5 median currentImage // remove spikes
@@ -442,10 +455,7 @@ Function SMAparticleAnalysis(currentImage)
 End
 
 Function SMAresetCoordinates()
-	WAVE/Z wavCoordinates = root:coordinates
-	if(WaveExists(wavCoordinates))
-		Make/O/N=(0, 3) root:coordinates/Wave=wavCoordinates = NaN
-	endif
+	Make/O/N=(0, 3) root:coordinates/Wave=wavCoordinates = NaN
 End
 
 Function SMAaddCoordinates(currentCoordinates, [text])
@@ -526,62 +536,100 @@ Function SMAaddCoordinates(currentCoordinates, [text])
 	return numCoords
 End
 
-Function SMAcameraCoordinates([Zzero])
+// Zzero is the new zero position to which the z values will be corrected
+// i.e. the new focus point at (x,y) = (0,0)
+Function SMAcameraCoordinates([Zzero, export])
 	Variable Zzero
+	Variable export
+	
+	export = ParamIsDefault(export) ? 1 : !!export
 
-	Variable xstep = 50, ystep = 80, zstep = -0.5
+	Variable xstep = 48, ystep = 80, zstep = -1
 
-	// Zzero is the new zero position to which the z values will be corrected
-	// i.e. the new focus point at (x,y) = (0,0)
-	if(ParamIsDefault(Zzero))
-		Zzero = 0
-	else
-		Zzero -= SMAcameraGetTiltPlane(0, 0)
-	endif
+	Zzero = ParamIsDefault(Zzero) ? SMAcameraGetTiltPlane(0, 0) : Zzero
 
-	// 4 scans in x = 300/80
-	// 6 scans in y = 300/50
-	// 8 scans in z direction (148.5um to 152.5um in 0.5um steps) = 5 um 0.5um
+	// 4 scans in x = 300/64
+	// 6 scans in y = 300/48
+	// 8 scans in z direction (4um from laserfocus to bottom of trench in 0.5um steps)
 	// --> 16 hours when integrating 300s.
 
-	Make/O/N=(4*6*8, 3) root:SMAfullscan/WAVE=wv
+	Make/O/N=(4 * 6 * 8, 3) root:SMAfullscan/WAVE=wv
 
-	wv[][0] = 25 + mod(floor(p / 4) * xstep, 300)
+	wv[][0] = 4 * 6 + mod(floor(p / 4), 6) * xstep
 	wv[][1] = 30 + mod(p, 4) * ystep
-	wv[][2] = Zzero + SMAcameraGetTiltPlane(wv[p][0], wv[p][1]) + floor(p/24) * zstep
+	wv[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) + floor(p / (4 * 6)) * zstep
 
-	Duplicate/o/R=[0,4*6-1] wv root:SMAsinglescan
-	print "created root:SMAsinglescan and root:SMAfullscan"
+	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan00/WAVE=singlescan00
+	singlescan00[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero)
+
+	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan20/WAVE=singlescan20
+	singlescan20[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 2
+
+	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan40/WAVE=singlescan40
+	singlescan40[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 4
+
+	if(export)
+		Save/J/O/DLIM=","/P=home singlescan00 as "singlescan00.csv"
+		Save/J/O/DLIM=","/P=home singlescan20 as "singlescan20.csv"
+		Save/J/O/DLIM=","/P=home singlescan40 as "singlescan40.csv"
+		Save/J/O/DLIM=","/P=home wv as "fullscan.csv"
+	endif
 End
 
 Function SMAcameraGetIntensity()
 	variable i
-	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
 	STRUCT PLEMd2Stats stats
+	variable numMaps = PLEMd2getMapsAvailable()
 
-	Make/O/N=(numSpec) root:SMAcameraIntensity/WAVE=intensity
-	Make/O/N=(numSpec, 3) root:SMAcameraIntensityCoordinates/WAVE=coordinates
+	if(numMaps == 0)
+		SMAload()
+		numMaps = PLEMd2getMapsAvailable()
+	endif
 
-	for(i = 0; i < numSpec; i += 1)
+	Make/O/N=(numMaps) root:SMAcameraIntensity/WAVE=intensity
+	Make/O/N=(numMaps, 3) root:SMAcameraIntensityCoordinates/WAVE=coordinates
+
+	for(i = 0; i < numMaps; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		intensity[i] = WaveMax(stats.wavPLEM)
+		CurveFit/Q/M=0/W=2 Gauss2D stats.wavPLEM
+		WAVE W_Coef
+		intensity[i] = W_Coef[1]
 		coordinates[i][0] = stats.numPositionX
 		coordinates[i][1] = stats.numPositionY
 		coordinates[i][2] = stats.numPositionZ
 	endfor
 End
 
-Function/WAVE SMAcameraGetTiltPlaneParameters()
-	variable i, numPeaks, step
+Function/WAVE SMAcameraGetTiltPlaneParameters([createNew])
+	variable createNew
 
-	WAVE/Z normal = root:SMAcameraPlaneNormal
-	WAVE/Z distance = root:SMAcameraPlaneDistance
-	WAVE/Z focuspoints = root:SMAcameraFocusPoints
-	if(WaveExists(normal) && WaveExists(distance) && WaveExists(focuspoints))
-		print "tilt plane parameters already calculated"
-		return focuspoints
+	variable numPeaks
+
+	createNew = ParamIsDefault(createNew) ? 0 : !!createNew
+
+	WAVE/Z focuspoints = root:SMAcameraFocusPoints 
+	if(createNew || !WaveExists(focuspoints))
+		WAVE focuspoints = SMAgetFocuspoints(graph = 1)
 	endif
-	WaveClear normal, distance, focuspoints
+
+	numPeaks = DimSize(focuspoints, 0)
+	if(!WaveExists(focuspoints) || (numPeaks != 3))
+		print "SMAcameraGetTiltPlaneParameters(): Please correct manually and call again."
+		edit focuspoints
+		print "call: SMAcameraGetTiltPlaneParameters(createNew=0) after manual editing root:SMAcameraFocusPoints"
+		Abort "Error in peakfind"
+	endif
+	
+	return SMAHessePlaneParameters(focuspoints)
+End
+
+/// @brief search for laserspot maxima in loaded images
+Function/WAVE SMAgetFocuspoints([graph])
+	variable graph
+
+	variable numPeaks, i, step
+	
+	graph = ParamIsDefault(graph) ? 0 : !!graph
 
 	WAVE/Z intensity = root:SMAcameraIntensity
 	WAVE/Z coordinates = root:SMAcameraIntensityCoordinates
@@ -591,35 +639,44 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 		WAVE coordinates = root:SMAcameraIntensityCoordinates
 	endif
 
-	WAVE/WAVE peakfind = SMApeakFind(intensity, maxPeaks = 3, verbose = 0)
+	Duplicate/O intensity root:SMAcameraIntensitySmth/WAVE=intensity_smooth
+	Smooth 5, intensity_smooth
+
+	WAVE guess = Utilities#PeakFind(intensity_smooth, maxPeaks = 3, minPeakPercent = 95, smoothingFactor = 1, verbose = 0)
+	WAVE/WAVE coef = Utilities#BuildCoefWv(intensity_smooth, peaks = guess, verbose = 0)
+	WAVE/WAVE peakParam = Utilities#GaussCoefToPeakParam(coef)
+	WAVE peakfind = Utilities#peakParamToResult(peakParam)
+	
 	if(!WaveExists(peakfind))
-		print "Error in peakfind"
-		return $""
+		print "SMAgetFocuspoints(): Please correct manually and call again."
+		Abort "Error in peakfind"
 	endif
+
 	numPeaks = DimSize(peakfind, 0)
-
-	Make/O/N=(3,3) root:SMAcameraFocusPoints/WAVE=focuspoints
+	Make/O/N=(numPeaks,3) root:SMAcameraFocusPoints/WAVE=focuspoints
 	focuspoints[][] = coordinates[round(peakfind[limit(p, 0, numPeaks - 1)][%position])][q]
-
-	//output the results to cli
-	print "SMAcameraGetTiltPlaneParameters(): focus maxima"
+	print "SMAgetFocuspoints(): focus maxima"
 	for(i = 0; i < numPeaks; i += 1)
 		printf "peak%d: \t file-number:\t%06.2f \t x-Axis: \t%06.2f \ty-Axis: \t%06.2f \tz-Axis: \t%06.2f\r", i, peakfind[i][%position], focuspoints[i][0], focuspoints[i][1], focuspoints[i][2]
 	endfor
-
+	
 	//output the results as graph
-	Make/O/N=(numPeaks) root:SMAcameraPlanePeakMaximum = peakfind[p][%position]
-	Make/O/T/N=(numPeaks) root:SMAcameraPlanePeakMaximumT = "(" + num2str(focuspoints[p][0]) + "," + num2str(focuspoints[p][1]) + ")"
-	step = floor(DimSize(coordinates, 0) / 10 / 2) * 2
-	Make/O/N=10 root:SMAcameraPlanePeakMaximumZ/WAVE=zWave = step / 2 + p * step
-	Make/O/T/N=10 root:SMAcameraPlanePeakMaximumZT = num2str(round(coordinates[zWave[p]][2]))
-	Execute/Z "SMAcameraFocusPointsGraph()"
-	SavePICT/O/P=home/E=-5/B=72
-
-	if(numPeaks != 3)
-		print "3 peaks have to be present to calculate 3-axis-tilt plane"
-		return $""
+	if(graph)
+		Make/O/N=(numPeaks) root:SMAcameraPlanePeakMaximum = peakfind[p][%position]
+		Make/O/T/N=(numPeaks) root:SMAcameraPlanePeakMaximumT = "(" + num2str(focuspoints[p][0]) + "," + num2str(focuspoints[p][1]) + ")"
+		step = floor(DimSize(coordinates, 0) / 10 / 2) * 2
+		Make/O/N=10 root:SMAcameraPlanePeakMaximumZ/WAVE=zWave = step / 2 + p * step
+		Make/O/T/N=10 root:SMAcameraPlanePeakMaximumZT = num2str(round(coordinates[zWave[p]][2] * 10) / 10)
+		Execute/Z "SMAcameraFocusPointsGraph()"
+		SavePICT/O/P=home/E=-5/B=72
 	endif
+
+	return focuspoints
+End
+
+Function/WAVE SMAHessePlaneParameters(focuspoints)
+	WAVE focuspoints
+
 	Make/O/N=3 root:SMAcameraPlaneNormal/WAVE=normal
 	Make/O/N=1 root:SMAcameraPlaneDistance/WAVE=distance
 
@@ -638,10 +695,16 @@ Function/WAVE SMAcameraGetTiltPlaneParameters()
 	return focuspoints
 End
 
-Function SMAcameraGetTiltPlane(coordinateX, coordinateY)
-	variable coordinateX, coordinateY
+Function SMAcameraGetTiltPlane(coordinateX, coordinateY, [zOffset])
+	variable coordinateX, coordinateY, zOffset
 
 	variable coordinateZ
+	
+	if(ParamIsDefault(zOffset))
+		zOffset = 0
+	else
+		zOffset -= SMAcameraGetTiltPlane(0, 0)
+	endif
 
 	WAVE/Z normal = root:SMAcameraPlaneNormal
 	WAVE/Z distance = root:SMAcameraPlaneDistance
@@ -651,7 +714,7 @@ Function SMAcameraGetTiltPlane(coordinateX, coordinateY)
 		WAVE distance = root:SMAcameraPlaneDistance
 	endif
 
-	return (distance[0] - normal[0] * coordinateX - normal[1] * coordinateY) / normal[2]
+	return zOffset + (distance[0] - normal[0] * coordinateX - normal[1] * coordinateY) / normal[2]
 End
 
 Function/WAVE SMAfindCoordinatesInPLEM(wavFindMe, [verbose])

@@ -1,29 +1,69 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
+Function/WAVE SMAgetSourceWave([overwrite])
+	Variable overwrite
+
+	Variable i, dim1, numMarkers
+	STRUCT PLEMd2Stats stats
+
+	Variable dim0 = PLEMd2getMapsAvailable()
+	String name = "source"
+	DFREF dfr = root:
+
+	overwrite = ParamIsDefault(overwrite) ? 0 : !!overwrite
+
+	WAVE/Z wv = dfr:$name
+	if(WaveExists(wv) && !overwrite)
+		if(DimSize(wv, 0) == dim0)
+			return wv
+		endif
+	endif
+
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+	dim1 = DimSize(stats.wavPLEM, 0)
+	Make/O/N=(dim0, dim1) dfr:$name/WAVE=wv
+	for(i = 0; i < dim0; i += 1)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+		WAVE nospikes = Utilities#removeSpikes(stats.wavPLEM)
+		wv[i][] = nospikes[q]
+	endfor
+
+	DoWindow SMAsourceGraph
+	if(V_flag == 0)
+		SMAcopyWavelengthToRoot()
+		Display/N=SMAsourceGraph
+		AppendImage root:source vs {*, root:wavelengthImage}
+		ModifyImage ''#0  ctab= {*,*,YellowHot256,1}
+		numMarkers = round(DimSize(wv, 0) / 4)
+		Make/O/N=(numMarkers) root:markers_source/WAVE=markers = p * 4
+		Make/O/N=(numMarkers)/T root:markers_sourceT/WAVE=markersT
+		markersT = num2str(markers[p])
+		ModifyGraph userticks(bottom)={markers,markersT}
+	endif
+
+	return wv
+End
+
 Function SMAcovariance()
 	variable i, numXvalues
-	variable numPoints
 
-	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
+	Variable numSpec = PLEMd2getMapsAvailable()
 	STRUCT PLEMd2Stats stats
+
+	WAVE source = SMAgetSourceWave(overwrite = 1)
 
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 	numXvalues = DimSize(stats.wavPLEM, 0)
-	MAKE/O/N=(numSpec, numXvalues) root:source/WAVE=source
 	MAKE/O/N=(numXvalues) root:sum1/WAVE=sum1
 	MAKE/O/N=(numXvalues) root:sum2/WAVE=sum2
-	Duplicate/O stats.wavWavelength root:wavelength/WAVE=wavelength
-	Duplicate/O stats.wavWavelength root:wavelengthImage/WAVE=wavelength_graph
-	numPoints = DimSize(wavelength, 0)
-	Redimension/N=(numPoints + 1) wavelength_graph
-	wavelength_graph[numPoints] = wavelength_graph[numPoints - 1] + 1
+
+	SMAcopyWavelengthToRoot()
 
 	for(i = 0; i < numSpec; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		WAVE nospikes = Utilities#removeSpikes(stats.wavPLEM)
 
-		source[i][] = nospikes[q]
 		sum1[] += nospikes[p]
 		sum2[] += nospikes[p]^2
 	endfor
@@ -42,10 +82,23 @@ Function SMAcovariance()
 	DoWindow SMAcovarianceGraph
 	if(V_flag == 0)
 		Display/N=SMAcovarianceGraph
-		AppendImage sym vs {wavelength_graph, wavelength_graph}
+		AppendImage sym vs {root:wavelengthImage, root:wavelengthImage}
 	endif
 	DoWindow SMAcovarianceGraphDiagonal
 	if(V_flag == 0)
-		Display/N=SMAcovarianceGraphDiagonal symdiag vs wavelength
+		Display/N=SMAcovarianceGraphDiagonal symdiag vs root:wavelength
 	endif
+End
+
+Function SMAcopyWavelengthToRoot()
+	variable numPoints
+	STRUCT PLEMd2Stats stats
+
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+
+	Duplicate/O stats.wavWavelength root:wavelength/WAVE=wavelength
+	Duplicate/O stats.wavWavelength root:wavelengthImage/WAVE=wavelength_graph
+	numPoints = DimSize(wavelength, 0)
+	Redimension/N=(numPoints + 1) wavelength_graph
+	wavelength_graph[numPoints] = wavelength_graph[numPoints - 1] + 1
 End

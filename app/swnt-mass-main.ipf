@@ -12,8 +12,12 @@
 
 strConstant cSMApackage = "swnt-mass-analysis"
 
+// call SMAread() directly.
 Function SMAload()
 	FILO#load(fileType = ".ibw", packageID = 1)
+	if(!PLEMd2getMapsAvailable())
+		SMAread()
+	endif
 End
 
 Function SMAread()
@@ -24,10 +28,17 @@ Function SMAread()
 	FILO#structureLoad(filos)
 
 	numFiles = ItemsInList(filos.strFileList)
+	if(numFiles == 0)
+		SMAload()
+		return 0
+	endif
 	for(i = 0; i < numFiles; i += 1)
 		file = StringFromList(i, filos.strFileList)
 		PLEMd2Open(strFile = filos.strFolder + file, display = 0)
 	endfor
+	// hotfix for file load
+	file = StringFromList(0, filos.strFileList)
+	PLEMd2Open(strFile = filos.strFolder + file, display = 0)
 End
 
 Function SMAmapInfo()
@@ -127,43 +138,47 @@ Function SMAgetMaximum(bestEnergy)
 	PLEMd2Display(secondBestPLEM)
 End
 
-Function SMAreset()
+Function SMAreset([power])
+	variable power
+
 	String strPLEM
 	Variable i
 
 	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
 	Struct PLEMd2Stats stats
 
+	power = ParamIsDefault(power) ? 1 : !!power
+
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
 		stats.booBackground = 1
 		stats.booPhoton = 0
-		stats.booPower = 1
+		stats.booPower = power
 		stats.booGrating = 0
 		PLEMd2statsSave(stats)
 		PLEMd2BuildMaps(strPLEM)
 	endfor
 End
 
-Function SMAmedianBackground()
+Function SMAbackgroundMedian()
 	String strPLEM
 	Variable i
 
 	NVAR gnumMapsAvailable	 = $(cstrPLEMd2root + ":gnumMapsAvailable")
 	Struct PLEMd2Stats stats
 
-	SMAreset()
-	WAVE globalMedian = SMAmedian(overwrite = 1)
+	SMAreset(power = 1)
+	WAVE globalMedian = SMAgetMedian(overwrite = 1)
 
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
-		stats.wavPLEM = stats.wavMeasure - stats.wavBackground - globalMedian
+		stats.wavPLEM -= globalMedian
 	endfor
 End
 
-Function SMAancestorBackground()
+Function SMABackgroundAncestor()
 	String strPLEM, strPLEM2
 	Variable i, previousmax
 

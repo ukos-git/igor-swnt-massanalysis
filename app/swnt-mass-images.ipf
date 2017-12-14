@@ -1,14 +1,27 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
-Function/WAVE SMAmergeImages([createNew])
-	Variable createNew
+#include "utilities-time"
+
+Function/WAVE SMAmergeImages(quick, [createNew, indices])
+	Variable createNew, quick
+	WAVE indices
 
 	Variable pixelX, pixelY, resolution
+	Variable numMaps
 	Variable i, j, k, dim0, dim1
 	STRUCT PLEMd2Stats stats
 
 	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	if(!NVAR_EXISTS(gnumMapsAvailable) || !gnumMapsAvailable)
+		SMAread()
+	endif
+
+	if(ParamIsDefault(indices))
+		Make/FREE/N=(PLEMd2getMapsAvailable()) indices = p
+	endif
+
+	quick = !!quick
 
 	createNew = ParamIsDefault(createNew) ? 1 : !!createNew
 
@@ -20,6 +33,8 @@ Function/WAVE SMAmergeImages([createNew])
 		WaveClear fullimage
 	endif
 
+	Variable timerRefNum = StartMSTimer
+
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 	dim0 = DimSize(stats.wavPLEM, 0)
 	dim1 = DimSize(stats.wavPLEM, 1)
@@ -27,32 +42,36 @@ Function/WAVE SMAmergeImages([createNew])
 	// append all Images to one big Image (fullimage)
 	wave background = SMAestimateBackground()
 	resolution = (abs(DimDelta(stats.wavPLEM, 0)) + abs(DimDelta(stats.wavPLEM, 1))) / 2
-	resolution = ceil(331 / resolution)
+	resolution = ceil(311 / resolution) // data points from -5µm to 330µm
 
 	Make/O/N=(resolution, resolution) root:fullimage/WAVE=fullimage = 0
-	Make/FREE/U/N=(resolution, resolution) fullimagenorm = 0
+	Make/FREE/B/U/N=(resolution, resolution) fullimagenorm = 0
+	Make/FREE/N=(dim0, dim1) currentImage
 
-	SetScale/I x, -5, 325, fullimage
-	SetScale/I y, -5, 325, fullimage
+	SetScale/I x, -5, 305, fullimage
+	SetScale/I y, -5, 305, fullimage
 
-	for(i = 0; i < gnumMapsAvailable; i += 1)
-		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		Duplicate/FREE stats.wavPLEM, currentImage
-		ImageFilter/O /N=5 median currentImage // remove spikes
-		currentImage -= background
+	numMaps = DimSize(indices, 0)
+	for(i = 0; i < numMaps; i += 1)
+		if(numtype(indices[i]) != 0)
+			continue
+		endif
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(indices[i]))
+		MultiThread currentImage[][] = stats.wavPLEM[p][q] - background[p][q]
+		if(!quick)
+			ImageFilter/O /N=5 median currentImage // remove spikes
+		endif
 		for(j = 0; j < dim0; j += 1)
+			pixelX = ScaleToIndex(fullimage, IndexToScale(stats.wavPLEM, j, 0), 0)
+			if((pixelX < 0) || (pixelX >= resolution))
+				continue
+			endif
 			for(k = 0; k < dim1; k += 1)
 				if(numtype(currentImage[j][k]) != 0)
 					continue
 				endif
-				pixelX = IndexToScale(currentImage, j, 0)
-				pixelX = ScaleToIndex(fullimage, pixelX, 0)
-				pixelY = IndexToScale(currentImage, k, 1)
-				pixelY = ScaleToIndex(fullimage, pixelY, 1)
-				if((pixelX < 0) || (pixelY < 0))
-					continue
-				endif
-				if((pixelX >= resolution) || (pixelY >= resolution))
+				pixelY = ScaleToIndex(fullimage, IndexToScale(stats.wavPLEM, k, 1), 1)
+				if((pixelY < 0) || (pixelY >= resolution))
 					continue
 				endif
 
@@ -60,13 +79,114 @@ Function/WAVE SMAmergeImages([createNew])
 				fullimagenorm[pixelX][pixelY] += 1
 			endfor
 		endfor
-		WaveClear currentImage
 	endfor
-	fullimage[][] = fullimagenorm[p][q] == 0 ? NaN : fullimage[p][q] / fullimagenorm[p][q]
-	ImageFilter/O NanZapMedian fullimage
+
+	MultiThread fullimage[][] = fullimagenorm[p][q] == 0 ? NaN : fullimage[p][q] / fullimagenorm[p][q]
+
+	// interpolate values, that were not found directly
+	if(!quick)
+		MultiThread fullimagenorm[][] = numtype(fullimage[p][q]) == 2
+		if(sum(fullimagenorm) / (dim0 * dim1) < 0.01)
+			ImageFilter/O NanZapMedian fullimage
+		endif
+	endif
+
 	SMAbuildGraphFullImage()
 
+	Utilities#lap(timerRefNum, "SMAmergeImages")
+
 	return fullimage
+End
+
+// input a wave stackCoordinates and search for the coordinates included in it.
+// the wave stackCoordinates is split to coordinate lists that have the size stackSize.
+// the function can be called multiple times with varying stackNumber to merge differnt
+// parts of the coordinate list.
+Function/WAVE SMAmergeAndRename(stackCoordinates, stackNumber, stackSize)
+	WAVE stackCoordinates
+	Variable stackNumber, stackSize
+
+	Variable rangeStart, rangeEnd
+
+	rangeStart = stackNumber * stackSize
+	rangeEnd   = (stackNumber + 1) * stackSize - 1
+	Duplicate/FREE/R=[rangeStart, rangeEnd][] stackCoordinates scan
+	WAVE found = SMAfindCoordinatesInPLEM(scan)
+	make/free/n=(stackSize) normalnumber = numType(found[p]) == 0
+	if(sum(normalnumber) < stackSize / 4)
+		return $""
+	endif
+	Duplicate/O found 	root:found/WAVE=found
+	WAVE fullimage = SMAmergeImages(1, indices = found)
+	SMAconvertWaveToUint(fullimage, bit = 8)
+	Rename fullimage $UniqueName("fullimage", 1, 0)
+
+	return fullimage
+End
+
+Function SMAprocessImageStack([wv])
+	WAVE wv
+
+	Variable i, numFullImages
+	Variable numImages = PLEMd2getMapsAvailable()
+
+	if(ParamIsDefault(wv))
+		WAVE wv = root:SMAfullscan
+	endif
+	if(!WaveExists(wv))
+		SMAcameraCoordinates(export = 0)
+		WAVE wv = root:SMAfullscan
+	endif
+
+	if(numImages == 0)
+		SMAload()
+		numImages = PLEMd2getMapsAvailable()
+	endif
+
+	numFullImages = floor(numImages / 24)
+	Wave fullimage = SMAmergeAndRename(wv, 0, 24)
+	Duplicate/O fullimage root:SMAimagestack/WAVE=imagestack
+	Redimension/N=(-1, -1, numFullImages) imagestack
+
+	for(i = 1; i < numFullImages; i += 1)
+		Wave fullimage = SMAmergeAndRename(wv, i, 24)
+		if(WaveExists(fullimage))
+			MultiThread imagestack[][][i] = fullimage[p][q]
+			KillWaves/Z fullimage
+		endif
+	endfor
+
+	SMAimageStackopenWindow()
+End
+
+// save storage by converting image to full uint
+Function SMAconvertWaveToUint(wv, [bit])
+	WAVE wv
+	Variable bit
+
+	Variable wMin, wMax
+	Variable numSpace
+
+	bit = ParamIsDefault(bit) ? 32 : bit
+	numSpace = 2^bit - 1
+
+	wMin = WaveMin(wv)
+	wv -= wMin
+
+	wMax = WaveMax(wv)
+	wv[][] = round(wv[p][q] / wMax * numSpace)
+
+	switch(bit)
+		case 16:
+			Redimension/W/U wv // 16bit
+			break
+		case 8:
+			Redimension/B/U wv // 8bit
+			break
+		case 32:
+		default:
+			Redimension/I/U wv // 32bit
+	endswitch
 End
 
 Function/S SMAbuildGraphPLEM()
@@ -86,8 +206,10 @@ Function/S SMAbuildGraphPLEM()
 	graphName = S_name
 
 	WAVE wavCoordinates = root:coordinates
-	AppendToGraph/W=$graphName wavCoordinates[][0]/TN=coordinates vs wavCoordinates[][1]
-	ModifyGraph/W=$graphName mode(coordinates)=3,marker(coordinates)=1,msize(coordinates)=2
+	if(WaveExists(wavCoordinates))
+		AppendToGraph/W=$graphName wavCoordinates[][0]/TN=coordinates vs wavCoordinates[][1]
+		ModifyGraph/W=$graphName mode(coordinates)=3,marker(coordinates)=1,msize(coordinates)=2
+	endif
 
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
@@ -134,18 +256,18 @@ Function SMAtestSizeAdjustment()
 		NVAR/Z numSizeAdjustment = root:numSizeAdjustment
 	endif
 
-	WAVE fullimage = SMAmergeImages(createNew = 0)
+	WAVE fullimage = SMAmergeImages(1, createNew = 0)
 	graphName1 = SMAbuildGraphPLEM()
 	graphName2 = SMAbuildGraphFullImage()
 
 	for(i = 0; i < 10; i += 1)
-		numSizeAdjustment = (0.940 + i * 0.005)
+		numSizeAdjustment = (0.9760 + i * 0.0001)
 		SMAread()
-		WAVE fullimage = SMAmergeImages(createNew = 1)
-		Duplicate/O fullimage $("root:fullImage_" + num2str(numSizeAdjustment * 1e3))
+		WAVE fullimage = SMAmergeImages(1, createNew = 1)
+		Duplicate/O fullimage $("root:fullImage_" + num2str(numSizeAdjustment * 1e4))
 
-		SavePICT/WIN=$graphName1/O/P=home/E=-5/B=72 as "fullImage_" + num2str(numSizeAdjustment * 1e3) + ".png"
-		SavePICT/WIN=$graphName2/O/P=home/E=-5/B=72 as "sizeAdjustment_" + num2str(numSizeAdjustment * 1e3) + ".png"
+		SavePICT/WIN=$graphName1/O/P=home/E=-5/B=72 as "fullImage_" + num2str(numSizeAdjustment * 1e4) + ".png"
+		SavePICT/WIN=$graphName2/O/P=home/E=-5/B=72 as "sizeAdjustment_" + num2str(numSizeAdjustment * 1e4) + ".png"
 	endfor
 End
 
@@ -171,7 +293,7 @@ Function/WAVE SMAestimateBackground()
 	dim1 = DimSize(stats.wavPLEM, 1)
 	Make/N=(dim0, dim1) root:background/WAVE=background
 
-	WAVE median = SMAmedian()
+	WAVE median = SMAgetMedian()
 	background = median
 
 	// remove gaussian background from illumination
@@ -194,7 +316,7 @@ Function/WAVE SMAestimateBackground()
 	return background
 End
 
-Function/WAVE SMAmedian([overwrite])
+Function/WAVE SMAgetMedian([overwrite])
 	Variable overwrite
 
 	Variable i, dim0, dim1
@@ -204,28 +326,23 @@ Function/WAVE SMAmedian([overwrite])
 
 	overwrite = ParamIsDefault(overwrite) ? 0 : !!overwrite
 
-	WAVE/Z source = root:source
-	if(!WaveExists(source) || overwrite)
-		SMAcovariance()
-		WAVE source = root:source
-	endif
-
 	WAVE/Z myMedian = root:SMAmedian
 	if(WaveExists(myMedian) && !overwrite)
 		return myMedian
 	endif
 	WaveClear myMedian
 
-	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
 
 	dim0 = DimSize(stats.wavPLEM, 0)
 	dim1 = DimSize(stats.wavPLEM, 1)
-	if(dim1 == 0)
-		dim1 = 1
-	endif
-	Make/O/N=(dim0, dim1) root:backgroundMedian/WAVE=myMedian
+	dim1 = dim1 != 0 ? dim1 : 1 // dim1 = 0 and dim1 = 1 is the same
+	Make/O/N=(dim0, dim1) root:SMAmedianBackground/WAVE=myMedian
+	SetScale/P x, 0, 1, myMedian
+	SetScale/P y, 0, 1, myMedian
 
 	// calculate median of all images
+	//Make/O/N=(dim0, dim1, gnumMapsAvailable) root:SMAmedianMatrix/WAVE=bgMatrix
 	Make/FREE/N=(dim0, dim1, gnumMapsAvailable) bgMatrix
 	for(i = 0; i < gnumMapsAvailable; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
@@ -242,11 +359,11 @@ Function/WAVE SMAmedian([overwrite])
 		myMedian[pVal][qVal] = median(currentPixel)
 		WaveClear currentPixel
 	endfor
+	duplicate/o bgmatrix root:temp
 	WaveClear bgMatrix
 
 	if(dim1 == 1)
 		Redimension/N=(dim0) myMedian
-		SetScale/P x, DimOffset(stats.wavPLEM, 0), DimDelta(stats.wavPLEM, 0), myMedian
 	endif
 
 	return myMedian

@@ -6,6 +6,48 @@
 #include "utilities-peakfind"
 #include "utilities-peakfit"
 
+Function SMAsinglePeakAction(startX, endX)
+	Variable startX, endX
+	
+	smareset()
+
+	WAVE source = SMAgetSourceWave(overwrite = 1)
+
+	STRUCT PLEMd2Stats stats
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+	Duplicate/O stats.wavWavelength root:wavelength/WAVE=wl
+
+	findvalue/V=(startX)/T=1 wl
+	variable start = V_Value
+	findvalue/V=(endX)/T=1 wl
+	variable ende = V_value
+
+	// sync correlation
+	Duplicate/O/R=[0,*][start, ende] source root:source_extracted/wave=source2
+	matrixop/O root:timecorrelation_extracted = getdiag(synccorrelation(source2^t), 0)
+
+	// lor fit
+	variable dim0 = DimSize(source, 0)
+	variable i
+	variable height, position, fwhm
+	Duplicate/O source root:source_fit/WAVE=myfitwave
+	myfitwave = NaN
+	Make/FREE/N=4 coefWave
+	Make/O/N=(dim0) root:source_maxHeight/WAVE=wvHeight
+	Make/O/N=(dim0) root:source_maxPosition/WAVE=wvPosition
+	Make/O/N=(dim0) root:source_maxFWHM/WAVE=wvFwhm
+	for(i = 0; i < dim0; i += 1)
+		CurveFit/Q lor, kwCWave=coefWave source[i][start, ende] /X=wl[start, ende] /D=myfitwave[i][start, ende]
+		wvHeight[i]   = coefWave[0] + coefWave[1] / coefWave[3]
+		wvPosition[i] = coefWave[2]
+		wvFwhm[i]     = 2 * sqrt(2 / ((1 / coefWave[3]) - (coefWave[0] / coefWave[1])) - coefWave[3])
+	endfor
+	dowindow/F $stats.strPLEM
+	if(!V_flag)
+		Display/N=$stats.strPLEM wvHeight as stats.strPLEM
+	endif
+end
+
 Function SMApeakFindMass(verbose)
 	variable verbose
 	variable i
@@ -28,8 +70,8 @@ Function SMApeakFindMass(verbose)
 	endfor
 End
 
-Function/WAVE SMApeakFind(input, [info, verbose, createWaves, maxPeaks, minPeakPercent, smoothingFactor])
-	WAVE input
+Function/WAVE SMApeakFind(input, [info, wvXdata, verbose, createWaves, maxPeaks, minPeakPercent, smoothingFactor])
+	WAVE input, wvXdata
 	STRUCT SMAinfo &info
 	variable verbose, createWaves, maxPeaks, minPeakPercent, smoothingFactor
 
@@ -66,7 +108,11 @@ Function/WAVE SMApeakFind(input, [info, verbose, createWaves, maxPeaks, minPeakP
 	WAVE nospikes = Utilities#removeSpikes(wv)
 	 //WAVE nobackground = Utilities#RemoveBackground(nospikes)
 
-	WAVE guess = Utilities#PeakFind(nospikes, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
+	if(ParamIsDefault(wvXdata))
+		WAVE guess = Utilities#PeakFind(nospikes, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
+	else
+		WAVE guess = Utilities#PeakFind(nospikes, wvXdata = wvXdata, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
+	endif
 	WAVE/WAVE coef = Utilities#BuildCoefWv(nospikes, peaks = guess, dfr = info_copy.dfrPeakFit, verbose = verbose)
 	WAVE/WAVE peakParam = Utilities#fitGauss(nospikes, wvCoef = coef, verbose = verbose)
 	
@@ -100,28 +146,7 @@ Function/WAVE SMApeakFind(input, [info, verbose, createWaves, maxPeaks, minPeakP
 	endif
 
 	Utilities#KillWaveOfWaves(coef)
-	
-	numResults = 0
-	if(WaveExists(peakParam))
-		numResults = DimSize(peakParam, 0)
-	endif
-
-	Make/FREE/N=(numResults, 6) result
-	SetDimLabel 1, 0, position, result
-	SetDimLabel 1, 1, intensity, result
-	SetDimLabel 1, 2, fwhm, result
-	SetDimLabel 1, 3, position_err, result
-	SetDimLabel 1, 4, intensity_err, result
-	SetDimLabel 1, 5, fwhm_err, result
-	for(i = 0; i < numResults; i += 1)
-		wave peak = peakParam[i]
-		result[i][%position] = peak[0][0]
-		result[i][%position_err] = peak[0][1]
-		result[i][%intensity] = peak[1][0]
-		result[i][%intensity_err] = peak[1][1]
-		result[i][%fwhm] = peak[3][0]
-		result[i][%fwhm_err] = peak[3][1]
-	endfor
+	WAVE result = Utilities#peakParamToResult(peakParam)
 
 	return result
 End
