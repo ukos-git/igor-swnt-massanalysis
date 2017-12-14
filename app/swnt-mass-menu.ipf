@@ -18,6 +18,16 @@ Menu "MassAnalysis"
 	"Calculate camerascan from TiltPlane", /Q, SMAtasksGetTiltPlane()
 	"Load single CameraScan", /Q, SMAmergeImages(0)
 	"Process Image Stack", SMAprocessImageStack()
+	"Search focus", SMAtasksPointZero()
+End
+
+Function SMAtasksPointZero()
+	SMAgetFocuspoints()
+	Duplicate/O/R=[][2] root:SMAcameraIntensityCoordinates root:SMAcameraIntensityCoordinateZ/wave=coordinateZ
+	Redimension/N=(-1, 0) coordinateZ
+	Display/K=0 root:SMAcameraIntensitySmth vs coordinateZ
+	WaveStats/Q root:SMAcameraIntensitySmth
+	print "maximum", coordinateZ[V_maxloc], "um"
 End
 
 Function SMAtasksProcessCoordinates()
