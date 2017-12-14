@@ -13,3 +13,12 @@ The sample used in this experiment consists of 2µm broad trench structure with 
 
 Background is fit with a large gaussian to the sum of all images that were loaded to substract the illumination of the lamp:
 ![Background substraction for Andor Clara](https://github.com/ukos-git/igor-swnt-massanalysis/blob/master/images/getCoordinates_FitBackground_contour.png)
+
+24 Images are combined to a single image that gives a good overview where to find the carbon nanotubes:
+![24 images combined at best focus](https://github.com/ukos-git/igor-swnt-massanalysis/blob/master/images/combined-images/SMAgetCoordinatesfullImageSi.png)
+
+The same can be done for different cameras. Here we use a InGaAs Camera that records a lot more carbon nanotubes but due to its larger pixel size not as accurate as the silicon camera above:
+![Xenics Xeva](https://github.com/ukos-git/igor-swnt-massanalysis/blob/master/images/combined-images/SMAgetCoordinatesfullImageInGaAs.png)
+
+From those images, good carbon nanotube positions are picked and a coordinate list is generated. From each position spectra are recorded:
+![typical trench scan](https://github.com/ukos-git/igor-swnt-massanalysis/blob/master/images/combined-images/SMAgetCoordinatesfullImageSi_zoom.png)
