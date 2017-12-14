@@ -536,29 +536,37 @@ Function SMAaddCoordinates(currentCoordinates, [text])
 	return numCoords
 End
 
-Function SMAcameraCoordinates([Zzero])
+// Zzero is the new zero position to which the z values will be corrected
+// i.e. the new focus point at (x,y) = (0,0)
+Function SMAcameraCoordinates([Zzero, export])
 	Variable Zzero
+	Variable export
+	
+	export = ParamIsDefault(export) ? 1 : !!export
 
-	Variable xstep = 50, ystep = 80, zstep = -0.5
+	Variable xstep = 48, ystep = 80, zstep = -1
 
-	// Zzero is the new zero position to which the z values will be corrected
-	// i.e. the new focus point at (x,y) = (0,0)
-	if(ParamIsDefault(Zzero))
-		Zzero = 0
-	else
-		Zzero -= SMAcameraGetTiltPlane(0, 0)
-	endif
+	Zzero = ParamIsDefault(Zzero) ? SMAcameraGetTiltPlane(0, 0) : Zzero
 
-	// 4 scans in x = 300/80
-	// 6 scans in y = 300/50
-	// 8 scans in z direction (148.5um to 152.5um in 0.5um steps) = 5 um 0.5um
+	// 4 scans in x = 300/64
+	// 6 scans in y = 300/48
+	// 8 scans in z direction (4um from laserfocus to bottom of trench in 0.5um steps)
 	// --> 16 hours when integrating 300s.
 
-	Make/O/N=(4*6*8, 3) root:SMAfullscan/WAVE=wv
+	Make/O/N=(4 * 6 * 8, 3) root:SMAfullscan/WAVE=wv
 
-	wv[][0] = 25 + mod(floor(p / 4) * xstep, 300)
+	wv[][0] = 4 * 6 + mod(floor(p / 4), 6) * xstep
 	wv[][1] = 30 + mod(p, 4) * ystep
-	wv[][2] = Zzero + SMAcameraGetTiltPlane(wv[p][0], wv[p][1]) + floor(p/24) * zstep
+	wv[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) + floor(p / (4 * 6)) * zstep
+
+	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan00/WAVE=singlescan00
+	singlescan00[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero)
+
+	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan20/WAVE=singlescan20
+	singlescan20[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 2
+
+	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan40/WAVE=singlescan40
+	singlescan40[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 4
 
 	Duplicate/O/R=[0,4*6-1] wv root:SMAsinglescan/WAVE=singlescan
 	Save/J/O/DLIM=","/P=home singlescan as "camerascan.csv"
