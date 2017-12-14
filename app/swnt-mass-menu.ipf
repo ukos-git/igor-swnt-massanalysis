@@ -5,7 +5,7 @@ Menu "CameraImage"
 	// CTRL+0 is the keyboard shortcut
 	"AddCoordinates/1", /Q, AddCoordinatesFromGraph()
 	"Set WaveScale zero", /Q, SetScaleToCursor()
-	"Process xyz coordinates", /Q, SMAprocessCoordinates()
+	"Process xyz coordinates", /Q, SMAtasksProcessCoordinates()
 	"PeakFind for coordinates", /Q, GetCoordinates()
 	"Correct Image overlap", /Q, SMAtestSizeAdjustment()
 End
@@ -17,6 +17,14 @@ End
 Menu "MassAnalysis"
 	"Calculate camerascan from TiltPlane", /Q, SMAtasksGetTiltPlane()
 	"Process Image Stack", SMAprocessImageStack()
+End
+
+Function SMAtasksProcessCoordinates()
+	RoundCoordinates(accuracy = 4)
+	SortCoordinates()
+	DeleteCoordinates(-5, 305)
+	print "zero at ", SMAcameraGetTiltPlane(0,0)
+	SMAcalcZcoordinateFromTiltPlane()
 End
 
 Function SMAtasksGetTiltPlane()

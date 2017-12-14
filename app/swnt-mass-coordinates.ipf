@@ -271,22 +271,28 @@ Function RoundCoordinates([accuracy])
 	coordinates[][0] = round(coordinates[p][0] / accuracy) * accuracy
 End
 
-Function SMAprocessCoordinates()
-	RoundCoordinates(accuracy = 4)
-	SortCoordinates()
-	DeleteCoordinates(-5, 305)
-	SMAcalcZcoordinateFromTiltPlane()
-End
+Function SMAcalcZcoordinateFromTiltPlane([wv, zOffset])
+	WAVE wv
+	variable zOffset
 
-Function SMAcalcZcoordinateFromTiltPlane()
+	zOffset = ParamIsDefault(zOffset) ? SMAcameraGetTiltPlane(0,0) : zOffset
+
+	if(ParamIsDefault(wv))
+		WAVE wv = root:coordinates
+	endif
+	if(!WaveExists(wv))
+		print "SMAcalcZcoordinateFromTiltPlane: input wave does not exist"
+		return 0
+	endif
+
 	WAVE/Z normal = root:SMAcameraPlaneNormal
 	WAVE/Z distance = root:SMAcameraPlaneDistance
 	if(!WaveExists(normal) || !WaveExists(distance))
-		print "SMAtasksFillTiltPlane: nothing done"
+		print "SMAcalcZcoordinateFromTiltPlane: nothing done"
 		return 0
 	endif
-	WAVE coordinates = root:coordinates
-	coordinates[][2] = SMAcameraGetTiltPlane(coordinates[p][0],coordinates[p][1])
+
+	wv[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zOffset)
 End
 
 Function SMAgetCoordinates()
