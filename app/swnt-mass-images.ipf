@@ -102,7 +102,7 @@ End
 // the wave stackCoordinates is split to coordinate lists that have the size stackSize.
 // the function can be called multiple times with varying stackNumber to merge differnt
 // parts of the coordinate list.
-Function SMAmergeAndRename(stackCoordinates, stackNumber, stackSize)
+Function/WAVE SMAmergeAndRename(stackCoordinates, stackNumber, stackSize)
 	WAVE stackCoordinates
 	Variable stackNumber, stackSize
 
@@ -114,29 +114,49 @@ Function SMAmergeAndRename(stackCoordinates, stackNumber, stackSize)
 	WAVE found = SMAfindCoordinatesInPLEM(scan)
 	make/free/n=(stackSize) normalnumber = numType(found[p]) == 0
 	if(sum(normalnumber) < stackSize / 4)
-		return 0
+		return $""
 	endif
 	Duplicate/O found 	root:found/WAVE=found
 	WAVE fullimage = SMAmergeImages(1, indices = found)
 	SMAconvertWaveToUint(fullimage, bit = 8)
 	Rename fullimage $UniqueName("fullimage", 1, 0)
+
+	return fullimage
 End
 
-Function SMAimageStack([wv])
+Function SMAprocessImageStack([wv])
 	WAVE wv
 
-	Variable i
+	Variable i, numFullImages
 	Variable numImages = PLEMd2getMapsAvailable()
 
 	if(ParamIsDefault(wv))
 		WAVE wv = root:SMAfullscan
 	endif
 	if(!WaveExists(wv))
-		Abort "please import or create the fullscan data first"
+		SMAcameraCoordinates(export = 0)
+		WAVE wv = root:SMAfullscan
 	endif
-	for(i = 0; i < floor(numImages / 24); i += 1)
-		SMAmergeAndRename(wv, i, 24)
+
+	if(numImages == 0)
+		SMAload()
+		numImages = PLEMd2getMapsAvailable()
+	endif
+
+	numFullImages = floor(numImages / 24)
+	Wave fullimage = SMAmergeAndRename(wv, 0, 24)
+	Duplicate/O fullimage root:SMAimagestack/WAVE=imagestack
+	Redimension/N=(-1, -1, numFullImages) imagestack
+
+	for(i = 1; i < numFullImages; i += 1)
+		Wave fullimage = SMAmergeAndRename(wv, i, 24)
+		if(WaveExists(fullimage))
+			MultiThread imagestack[][][i] = fullimage[p][q]
+			KillWaves/Z fullimage
+		endif
 	endfor
+
+	SMAimageStackopenWindow()
 End
 
 // save storage by converting image to full uint
