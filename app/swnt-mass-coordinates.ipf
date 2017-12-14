@@ -306,7 +306,7 @@ Function SMAgetCoordinates()
 	Variable i
 	STRUCT PLEMd2Stats stats
 
-	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	variable numMaps = PLEMd2getMapsAvailable()
 
 	SMAresetCoordinates()
 	SMAbuildGraphPLEM()
@@ -315,7 +315,7 @@ Function SMAgetCoordinates()
 	//SMAparticleAnalysis(currentImage)
 
 	wave background = SMAestimateBackground()
-	for(i = 0; i < gnumMapsAvailable; i += 1)
+	for(i = 0; i < numMaps; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		Duplicate/FREE stats.wavPLEM, currentImage
 		ImageFilter/O /N=5 median currentImage // remove spikes
