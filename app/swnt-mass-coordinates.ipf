@@ -192,7 +192,14 @@ Function AddCoordinatesFromGraph()
 	Redimension/N=(numItems + 1, 3) coordinates
 	coordinates[numItems][0]=vcsr(A)
 	coordinates[numItems][1]=hcsr(A)
-	coordinates[numItems][2]=150
+	WAVE/Z normal = root:SMAcameraPlaneNormal
+	WAVE/Z distance = root:SMAcameraPlaneDistance
+	if(!WaveExists(normal) || !WaveExists(distance))
+		coordinates[numItems][2]=150
+		print "AddCoordinatesFromGraph: missing tilt plane parameters"
+	else
+		coordinates[numItems][2]= SMAcameraGetTiltPlane(coordinates[numItems][0],coordinates[numItems][1])
+	endif
 
 	if(WaveExists(legende))
 		Redimension/N=(numItems + 1, -1) legende
