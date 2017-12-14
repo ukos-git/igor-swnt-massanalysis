@@ -259,13 +259,13 @@ Function SMAtestSizeAdjustment()
 	graphName2 = SMAbuildGraphFullImage()
 
 	for(i = 0; i < 10; i += 1)
-		numSizeAdjustment = (0.940 + i * 0.005)
+		numSizeAdjustment = (0.9760 + i * 0.0001)
 		SMAread()
 		WAVE fullimage = SMAmergeImages(1, createNew = 1)
-		Duplicate/O fullimage $("root:fullImage_" + num2str(numSizeAdjustment * 1e3))
+		Duplicate/O fullimage $("root:fullImage_" + num2str(numSizeAdjustment * 1e4))
 
-		SavePICT/WIN=$graphName1/O/P=home/E=-5/B=72 as "fullImage_" + num2str(numSizeAdjustment * 1e3) + ".png"
-		SavePICT/WIN=$graphName2/O/P=home/E=-5/B=72 as "sizeAdjustment_" + num2str(numSizeAdjustment * 1e3) + ".png"
+		SavePICT/WIN=$graphName1/O/P=home/E=-5/B=72 as "fullImage_" + num2str(numSizeAdjustment * 1e4) + ".png"
+		SavePICT/WIN=$graphName2/O/P=home/E=-5/B=72 as "sizeAdjustment_" + num2str(numSizeAdjustment * 1e4) + ".png"
 	endfor
 End
 

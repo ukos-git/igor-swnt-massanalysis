@@ -7,6 +7,7 @@ Menu "CameraImage"
 	"Set WaveScale zero", /Q, SetScaleToCursor()
 	"Process xyz coordinates", /Q, SMAprocessCoordinates()
 	"PeakFind for coordinates", /Q, GetCoordinates()
+	"Correct Image overlap", /Q, SMAtestSizeAdjustment()
 End
 
 Menu "GraphMarquee"
