@@ -568,8 +568,12 @@ Function SMAcameraCoordinates([Zzero, export])
 	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan40/WAVE=singlescan40
 	singlescan40[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 4
 
-	Duplicate/O/R=[0,4*6-1] wv root:SMAsinglescan/WAVE=singlescan
-	Save/J/O/DLIM=","/P=home singlescan as "camerascan.csv"
+	if(export)
+		Save/J/O/DLIM=","/P=home singlescan00 as "singlescan00.csv"
+		Save/J/O/DLIM=","/P=home singlescan20 as "singlescan20.csv"
+		Save/J/O/DLIM=","/P=home singlescan40 as "singlescan40.csv"
+		Save/J/O/DLIM=","/P=home wv as "fullscan.csv"
+	endif
 End
 
 Function SMAcameraGetIntensity()
