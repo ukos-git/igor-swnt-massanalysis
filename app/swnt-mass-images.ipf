@@ -7,9 +7,10 @@ Function/WAVE SMAmergeImages(quick, [createNew, indices])
 	Variable createNew, quick
 	WAVE indices
 
-	Variable pixelX, pixelY, resolution
+	Variable pixelX, pixelY, resolution, imageborders
 	Variable numMaps
 	Variable i, j, k, dim0, dim1
+	variable imagearea = 311
 	STRUCT PLEMd2Stats stats
 
 	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
@@ -42,14 +43,15 @@ Function/WAVE SMAmergeImages(quick, [createNew, indices])
 	// append all Images to one big Image (fullimage)
 	wave background = SMAestimateBackground()
 	resolution = (abs(DimDelta(stats.wavPLEM, 0)) + abs(DimDelta(stats.wavPLEM, 1))) / 2
-	resolution = ceil(311 / resolution) // data points from -5µm to 330µm
+	resolution = ceil(imagearea / resolution)
 
 	Make/O/N=(resolution, resolution) root:fullimage/WAVE=fullimage = 0
 	Make/FREE/B/U/N=(resolution, resolution) fullimagenorm = 0
 	Make/FREE/N=(dim0, dim1) currentImage
 
-	SetScale/I x, -5, 305, fullimage
-	SetScale/I y, -5, 305, fullimage
+	imageborders = abs(imagearea - 300 - 1) / 2
+	SetScale/I x, 0 - imageborders , 300 + imageborders, fullimage
+	SetScale/I y, 0 - imageborders , 300 + imageborders, fullimage
 
 	numMaps = DimSize(indices, 0)
 	for(i = 0; i < numMaps; i += 1)
