@@ -4,7 +4,7 @@
 Function/WAVE SMAgetSourceWave([overwrite])
 	Variable overwrite
 
-	Variable i, dim1, numMarkers
+	Variable i, dim1, dim2, numMarkers
 	STRUCT PLEMd2Stats stats
 
 	Variable dim0 = PLEMd2getMapsAvailable()
@@ -22,18 +22,24 @@ Function/WAVE SMAgetSourceWave([overwrite])
 
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 	dim1 = DimSize(stats.wavPLEM, 0)
-	Make/O/N=(dim0, dim1) dfr:$name/WAVE=wv
+	dim2 = DimSize(stats.wavPLEM, 1)
+	dim2 = dim2 == 0 ? 1 : dim2
+	Make/O/N=(dim0, dim1 * dim2) dfr:$name/WAVE=wv
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		WAVE nospikes = Utilities#removeSpikes(stats.wavPLEM)
-		wv[i][] = nospikes[q]
+		wv[i][] = nospikes[mod(q, dim1)][floor(q / dim1)]
 	endfor
 
 	DoWindow SMAsourceGraph
 	if(V_flag == 0)
 		SMAcopyWavelengthToRoot()
 		Display/N=SMAsourceGraph
-		AppendImage root:source vs {*, root:wavelengthImage}
+		if(dim2 == 1)
+			AppendImage root:source vs {*, root:wavelengthImage}
+		else
+			AppendImage root:source vs {*, *}
+		endif
 		ModifyImage ''#0  ctab= {*,*,YellowHot256,1}
 		numMarkers = round(DimSize(wv, 0) / 4)
 		Make/O/N=(numMarkers) root:markers_source/WAVE=markers = p * 4
