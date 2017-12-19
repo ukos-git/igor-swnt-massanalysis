@@ -2,7 +2,7 @@
 #pragma rtGlobals=3
 
 Menu "CameraImage"
-	// CTRL+0 is the keyboard shortcut
+	// CTRL+1 is the keyboard shortcut
 	"AddCoordinates/1", /Q, AddCoordinatesFromGraph()
 	"Set WaveScale zero", /Q, SetScaleToCursor()
 	"Process xyz coordinates", /Q, SMAtasksProcessCoordinates()
