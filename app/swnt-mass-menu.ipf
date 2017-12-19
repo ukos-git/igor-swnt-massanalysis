@@ -22,7 +22,7 @@ Menu "MassAnalysis"
 End
 
 Function SMAtasksPointZero()
-	SMAgetFocuspoints()
+	SMAgetFocuspoints(graph = 1)
 	Duplicate/O/R=[][2] root:SMAcameraIntensityCoordinates root:SMAcameraIntensityCoordinateZ/wave=coordinateZ
 	Redimension/N=(-1, 0) coordinateZ
 	Display/K=0 root:SMAcameraIntensitySmth vs coordinateZ
