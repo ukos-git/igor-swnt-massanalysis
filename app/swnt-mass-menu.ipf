@@ -32,10 +32,13 @@ End
 
 Function SMAtasksProcessCoordinates()
 	RoundCoordinates(accuracy = 4)
+	print "rounded coordinates"
 	SortCoordinates()
+	print "sorted coordinates"
 	DeleteCoordinates(-5, 305)
-	print "zero at ", SMAcameraGetTiltPlane(0,0)
+	print "deleted range from -5um to 305um"
 	SMAcalcZcoordinateFromTiltPlane()
+	print "SMAcalcZcoordinateFromTiltPlane(zOffset = ", SMAcameraGetTiltPlane(0,0), ")"
 End
 
 Function SMAtasksGetTiltPlane()
