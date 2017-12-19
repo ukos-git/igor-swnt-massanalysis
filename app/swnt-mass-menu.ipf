@@ -5,7 +5,7 @@ Menu "CameraImage"
 	// CTRL+1 is the keyboard shortcut
 	"AddCoordinates/1", /Q, AddCoordinatesFromGraph()
 	"Set WaveScale zero", /Q, SetScaleToCursor()
-	"Process xyz coordinates", /Q, SMAtasksProcessCoordinates()
+	"Process xyz coordinates", SMAtasksProcessCoordinates()
 	"PeakFind for coordinates", /Q, GetCoordinates()
 	"Correct Image overlap", /Q, SMAtestSizeAdjustment()
 End
