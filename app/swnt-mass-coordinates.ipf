@@ -654,7 +654,9 @@ Function/WAVE SMAgetFocuspoints([graph])
 
 	numPeaks = DimSize(peakfind, 0)
 	Make/O/N=(numPeaks,3) root:SMAcameraFocusPoints/WAVE=focuspoints
-	focuspoints[][] = coordinates[round(peakfind[limit(p, 0, numPeaks - 1)][%position])][q]
+	if(numPeaks > 0)
+		focuspoints[][] = coordinates[round(peakfind[limit(p, 0, numPeaks - 1)][%position])][q]
+	endif
 	print "SMAgetFocuspoints(): focus maxima"
 	for(i = 0; i < numPeaks; i += 1)
 		printf "peak%d: \t file-number:\t%06.2f \t x-Axis: \t%06.2f \ty-Axis: \t%06.2f \tz-Axis: \t%06.2f\r", i, peakfind[i][%position], focuspoints[i][0], focuspoints[i][1], focuspoints[i][2]
