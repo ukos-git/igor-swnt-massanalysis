@@ -161,6 +161,28 @@ Function SMAprocessImageStack([wv])
 	SMAimageStackopenWindow()
 End
 
+Function SMAmergeTimeSeries()
+	Variable i
+	Variable numImages = PLEMd2getMapsAvailable()
+
+	STRUCT PLEMd2Stats stats
+
+	if(numImages == 0)
+		SMAload()
+	endif
+
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+	Duplicate/O stats.wavPLEM root:SMAimagestack/WAVE=imagestack
+	Redimension/N=(-1, -1, numImages) imagestack
+
+	for(i = 1; i < numImages; i += 1)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+		MultiThread imagestack[][][i] = stats.wavPLEM[p][q]
+	endfor
+
+	SMAimageStackopenWindow()
+End
+
 // save storage by converting image to full uint
 Function SMAconvertWaveToUint(wv, [bit])
 	WAVE wv
