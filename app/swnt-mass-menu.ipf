@@ -12,6 +12,7 @@ End
 
 Menu "GraphMarquee"
 	"Erase Points", SMA_EraseMarqueeArea()
+	"Extract z-dimension", SMA_ExtractSumMarqueeArea()
 End
 
 Menu "MassAnalysis"

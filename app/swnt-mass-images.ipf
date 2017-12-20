@@ -183,6 +183,55 @@ Function SMAmergeTimeSeries()
 	SMAimageStackopenWindow()
 End
 
+// see ACW_EraseMarqueeArea.
+Function SMA_ExtractSumMarqueeArea()
+	variable pStart, pEnd, qStart, qEnd
+	variable i, dim2, cursorExists
+	string sourcewin, destwin
+	variable normalization = 1
+	string outputName = "timetrace"
+	
+	sourcewin = WinName(0, 1)
+	destwin = outputName
+
+	GetMarquee left, bottom //V_bottom, V_top, V_left and V_right
+	if (V_flag == 0)
+		return 0
+	endif
+	
+	WAVE/Z image = getTopWindowImage()
+	pStart = ScaleToIndex(image, V_left, 0)
+	pEnd = ScaleToIndex(image, V_right, 0)
+	qStart = ScaleToIndex(image, V_bottom, 1)
+	qEnd = ScaleToIndex(image, V_top, 1)
+
+	SMAorderAsc(pStart, pEnd)
+	SMAorderAsc(qStart, qEnd)
+
+	DoWindow $destwin
+	if(!V_Flag)
+		Display/N=$destwin
+	endif
+
+	outputName = UniqueName(outputName, 1, 0)
+	dim2 = DimSize(image, 2)
+	Make/N=(dim2) $outputName/WAVE=wv
+
+	cursorExists = strlen(CsrInfo(A)) > 0 && strlen(CsrInfo(B)) > 0
+
+	for(i = 0; i < dim2; i += 1)
+		Duplicate/FREE/R=[pStart, pEnd][qStart, qEnd][i] image, marqueearea
+		if(cursorExists)
+			Duplicate/FREE/R=[pcsr(a, sourcewin), pcsr(b, sourcewin)][qcsr(a, sourcewin), qcsr(b, sourcewin)][i] image, reference
+			normalization = sum(reference)
+		endif
+		wv[i] = sum(marqueearea) / normalization
+	endfor
+
+	AppendToGraph/W=$destwin wv
+	print outputname
+End
+
 // save storage by converting image to full uint
 Function SMAconvertWaveToUint(wv, [bit])
 	WAVE wv
