@@ -71,16 +71,28 @@ Function/Wave SMA_PromptTrace()
     return wv
 End
 
-Function SetScaleToCursor()
-	Variable aExists = 0
+Function/WAVE getTopWindowImage()
 	String topWindowImages =	ImageNameList("",";")
 
 	if(ItemsInList(topWindowImages) == 0)
 		print "no Image found in top graph"
-		return 0
+		return $""
 	endif
 
 	WAVE/Z image = ImageNameToWaveRef("", StringFromList(0, topWindowImages))
+	if(!WaveExists(image))
+		print "image wave does not exist."
+		return $""
+	endif
+
+	return image
+End
+
+Function SetScaleToCursor()
+	Variable aExists = 0
+	String topWindowImages =	ImageNameList("",";")
+
+	WAVE/Z image = getTopWindowImage()
 	if(!WaveExists(image))
 		print "image wave does not exist."
 		return 0
