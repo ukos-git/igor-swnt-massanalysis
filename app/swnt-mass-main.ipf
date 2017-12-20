@@ -45,15 +45,15 @@ Function SMAmapInfo()
 	String strPLEM
 	Variable i
 
-	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	variable numSpectra = PLEMd2getMapsAvailable()
 	STRUCT PLEMd2Stats stats
 	STRUCT SMAinfo info
 
 	SMAstructureLoad(info)
-	info.numSpectra = gnumMapsAvailable
+	info.numSpectra = numSpectra
 	Redimension/N=(info.numSpectra) info.wavSpectra
 
-	for(i = 0; i < gnumMapsAvailable; i += 1)
+	for(i = 0; i < numSpectra; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
 		info.wavSpectra[i] = stats.wavPLEM
@@ -71,7 +71,7 @@ Function SMAgetBestSpectra(bestEnergy)
 	string secondBestPLEM, currentPLEM
 	string bestPLEM = ""
 
-	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
+	variable numSpec = PLEMd2getMapsAvailable()
 	STRUCT PLEMd2Stats stats
 
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
@@ -107,7 +107,7 @@ Function SMAgetMaximum(bestEnergy)
 	string secondBestPLEM, currentPLEM
 	string bestPLEM = ""
 
-	NVAR numSpec = root:PLEMd2:gnumMapsAvailable
+	variable numSpec = PLEMd2getMapsAvailable()
 	STRUCT PLEMd2Stats stats
 
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
@@ -144,12 +144,12 @@ Function SMAreset([power])
 	String strPLEM
 	Variable i
 
-	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	variable numSpectra = PLEMd2getMapsAvailable()
 	Struct PLEMd2Stats stats
 
 	power = ParamIsDefault(power) ? 1 : !!power
 
-	for(i = 0; i < gnumMapsAvailable; i += 1)
+	for(i = 0; i < numSpectra; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
 		stats.booBackground = 1
@@ -165,13 +165,13 @@ Function SMAbackgroundMedian()
 	String strPLEM
 	Variable i
 
-	NVAR gnumMapsAvailable	 = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	variable numSpectra = PLEMd2getMapsAvailable()
 	Struct PLEMd2Stats stats
 
 	SMAreset(power = 1)
 	WAVE globalMedian = SMAgetMedian(overwrite = 1)
 
-	for(i = 0; i < gnumMapsAvailable; i += 1)
+	for(i = 0; i < numSpectra; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
 		stats.wavPLEM -= globalMedian
@@ -182,17 +182,17 @@ Function SMABackgroundAncestor()
 	String strPLEM, strPLEM2
 	Variable i, previousmax
 
-	NVAR gnumMapsAvailable	 = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	Variable numSpectra = PLEMd2getMapsAvailable()
 	Struct PLEMd2Stats stats
 	Struct PLEMd2Stats stats2
 
-	for(i = 0; i < gnumMapsAvailable; i += 1)
+	for(i = 0; i < numSpectra; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
 		stats.wavPLEM = stats.wavmeasure - stats.wavbackground
 	endfor
 
-	for(i = 2; i < gnumMapsAvailable; i += 1)
+	for(i = 2; i < numSpectra; i += 1)
 		strPLEM = PLEMd2strPLEM(i-1)
 		PLEMd2statsLoad(stats, strPLEM)
 		previousmax = WaveMax(stats.wavPLEM)
@@ -210,9 +210,9 @@ Function SMAanalyse(min, max)
 	Struct PLEMd2Stats stats
 	String strPLEM, caption
 	Variable i
-	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	Variable numSpectra = PLEMd2getMapsAvailable()
 
-	for(i = 1; i < gnumMapsAvailable; i += 1)
+	for(i = 1; i < numSpectra; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
 		Wavestats/Q stats.wavPLEM
