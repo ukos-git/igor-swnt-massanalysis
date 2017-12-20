@@ -11,6 +11,7 @@
 // https://github.com/ukos-git/igor-swnt-plem
 
 strConstant cSMApackage = "swnt-mass-analysis"
+StrConstant cstrSMAroot = "root:Packages:SMA:"
 
 // call SMAread() directly.
 Function SMAload()
@@ -233,4 +234,93 @@ Function SMAkillAllWindows()
 		myWindow = "win_spectra50_00_" + num2str(i)
 		KillWindow/Z $myWindow
 	endfor
+End
+
+Function/DF SMAgetPackageRoot()
+	variable i, startFolder, numFolders
+	string currentFolder = ""
+	
+	if(!DataFolderExists(cstrSMAroot))
+		if(!cmpstr(cstrSMAroot[0,4], "root:"))
+			startFolder = 1
+			currentFolder = "root"
+		endif
+		numFolders = ItemsInList(cstrSMAroot, ":")
+		for(i = startFolder; i < numFolders; i += 1)
+			currentFolder += ":" + StringFromList(i, cstrSMAroot, ":")
+			NewDataFolder/O $currentFolder
+		endfor
+	endif
+	
+	DFREF dfr = $cstrSMAroot
+
+	return dfr
+End
+
+Function/WAVE SMAgetWaveMapsAvailable()
+	variable numSpectra = PLEMd2getMapsAvailable()
+	string strMaps = PLEMd2getStrMapsAvailable()
+	
+	DFREF dfr = SMAgetPackageRoot()
+
+	if(numSpectra == 0)
+		return $""
+	endif
+
+	WAVE/T/Z wv = dfr:mapsavailable
+	if(WaveExists(wv))
+		if(DimSize(wv, 0) == numSpectra)
+			return wv
+		endif
+	endif
+	
+	Make/O/T/N=(numSpectra) dfr:mapsavailable/WAVE=wv = StringFromList(p, strMaps)
+
+	return wv
+End
+
+Function/WAVE PLEMd2getWaveMapsSelected()
+	variable numSpectra = PLEMd2getMapsAvailable()
+	string strMaps = PLEMd2getStrMapsAvailable()
+
+	DFREF dfr = SMAgetPackageRoot()
+
+	if(numSpectra == 0)
+		return $""
+	endif
+
+	WAVE/T/Z wv = dfr:mapsselected
+	if(WaveExists(wv))
+		if(DimSize(wv, 0) != numSpectra)
+			Redimension/N=(numSpectra) dfr:mapsselected
+		endif
+		return wv
+	endif
+
+	Make/O/T/N=(numSpectra) dfr:mapsselection/WAVE=wv = StringFromList(p, strMaps)
+
+	return wv
+End
+
+Function/WAVE PLEMd2getWaveMapsSelection()
+	variable numSpectra = PLEMd2getMapsAvailable()
+	string strMaps = PLEMd2getStrMapsAvailable()
+
+	DFREF dfr = SMAgetPackageRoot()
+
+	if(numSpectra == 0)
+		return $""
+	endif
+
+	WAVE/Z wv = dfr:mapsselection
+	if(WaveExists(wv))
+		if(DimSize(wv, 0) != numSpectra)
+			Redimension/N=(numSpectra) dfr:mapsselection 
+		endif
+		return wv
+	endif
+
+	Make/O/N=(numSpectra) dfr:mapsselection/WAVE=wv = 1
+
+	return wv
 End

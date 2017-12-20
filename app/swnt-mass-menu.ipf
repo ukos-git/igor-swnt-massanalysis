@@ -21,6 +21,7 @@ Menu "MassAnalysis"
 	"Load multiple CameraScans", SMAprocessImageStack()
 	"Merge TimeSeries", SMAmergeTimeSeries()
 	"Search focus (pointzero)", SMAtasksPointZero()
+	"Select Spectra Panel", SMAopenPanelSelectWaves()
 End
 
 Function SMAtasksPointZero()
@@ -56,4 +57,18 @@ Function SMAtasksGetTiltPlane()
 		endif
 	endif
 	Execute "SMAcameraCoordinates()"
+End
+
+Function SMAopenPanelSelectWaves()
+
+	// create waves
+	SMAgetWaveMapsAvailable()
+	PLEMd2getWaveMapsSelected()
+	PLEMd2getWaveMapsSelection()
+
+	DoWindow SMAselectWaves
+	if(!V_flag)
+		Execute/Q "SMAselectWaves"
+	endif
+	DoWindow/F SMAselectWaves
 End

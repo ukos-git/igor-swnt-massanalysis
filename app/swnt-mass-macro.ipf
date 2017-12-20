@@ -106,3 +106,73 @@ Function SMAfullstackSliderProc(sa) : SliderControl
 
 	return 0
 End
+
+Function ListBoxProc_SMAselect(lba) : ListBoxControl
+	STRUCT WMListboxAction &lba
+
+	Variable row = lba.row
+	Variable col = lba.col
+	WAVE/T/Z listWave = lba.listWave
+	WAVE/Z selWave = lba.selWave
+
+	switch( lba.eventCode )
+		case -1: // control being killed
+			break
+		case 1: // mouse down
+			break
+		case 3: // double click
+			break
+		case 4: // cell selection
+		case 5: // cell selection plus shift key
+			WAVE selectedMaps = PLEMd2getWaveMapsSelection()
+			Extract listWave, selectedMaps, selWave[p] == 1
+			break
+		case 6: // begin edit
+			break
+		case 7: // finish edit
+			break
+		case 13: // checkbox clicked (Igor 6.2 or later)
+			break
+	endswitch
+
+	return 0
+End
+
+Function ButtonProc_SMAselectPower(ba) : ButtonControl
+	STRUCT WMButtonAction &ba
+
+	switch( ba.eventCode )
+		case 2: // mouse up
+			// click code here
+			break
+		case -1: // control being killed
+			break
+	endswitch
+
+	return 0
+End
+
+Window SMAselectWaves() : Panel
+	PauseUpdate; Silent 1		// building window...
+	NewPanel /W=(306,137,806,237) as "select waves"
+	ListBox mapsAvailable,pos={0.00,0.00},size={200.00,100.00},proc=ListBoxProc_SMAselect
+	ListBox mapsAvailable,userdata(ResizeControlsInfo)= A"!!*'\"z!!#AW!!#@,z!!#](Aon\"Qzzzzzzzzzzzzzz!!#`-A7TLfzz"
+	ListBox mapsAvailable,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
+	ListBox mapsAvailable,userdata(ResizeControlsInfo) += A"zzz!!#?(FEDG<zzzzzzzzzzzzzz!!!"
+	ListBox mapsAvailable,listWave=root:Packages:SMA:mapsavailable
+	ListBox mapsAvailable,selWave=root:Packages:SMA:mapsselected,mode= 4
+	ListBox mapsSelected,pos={206.00,0.00},size={200.00,100.00}
+	ListBox mapsSelected,userdata(ResizeControlsInfo)= A"!!,G^z!!#AW!!#@,z!!#`-A7TLfzzzzzzzzzzzzzz!!#o2B4uAezz"
+	ListBox mapsSelected,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
+	ListBox mapsSelected,userdata(ResizeControlsInfo) += A"zzz!!#?(FEDG<zzzzzzzzzzzzzz!!!"
+	ListBox mapsSelected,listWave=root:Packages:SMA:mapsselection
+	Button extractpower,pos={414.00,2.00},size={81.00,25.00},proc=ButtonProc_SMAselectPower,title="extract power"
+	Button extractpower,userdata(ResizeControlsInfo)= A"!!,I5!!#7a!!#?[!!#=+z!!#o2B4uAezzzzzzzzzzzzzz!!#o2B4uAezz"
+	Button extractpower,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
+	Button extractpower,userdata(ResizeControlsInfo) += A"zzz!!#u:Du]k<zzzzzzzzzzzzzz!!!"
+	SetWindow kwTopWin,hook(ResizeControls)=ResizeControls#ResizeControlsHook
+	SetWindow kwTopWin,userdata(ResizeControlsInfo)= A"!!*'\"z!!#C_!!#@,zzzzzzzzzzzzzzzzzzzzz"
+	SetWindow kwTopWin,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzzzzzzzzzzzzzzz"
+	SetWindow kwTopWin,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzzzzzzzzz!!!"
+	Execute/Q/Z "SetWindow kwTopWin sizeLimit={375,75,inf,inf}" // sizeLimit requires Igor 7 or later
+EndMacro
