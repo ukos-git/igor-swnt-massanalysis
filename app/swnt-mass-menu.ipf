@@ -17,9 +17,10 @@ End
 
 Menu "MassAnalysis"
 	"Calculate camerascan from TiltPlane", /Q, SMAtasksGetTiltPlane()
-	"Load single CameraScan", /Q, SMAmergeImages(0)
-	"Process Image Stack", SMAprocessImageStack()
-	"Search focus", SMAtasksPointZero()
+	"Load CameraScan", /Q, SMAmergeImages(0)
+	"Load multiple CameraScans", SMAprocessImageStack()
+	"Merge TimeSeries", SMAmergeTimeSeries()
+	"Search focus (pointzero)", SMAtasksPointZero()
 End
 
 Function SMAtasksPointZero()
