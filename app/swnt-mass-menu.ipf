@@ -8,6 +8,7 @@ Menu "CameraImage"
 	"Process xyz coordinates", SMAtasksProcessCoordinates()
 	"PeakFind for coordinates", /Q, GetCoordinates()
 	"Correct Image overlap", /Q, SMAtestSizeAdjustment()
+	"GetHeight/2", SMAtasksPrintZposition()
 End
 
 Menu "GraphMarquee"
@@ -23,6 +24,11 @@ Menu "MassAnalysis"
 	"Search focus (pointzero)", SMAtasksPointZero()
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
 	"Histogram", SMAtasksHistogram()
+End
+
+Function SMAtasksPrintZposition()
+	print "(x,y)=", hcsr(a), ",", vcsr(a)
+	print "z =", SMAcameraGetTiltPlane(hcsr(a), vcsr(a))
 End
 
 Function SMAtasksHistogram()
