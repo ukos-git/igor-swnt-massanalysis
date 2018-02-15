@@ -6,6 +6,7 @@ Menu "CameraImage"
 	"AddCoordinates/1", /Q, AddCoordinatesFromGraph()
 	"Set WaveScale zero", /Q, SetScaleToCursor()
 	"Process xyz coordinates", SMAtasksProcessCoordinates()
+	"Merge Coordinates", SMAtasksMergeCoordinates()
 	"PeakFind for coordinates", /Q, GetCoordinates()
 	"Correct Image overlap", /Q, SMAtestSizeAdjustment()
 	"GetHeight/2", SMAtasksPrintZposition()
@@ -175,6 +176,31 @@ Function SMAopenPanelSelectWaves()
 		Execute/Q "SMAselectWaves"
 	endif
 	DoWindow/F SMAselectWaves
+End
+
+// for coordinates from two camerascans.
+Function SMAtasksMergeCoordinates()
+	WAVE coordinates0, coordinates1, coordinates
+	SMAMergeCoordinates(coordinates0, coordinates1)
+End
+
+// for coordinates from two camerascans.
+// do not input root:coordinates!
+Function/WAVE SMAMergeCoordinates(coordinates0, coordinates1)
+	WAVE coordinates0, coordinates1
+	
+	WAVE/Z coordinates = root:coordinates
+	if(WAVEExists(coordinates))
+		duplicate/o coordinates root:coordinates_backup
+	endif
+
+	Variable dim00, dim01
+	dim00 = DimSize(coordinates0, 0)
+	dim01 = DimSize(coordinates1, 0)
+	make/O/N=(dim00 + dim01, 3) root:coordinates/WAVE=coordinates
+
+	coordinates[0, dim00 - 1] = coordinates0[p][q]
+	coordinates[dim00,*] = coordinates1[p - dim00][q]
 End
 
 // exactscan --> exactcoordinates
