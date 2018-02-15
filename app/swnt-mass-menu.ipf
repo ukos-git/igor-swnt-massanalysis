@@ -28,6 +28,7 @@ Menu "MassAnalysis"
 	"generate exactscan", SMAtasksGenerateExactscan()
 	"load exactscan", SMAtasksLoadExactscan()
 	"convert excactscan to exactcoordinates", SMAtasksGenerateCoordinates()
+	"single peak between cursor", SMAsinglePeakAction(hcsr(A), hcsr(B))
 	"Histogram", SMAtasksHistogram()
 	"Maps: Quick Analysis", SMAquickAnalyseMap()
 End
