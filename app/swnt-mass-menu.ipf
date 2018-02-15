@@ -20,6 +20,7 @@ End
 Menu "MassAnalysis"
 	"Calculate camerascan from TiltPlane", /Q, SMAtasksGetTiltPlane()
 	"Load CameraScan", /Q, SMAmergeImages(0)
+	"Images: Substract Median Background", SMAtasksImagesMedianBG()
 	"Load multiple CameraScans", SMAprocessImageStack()
 	"Merge TimeSeries", SMAmergeTimeSeries()
 	"Search focus (pointzero)", SMAtasksPointZero()
@@ -29,6 +30,32 @@ Menu "MassAnalysis"
 	"convert excactscan to exactcoordinates", SMAtasksGenerateCoordinates()
 	"Histogram", SMAtasksHistogram()
 	"Maps: Quick Analysis", SMAquickAnalyseMap()
+End
+
+Function SMAtasksImagesMedianBG()
+	Variable pOffset, qOffset
+
+	WAVE/Z wv = root:fullimage
+	if(WaveExists(wv))
+		Duplicate/O wv root:fullimage_autobackup
+		pOffset = ScaleToIndex(wv, 0, 0)
+		qOffset = ScaleToIndex(wv, 0, 1)
+		print "minimum at", pOffset, qOffset
+
+		DoWindow/F SMAgetCoordinatesfullImage
+		if(V_flag)
+			Cursor/I A fullimage 0, 0
+		endif
+	endif
+
+	SMAbackgroundMedian(power = 0)
+	SMAmergeImages(0)
+	
+	DoWindow/F SMAgetCoordinatesfullImage
+	if(V_flag)
+		Cursor/I/P A fullimage pOffset, qOffset
+		SetScaleToCursor()
+	endif
 End
 
 Function SMAquickAnalyseMap()
