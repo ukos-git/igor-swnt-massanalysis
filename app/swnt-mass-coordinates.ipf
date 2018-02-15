@@ -586,6 +586,8 @@ Function SMAcameraCoordinates([Zzero, export])
 	Variable xstep = 48, ystep = 80, zstep = -1
 
 	Zzero = ParamIsDefault(Zzero) ? SMAcameraGetTiltPlane(0, 0) : Zzero
+	
+	printf "SMAcameraCoordinates(Zzero = %.2f, export = %d)\r", Zzero, export
 
 	// 4 scans in x = 300/64
 	// 6 scans in y = 300/48
@@ -717,6 +719,8 @@ End
 
 Function/WAVE SMAHessePlaneParameters(focuspoints)
 	WAVE focuspoints
+
+	printf "SMAHessePlaneParameters(%s)\r", GetWavesDataFolder(focuspoints, 2)
 
 	Make/O/N=3 root:SMAcameraPlaneNormal/WAVE=normal
 	Make/O/N=1 root:SMAcameraPlaneDistance/WAVE=distance
