@@ -51,7 +51,8 @@ Function SMAtasksImagesMedianBG()
 	endif
 
 	SMAbackgroundMedian(power = 0)
-	SMAmergeImages(0)
+	Make/FREE/N=24 indices=p
+	SMAmergeImages(0, createNew = 1, indices=indices)
 	
 	DoWindow/F SMAgetCoordinatesfullImage
 	if(V_flag)
