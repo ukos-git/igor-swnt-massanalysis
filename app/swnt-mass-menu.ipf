@@ -156,12 +156,13 @@ Function SMAtasksGetTiltPlane()
 	if(!WaveExists(normal) || !WaveExists(distance))
 		if(numMaps == 0)
 			Execute "SMAread()"
-			Execute "SMAreset()"
+			Execute "SMAreset(power=0)"
 		endif
 	endif
 	Execute "SMAcameraCoordinates()"
 End
 
+// panel for handling different wave-sets in one igor experiment
 Function SMAopenPanelSelectWaves()
 
 	// create waves
