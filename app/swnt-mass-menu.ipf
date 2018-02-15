@@ -18,12 +18,13 @@ Menu "GraphMarquee"
 End
 
 Menu "MassAnalysis"
-	"Calculate camerascan from TiltPlane", /Q, SMAtasksGetTiltPlane()
-	"Load CameraScan", /Q, SMAmergeImages(0)
+	"Get TiltPlane (tiltscan)", /Q, SMAtasksGetTiltPlane()
+	"Recalc TiltPlane", SMAcameraGetTiltPlaneParameters(createNew = 1)
+	"Get focus (pointzero)", SMAtasksPointZero()
+	"Load CameraScan (one focusplane)", /Q, SMAmergeImages(0)
 	"Images: Substract Median Background", SMAtasksImagesMedianBG()
-	"Load multiple CameraScans", SMAprocessImageStack()
-	"Merge TimeSeries", SMAmergeTimeSeries()
-	"Search focus (pointzero)", SMAtasksPointZero()
+	"Load CameraScans (multiple z-focusplanes)", SMAprocessImageStack()
+	"Load CameraScan (timeSeries to z)", SMAmergeTimeSeries()
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
 	"generate exactscan", SMAtasksGenerateExactscan()
 	"load exactscan", SMAtasksLoadExactscan()
