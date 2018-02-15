@@ -162,6 +162,7 @@ Function SMAprocessImageStack([wv])
 	SMAimageStackopenWindow()
 End
 
+// only valid for images
 Function SMAmergeTimeSeries()
 	Variable i
 	Variable numImages = PLEMd2getMapsAvailable()
