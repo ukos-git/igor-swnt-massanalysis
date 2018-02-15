@@ -44,7 +44,7 @@ Function SMAsinglePeakAction(startX, endX)
 	endfor
 	dowindow/F $stats.strPLEM
 	if(!V_flag)
-		Display/N=$stats.strPLEM wvHeight as stats.strPLEM
+		Display/N=$stats.strPLEM wvHeight as "PLEM peak action"
 	endif
 end
 
