@@ -50,16 +50,26 @@ Function SMAtasksImagesMedianBG()
 		endif
 	endif
 
+	print "merge images"
 	SMAbackgroundMedian(power = 0)
 	Make/FREE/N=24 indices=p
-	SMAmergeImages(0, createNew = 1, indices=indices)
+	WAVE fullimage = SMAmergeImages(0, createNew = 1, indices=indices)
+
+	print "substract overall background"
+	WAVE background = SMAestimateBackground(fullimage)
+	MultiThread fullimage -= background
+	MultiThread fullimage = fullimage[p][q] < 0 ? 0 : fullimage[p][q]
+	
+	SMAconvertWaveToUint(fullimage)
 	
 	DoWindow/F SMAgetCoordinatesfullImage
 	if(V_flag)
 		Cursor/I/P A fullimage pOffset, qOffset
 		SetScaleToCursor()
+		ModifyImage fullimage ctab= {*,*,Blue,1}
 	endif
 End
+
 
 Function SMAquickAnalyseMap()
 	variable i, numMaps
