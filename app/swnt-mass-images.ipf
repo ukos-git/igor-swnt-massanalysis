@@ -42,7 +42,8 @@ Function/WAVE SMAmergeImages(quick, [createNew, indices])
 	dim1 = DimSize(stats.wavPLEM, 1)
 
 	// append all Images to one big Image (fullimage)
-	wave background = SMAestimateBackground()
+	WAVE medianImage = SMAgetMedian(overwrite = 1)
+	wave background = SMAestimateBackground(medianImage)
 	resolution = (abs(DimDelta(stats.wavPLEM, 0)) + abs(DimDelta(stats.wavPLEM, 1))) / 2
 	resolution = ceil(imagearea / resolution)
 
@@ -350,31 +351,24 @@ Function SMAtestSizeAdjustment()
 	endfor
 End
 
-Function/WAVE SMAestimateBackground()
-	Variable pVal, qVal, dim0, dim1
+Function/WAVE SMAestimateBackground(input)
+	WAVE input
+
+	Variable pVal, qVal
 	Variable i
-	STRUCT PLEMd2Stats stats
 
 	Variable V_fitOptions=4 // used to suppress CurveFit dialog
 	Variable V_FitQuitReason // stores the CurveFit Quit Reason
 	Variable V_FitError // Curve Fit error
 
-	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
+	Duplicate/FREE input background
 
-	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
-
-	dim0 = DimSize(stats.wavPLEM, 0)
-	dim1 = DimSize(stats.wavPLEM, 1)
-	Make/FREE/N=(dim0, dim1) background
-
-	WAVE median = SMAgetMedian()
-	background = median
-
-	// remove gaussian background from illumination
 	ImageFilter/O NaNZapMedian background
 	ImageFilter/O /N=5 median background // remove spikes
 	Smooth 5, background
 	ImageFilter/O /N=101/P=1 avg background
+
+	// remove gaussian background from illumination if possible
 	Make/O/T/N=3 T_Constraints = {"K1 > 0","K3 > 0","K5 > 0"}
 	V_FitError = 0
 	CurveFit/Q Gauss2D background /C=T_Constraints
@@ -382,7 +376,7 @@ Function/WAVE SMAestimateBackground()
 		Wave W_coef, W_sigma
 		W_coef[] = abs(W_sigma[p] / W_coef[p]) > 0.3 ? NaN : W_coef[p]
 		if(numType(sum(W_coef) == 0))
-			background = Gauss2D(W_coef, x, y)
+			background -= Gauss2D(W_coef, x, y)
 		endif
 		WaveClear W_coef, W_sigma
 	endif
