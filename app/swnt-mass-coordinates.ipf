@@ -602,16 +602,28 @@ Function SMAcameraCoordinates([Zzero, export])
 
 	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan00/WAVE=singlescan00
 	singlescan00[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero)
-
+	
+	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan10/WAVE=singlescan10
+	singlescan10[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 1
+	
+	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan15/WAVE=singlescan15
+	singlescan15[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 1.5
+	
 	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan20/WAVE=singlescan20
 	singlescan20[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 2
+
+	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan25/WAVE=singlescan25
+	singlescan25[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 2.5
 
 	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan40/WAVE=singlescan40
 	singlescan40[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 4
 
 	if(export)
 		Save/J/O/DLIM=","/P=home singlescan00 as "singlescan00.csv"
+		Save/J/O/DLIM=","/P=home singlescan10 as "singlescan10.csv"
+		Save/J/O/DLIM=","/P=home singlescan15 as "singlescan15.csv"
 		Save/J/O/DLIM=","/P=home singlescan20 as "singlescan20.csv"
+		Save/J/O/DLIM=","/P=home singlescan25 as "singlescan25.csv"
 		Save/J/O/DLIM=","/P=home singlescan40 as "singlescan40.csv"
 		Save/J/O/DLIM=","/P=home wv as "fullscan.csv"
 	endif
