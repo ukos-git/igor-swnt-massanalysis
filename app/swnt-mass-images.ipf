@@ -371,6 +371,7 @@ Function/WAVE SMAestimateBackground()
 	background = median
 
 	// remove gaussian background from illumination
+	ImageFilter/O NaNZapMedian background
 	ImageFilter/O /N=5 median background // remove spikes
 	Smooth 5, background
 	ImageFilter/O /N=101/P=1 avg background
