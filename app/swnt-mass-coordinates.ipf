@@ -50,25 +50,52 @@ Function SMA_EraseMarqueeArea()
 End
 
 Function/Wave SMA_PromptTrace()
-	string traceName
-    string traces = TraceNameList("", ";", 1)
+	String itemName
+	Variable selectedItem
 
-	if(ItemsInList(traces) == 0)
+	string itemsList = ""
+	Variable numItems = 0
+
+	String topWindowImages =	ImageNameList("", ";")
+	String topWindowTraces =	TraceNameList("", ";", 1)
+	
+	Variable numTraces = ItemsInList(topWindowTraces)
+	Variable numImages = ItemsInList(topWindowImages)
+	
+	// remove trailing ";"
+	if(!cmpstr(topWindowImages[(strlen(topWindowImages) - 1), strlen(topWindowImages)], ";"))
+		topWindowImages = topWindowImages[0, strlen(topWindowImages) - 1]
+	endif
+	itemsList = AddListItem(topWindowImages, topWindowTraces, ";", numTraces)
+	numItems = numTraces + numImages
+
+	if(numItems == 0)
 		print "No traces found in top graph"
 		return $""
 	endif
 
-	if(ItemsInList(traces) == 1)
-		WAVE wv = TraceNameToWaveRef("", StringFromList(0, traces))
-		return wv
+	if(numItems == 1)
+		if(numTraces)
+			return TraceNameToWaveRef("", StringFromList(0, itemsList))
+		else
+			return ImageNameToWaveRef("", StringFromList(0, itemsList))
+		endif
 	endif
 
-	traceName = "coordinates"
-    Prompt traceName, "Choose Trace", popup traces
-    DoPrompt "Enter wave", traceName
-    WAVE wv = TraceNameToWaveRef("", traceName)
+	Prompt selectedItem, "Choose Trace", popup, itemsList
+	DoPrompt "Enter wave", selectedItem
+	if(V_flag)
+		print "SMA_PromptTrace: catched Cancel"
+		return $""
+	endif
+	selectedItem -= 1 // zero based index
+	itemName = StringFromList(selectedItem, itemsList)
 
-    return wv
+	if(selectedItem < numTraces)
+		return TraceNameToWaveRef("", itemName)
+	else
+		return ImageNameToWaveRef("", itemName)
+	endif
 End
 
 Function/WAVE getTopWindowImage()
