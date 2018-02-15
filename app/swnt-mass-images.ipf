@@ -361,16 +361,11 @@ Function/WAVE SMAestimateBackground()
 
 	NVAR gnumMapsAvailable = $(cstrPLEMd2root + ":gnumMapsAvailable")
 
-	WAVE/Z background = root:background
-	if(WaveExists(background))
-		return background
-	endif
-	WaveClear background
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 
 	dim0 = DimSize(stats.wavPLEM, 0)
 	dim1 = DimSize(stats.wavPLEM, 1)
-	Make/N=(dim0, dim1) root:background/WAVE=background
+	Make/FREE/N=(dim0, dim1) background
 
 	WAVE median = SMAgetMedian()
 	background = median
