@@ -22,6 +22,29 @@ Menu "MassAnalysis"
 	"Merge TimeSeries", SMAmergeTimeSeries()
 	"Search focus (pointzero)", SMAtasksPointZero()
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
+	"Histogram", SMAtasksHistogram()
+End
+
+Function SMAtasksHistogram()
+	Make/O histResult = 0, fit_histResult = 0
+	
+	SVAR/Z diffwave = root:diffwave
+	if(!SVAR_EXISTS(diffwave))
+		String/G root:diffwave
+		SVAR/Z diffwave = root:diffwave
+	endif
+	NVAR/Z checkbox_fit = root:checkbox_fit
+	if(!NVAR_EXISTS(checkbox_fit))
+		Variable/G root:checkbox_fit = 1
+	endif	
+	
+	WAVE wv = SMA_PromptTrace()
+	diffwave = GetWavesDataFolder(wv, 2)
+
+	DoWindow/F SMAHistogram
+	if(!V_flag)
+		Execute "SMAHistogram()"
+	endif
 End
 
 Function SMAtasksPointZero()

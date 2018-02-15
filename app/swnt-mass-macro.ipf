@@ -176,3 +176,51 @@ Window SMAselectWaves() : Panel
 	SetWindow kwTopWin,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzzzzzzzzz!!!"
 	Execute/Q/Z "SetWindow kwTopWin sizeLimit={375,75,inf,inf}" // sizeLimit requires Igor 7 or later
 EndMacro
+
+Window SMAHistogram() : Graph
+	PauseUpdate; Silent 1		// building window...
+	Display /W=(256.5,314.75,653.25,522.5) fit_histResult,histResult,histResult as "SMAHistogram"
+	ModifyGraph mode(histResult#1)=5
+	ModifyGraph lSize(fit_histResult)=2,lSize(histResult)=2
+	ModifyGraph rgb(fit_histResult)=(65535,0,0,32768),rgb(histResult)=(0,0,0)
+	NewPanel/HOST=#/EXT=0/W=(0,0,78,278) 
+	Slider slider0,pos={16.00,30.00},size={54.00,244.00},proc=SMAHistogramSliderProc
+	Slider slider0,limits={0,25,1},value= 1
+	CheckBox check_fit,pos={20.00,11.00},size={26.00,15.00},title="fit"
+	CheckBox check_fit,variable= checkbox_fit
+	RenameWindow #,P0
+	SetActiveSubwindow ##
+EndMacro
+
+Function SMAHistogramSliderProc(sa) : SliderControl
+	STRUCT WMSliderAction &sa
+	
+	variable resolution = 0.05
+	variable width = 11
+	SVAR/Z diffwave = root:diffwave
+	if(!SVAR_EXists(diffwave))
+		return 0
+	endif
+	NVAR checkbox_fit = root:checkbox_fit
+
+	switch( sa.eventCode )
+		case -1: // control being killed
+			break
+		default:
+			if( sa.eventCode & 1 ) // value set
+				Variable curval = sa.curval
+				wave wv = $diffwave
+				Duplicate/O wv diff
+				wave histResult
+				
+				diff = p < curval ? 0 : wv[p] - wv[p - curval]
+				Histogram/B={-(width - 1)/2,resolution,abs((width - 1)/resolution)} diff, histResult
+				if(checkbox_fit)
+					CurveFit/M=2/W=0 lor, histResult/D
+				endif
+			endif
+			break
+	endswitch
+
+	return 0
+End
