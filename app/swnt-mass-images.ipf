@@ -190,7 +190,7 @@ Function SMA_ExtractSumMarqueeArea()
 	variable pStart, pEnd, qStart, qEnd
 	variable i, dim2, cursorExists
 	string sourcewin, destwin
-	variable normalization = 1
+	variable normalization = 0
 	string outputName = "timetrace"
 	
 	sourcewin = WinName(0, 1)
@@ -220,14 +220,18 @@ Function SMA_ExtractSumMarqueeArea()
 	Make/N=(dim2) $outputName/WAVE=wv
 
 	cursorExists = strlen(CsrInfo(A)) > 0 && strlen(CsrInfo(B)) > 0
+	if(cursorExists)
+		print "substracting area between cursors as background for marquee area"
+	endif
 
 	for(i = 0; i < dim2; i += 1)
 		Duplicate/FREE/R=[pStart, pEnd][qStart, qEnd][i] image, marqueearea
 		if(cursorExists)
 			Duplicate/FREE/R=[pcsr(a, sourcewin), pcsr(b, sourcewin)][qcsr(a, sourcewin), qcsr(b, sourcewin)][i] image, reference
-			normalization = sum(reference)
+			// background for marquearea
+			normalization = sum(reference) / (DimSize(reference, 0) * DimSize(reference, 1)) * (DimSize(marqueearea, 0) * DimSize(marqueearea, 1))
 		endif
-		wv[i] = sum(marqueearea) / normalization
+		wv[i] = sum(marqueearea) - normalization
 	endfor
 
 	AppendToGraph/W=$destwin wv
