@@ -24,7 +24,44 @@ Menu "MassAnalysis"
 	"Search focus (pointzero)", SMAtasksPointZero()
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
 	"Histogram", SMAtasksHistogram()
+	"Maps: Quick Analysis", SMAquickAnalyseMap()
 End
+
+Function SMAquickAnalyseMap()
+	variable i, numMaps
+	
+	Struct PLEMd2stats stats
+	
+	numMaps = Plemd2getMapsAvailable()
+	smareset(power=1)
+
+	make/O/N=(numMaps) root:intensity/WAVE=intensity
+	make/O/N=(numMaps) root:emission/WAVE=emi
+	make/O/N=(numMaps) root:excitation/WAVE=exc
+	for(i=0; i < numMaps; i += 1)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+		
+		duplicate/FREE/R=[][6,*]stats.wavPLEM, corrected
+		smooth 255, corrected
+
+		WaveStats/Q corrected
+		print V_maxRowLoc, V_maxColLoc
+		intensity[i] = V_max
+		emi[i] = V_maxRowLoc
+		exc[i] = V_maxColLoc
+		
+		print i, PLEMd2strPLEM(i), V_max, V_maxRowLoc, V_maxColLoc
+	endfor
+	
+	DoWindow/F SMAmapAnalysis
+	if(!V_flag)
+		Display/N=SMAmapAnalysis
+		AppendToGraph exc vs emi
+		ModifyGraph mode=3,marker=19,zColor(excitation)={intensity,*,*,YellowHot,0}
+		SetAxis bottom 800,1100
+		SetAxis left 500,750
+	endif
+end
 
 Function SMAtasksPrintZposition()
 	print "(x,y)=", hcsr(a), ",", vcsr(a)
