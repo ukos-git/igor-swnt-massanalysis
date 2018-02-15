@@ -23,6 +23,9 @@ Menu "MassAnalysis"
 	"Merge TimeSeries", SMAmergeTimeSeries()
 	"Search focus (pointzero)", SMAtasksPointZero()
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
+	"generate exactscan", SMAtasksGenerateExactscan()
+	"load exactscan", SMAtasksLoadExactscan()
+	"convert excactscan to exactcoordinates", SMAtasksGenerateCoordinates()
 	"Histogram", SMAtasksHistogram()
 	"Maps: Quick Analysis", SMAquickAnalyseMap()
 End
@@ -90,6 +93,40 @@ Function SMAtasksHistogram()
 	endif
 End
 
+Function SMAtasksLoadExactscan()
+	variable numMaps = PLEMd2getMapsAvailable()
+	if(!numMaps)
+		SMAread()
+	endif
+	SMAbackgroundMedian()
+	SMAgetSourceWave(overwrite = 1)
+End
+
+Function SMAtasksGenerateExactscan([wv])
+	WAVE wv
+	
+	variable dim0, dim1
+	variable resolution = 11
+	variable stepsize = 0.5
+
+	if(ParamIsDefault(wv))
+		WAVE wv = root:coordinates
+		print "SMAtasksGenerateExactscan(wv = root:coordinates)"
+	endif
+	
+	dim0 = DimSize(wv, 0)
+	dim1 = DimSize(wv, 1)
+	
+	Make/O/N=(dim0 * resolution, dim1) root:exactscan/WAVE=exactscan
+	exactscan[][] = wv[floor(p / resolution)][q]
+	exactscan[][1] = wv[floor(p / resolution)][1] - (resolution - 1) / 2 * stepsize + mod(p, 11) * stepsize
+	
+	print "SMAcalcZcoordinateFromTiltPlane(wv = ", NameOfWave(exactscan), ", zOffset = ", SMAcameraGetTiltPlane(0,0), ")"
+	SMAcalcZcoordinateFromTiltPlane(wv = exactscan)
+
+	Save/J/O/DLIM=","/P=home exactscan as "exactscan.csv"
+End
+
 Function SMAtasksPointZero()
 	SMAgetFocuspoints(graph = 1)
 	Duplicate/O/R=[][2] root:SMAcameraIntensityCoordinates root:SMAcameraIntensityCoordinateZ/wave=coordinateZ
@@ -137,4 +174,17 @@ Function SMAopenPanelSelectWaves()
 		Execute/Q "SMAselectWaves"
 	endif
 	DoWindow/F SMAselectWaves
+End
+
+// exactscan --> exactcoordinates
+Function SMAtasksGenerateCoordinates()
+	WAVE exactscan = root:coordinates
+	
+	Duplicate/O exactscan root:exactcoordinates/WAVE=wv
+
+	WAVE coordinates = PLEMd2getCoordinates()
+	wv[][] = coordinates[exactscan[p][1]][q]
+	
+	print GetWavesDataFolder(wv, 2)
+	Save/J/O/DLIM=","/P=home wv as "exactcoordinates.csv"
 End
