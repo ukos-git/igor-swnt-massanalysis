@@ -162,14 +162,18 @@ Function SMAreset([power])
 	endfor
 End
 
-Function SMAbackgroundMedian()
+Function SMAbackgroundMedian([power])
+	Variable power
+	
 	String strPLEM
 	Variable i
 
 	variable numSpectra = PLEMd2getMapsAvailable()
 	Struct PLEMd2Stats stats
+	
+	power = ParamIsDefault(power) ? 1 : 0
 
-	SMAreset(power = 1)
+	SMAreset(power = power)
 	WAVE globalMedian = SMAgetMedian(overwrite = 1)
 
 	for(i = 0; i < numSpectra; i += 1)
