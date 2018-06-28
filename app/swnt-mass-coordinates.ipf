@@ -731,33 +731,40 @@ Function/WAVE SMAcameraGetTiltPlaneParameters([createNew])
 
 	createNew = ParamIsDefault(createNew) ? 0 : !!createNew
 
-	WAVE/Z focuspoints = root:SMAcameraFocusPoints 
+	WAVE/Z focuspoints = root:SMAcameraFocusPoints
 	if(createNew || !WaveExists(focuspoints))
-		WAVE focuspoints = SMAgetFocuspoints(graph = 1)
+		WAVE focuspoints = SMAgetFocuspoints(graph = 1, createNew = createNew)
 	endif
 
 	numPeaks = DimSize(focuspoints, 0)
 	if(!WaveExists(focuspoints) || (numPeaks != 3))
 		print "SMAcameraGetTiltPlaneParameters(): Please correct manually and call again."
 		edit focuspoints
-		print "call: SMAcameraGetTiltPlaneParameters(createNew=0) after manual editing root:SMAcameraFocusPoints"
+		print "call: to add from graph"
+		print "root:SMAcameraFocusPoints[2] = root:SMAcameraIntensityCoordinates[pcsr(a)][q]"
+		print "call after manual editing root:SMAcameraFocusPoints:"
+		print "SMAcameraGetTiltPlaneParameters(createNew=0)"
 		Abort "Error in peakfind"
 	endif
-	
+
 	return SMAHessePlaneParameters(focuspoints)
 End
 
 /// @brief search for laserspot maxima in loaded images
-Function/WAVE SMAgetFocuspoints([graph])
-	variable graph
+Function/WAVE SMAgetFocuspoints([graph, createNew])
+	variable graph, createNew
 
-	variable numPeaks, i, step
-	
+	variable numPeaks, i, step, pStart, pEnd, pPeak
+	variable numSpectra = PLEMd2getMapsAvailable()
+	variable numFocuspoints = 3
+	variable pOffset = 5
+
 	graph = ParamIsDefault(graph) ? 0 : !!graph
+	createNew = ParamIsDefault(createNew) ? 0 : !!createNew
 
 	WAVE/Z intensity = root:SMAcameraIntensity
 	WAVE/Z coordinates = root:SMAcameraIntensityCoordinates
-	if(!WaveExists(intensity) || !WaveExists(coordinates))
+	if(!WaveExists(intensity) || !WaveExists(coordinates) || createNew)
 		SMAcameraGetIntensity()
 		WAVE intensity = root:SMAcameraIntensity
 		WAVE coordinates = root:SMAcameraIntensityCoordinates
@@ -766,30 +773,52 @@ Function/WAVE SMAgetFocuspoints([graph])
 	Duplicate/O intensity root:SMAcameraIntensitySmth/WAVE=intensity_smooth
 	Smooth 5, intensity_smooth
 
-	WAVE guess = Utilities#PeakFind(intensity_smooth, maxPeaks = 3, minPeakPercent = 95, smoothingFactor = 1, verbose = 0)
-	WAVE/WAVE coef = Utilities#BuildCoefWv(intensity_smooth, peaks = guess, verbose = 0)
-	WAVE/WAVE peakParam = Utilities#GaussCoefToPeakParam(coef)
-	WAVE peakfind = Utilities#peakParamToResult(peakParam)
-	
-	if(!WaveExists(peakfind))
-		print "SMAgetFocuspoints(): Please correct manually and call again."
-		Abort "Error in peakfind"
-	endif
+	Make/O/N=(numFocuspoints, 3) root:SMAcameraFocusPoints/WAVE=focuspoints = 0
+	Make/O/N=(numFocuspoints) root:SMAcameraPlanePeakMaximum/WAVE=focuspointsPval = 0
+	for(i = 0; i < numFocuspoints; i += 1)
+		pStart = i * round(numSpectra / 3)
+		pEnd = (i + 1) * round(numSpectra / 3) - 1
 
-	numPeaks = DimSize(peakfind, 0)
-	Make/O/N=(numPeaks,3) root:SMAcameraFocusPoints/WAVE=focuspoints
-	if(numPeaks > 0)
-		focuspoints[][] = coordinates[round(peakfind[limit(p, 0, numPeaks - 1)][%position])][q]
-	endif
-	print "SMAgetFocuspoints(): focus maxima"
-	for(i = 0; i < numPeaks; i += 1)
-		printf "peak%d: \t file-number:\t%06.2f \t x-Axis: \t%06.2f \ty-Axis: \t%06.2f \tz-Axis: \t%06.2f\r", i, peakfind[i][%position], focuspoints[i][0], focuspoints[i][1], focuspoints[i][2]
+		// quick fix: experimentally the first points are often garbage
+		pStart += pOffset
+
+		Duplicate/FREE/R=[pStart,pEnd] intensity_smooth singlePeakY
+		Duplicate/FREE/R=[pStart,pEnd][2] coordinates singlePeakX
+		Redimension/N=(-1, 0) singlePeakX
+
+		WAVE guess = Utilities#PeakFind(singlePeakY, wvXdata = singlePeakX, maxPeaks = 1)
+		WAVE/WAVE coef = Utilities#BuildCoefWv(singlePeakY, wvXdata = singlePeakX, peaks = guess)
+
+		WAVE/WAVE/Z peakParam = Utilities#fitGauss(singlePeakY, wvXdata = singlePeakX, wvCoef = coef)
+		if(!WaveExists(peakParam))
+			// revert to guess
+			WAVE/WAVE coef = Utilities#BuildCoefWv(singlePeakY, wvXdata = singlePeakX, peaks = guess)
+			WAVE/WAVE peakParam = Utilities#GaussCoefToPeakParam(coef)
+		endif
+
+		WAVE peakfind = Utilities#peakParamToResult(peakParam)
+		if(!WaveExists(peakfind))
+			print "SMAgetFocuspoints(): Please correct manually and call again."
+			Abort "Error in peakfind"
+		endif
+
+		numPeaks = DimSize(peakfind, 0)
+		if(numPeaks == 1)
+			pPeak = pStart - pOffset
+			FindLevel singlePeakX, peakfind[0][%position]
+			if(!V_flag)
+				pPeak = V_LevelX
+			endif
+			focuspointsPval[i] = pPeak
+			focuspoints[i][] = coordinates[pPeak][q]
+			focuspoints[i][2] = peakfind[0][%position]
+			printf "peak%d: \t x-Axis: \t%06.2f \ty-Axis: \t%06.2f \tz-Axis: \t%06.2f\r", i, focuspoints[i][0], focuspoints[i][1], focuspoints[i][2]
+		endif
 	endfor
 	
 	//output the results as graph
 	if(graph)
-		Make/O/N=(numPeaks) root:SMAcameraPlanePeakMaximum = peakfind[p][%position]
-		Make/O/T/N=(numPeaks) root:SMAcameraPlanePeakMaximumT = "(" + num2str(focuspoints[p][0]) + "," + num2str(focuspoints[p][1]) + ")"
+		Make/O/T/N=(numFocuspoints) root:SMAcameraPlanePeakMaximumT = "(" + num2str(focuspoints[p][0]) + "," + num2str(focuspoints[p][1]) + ")"
 		step = floor(DimSize(coordinates, 0) / 10 / 2) * 2
 		Make/O/N=10 root:SMAcameraPlanePeakMaximumZ/WAVE=zWave = step / 2 + p * step
 		Make/O/T/N=10 root:SMAcameraPlanePeakMaximumZT = num2str(round(coordinates[zWave[p]][2] * 10) / 10)
