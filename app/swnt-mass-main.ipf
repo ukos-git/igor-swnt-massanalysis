@@ -139,8 +139,8 @@ Function SMAgetMaximum(bestEnergy)
 	PLEMd2Display(secondBestPLEM)
 End
 
-Function SMAreset([power])
-	variable power
+Function SMAreset([power, photon, background])
+	variable power, photon, background
 
 	String strPLEM
 	Variable i
@@ -148,13 +148,15 @@ Function SMAreset([power])
 	variable numSpectra = PLEMd2getMapsAvailable()
 	Struct PLEMd2Stats stats
 
-	power = ParamIsDefault(power) ? 1 : !!power
+	power = ParamIsDefault(power) ? 0 : !!power
+	photon = ParamIsDefault(photon) ? 0 : !!photon
+	background = ParamIsDefault(background) ? 1 : !!background
 
 	for(i = 0; i < numSpectra; i += 1)
 		strPLEM = PLEMd2strPLEM(i)
 		PLEMd2statsLoad(stats, strPLEM)
-		stats.booBackground = 1
-		stats.booPhoton = 0
+		stats.booBackground = background
+		stats.booPhoton = photon
 		stats.booPower = power
 		stats.booGrating = 0
 		PLEMd2statsSave(stats)

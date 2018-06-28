@@ -197,9 +197,10 @@ Function SMAtasksGetTiltPlane()
 	if(!WaveExists(normal) || !WaveExists(distance))
 		if(numMaps == 0)
 			Execute "SMAread()"
-			Execute "SMAreset(power=0)"
 		endif
 	endif
+	Execute "SMAreset(power=0, background=0)"
+	Execute "	SMAcameraGetTiltPlaneParameters(createNew = 1)"
 	Execute "SMAcameraCoordinates()"
 End
 

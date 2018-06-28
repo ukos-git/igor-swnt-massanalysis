@@ -9,7 +9,7 @@
 Function SMAsinglePeakAction(startX, endX)
 	Variable startX, endX
 	
-	smareset()
+	smareset(power=1)
 
 	WAVE source = SMAgetSourceWave(overwrite = 1)
 
