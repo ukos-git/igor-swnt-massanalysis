@@ -1,6 +1,29 @@
 #pragma TextEncoding = "Windows-1252"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 
+Function SMA_FindMatchingSpectra(coordinates)
+	WAVE coordinates
+
+	variable dim0, numMatches, numMatchesOld, i, j
+	variable tolerance = 1 // tolerance in um around coordinate
+
+	Make/O/N=(0) root:matches/WAVE=matches
+
+	WAVE spectra = PLEMd2getCoordinates()
+	dim0 = DimSize(coordinates, 0)
+	for(i = 0; i < dim0; i += 1)
+		WAVE indices = CoordinateFinderXYrange(spectra, coordinates[i][0] - tolerance, coordinates[i][0] + tolerance, coordinates[i][1] - tolerance, coordinates[i][1] + tolerance, verbose = 1)
+		numMatches = DimSize(indices, 0)
+		numMatchesOld = DimSize(matches, 0)
+		Redimension/N=(numMatchesOld + numMatches) matches
+		for(j = 0; j < numMatches; j += 1)
+			matches[numMatchesOld + j] = indices[j]
+			PLEMd2Displaybynum(indices[j])
+		endfor
+	endfor
+End
+
+
 // see ACW_EraseMarqueeArea.
 Function SMA_EraseMarqueeArea()
 	variable dim0, numMatches, i
