@@ -42,9 +42,8 @@ Function/WAVE SMAgetSourceWave([overwrite])
 		endif
 		ModifyImage ''#0  ctab= {*,*,YellowHot256,1}
 		numMarkers = round(DimSize(wv, 0) / 4)
-		Make/O/N=(numMarkers) root:markers_source/WAVE=markers = p * 4
-		Make/O/N=(numMarkers)/T root:markers_sourceT/WAVE=markersT
-		markersT = num2str(markers[p])
+		Make/O/N=(numMarkers) root:markers_source/WAVE=markers = p * 	11 + 6
+		Make/O/N=(numMarkers)/T root:markers_sourceT/WAVE=markersT = num2str(p)
 		ModifyGraph userticks(bottom)={markers,markersT}
 	endif
 
