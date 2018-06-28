@@ -693,6 +693,7 @@ Function SMAcameraGetIntensity()
 	variable i
 	STRUCT PLEMd2Stats stats
 	variable numMaps = PLEMd2getMapsAvailable()
+	variable V_FitError = 0
 
 	if(numMaps == 0)
 		SMAload()
@@ -704,9 +705,19 @@ Function SMAcameraGetIntensity()
 
 	for(i = 0; i < numMaps; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		CurveFit/Q/M=0/W=2 Gauss2D stats.wavPLEM
-		WAVE W_Coef
-		intensity[i] = W_Coef[1]
+		V_FitError = 0
+		if(DimSize(stats.wavPLEM, 1) > 1)
+			CurveFit/Q/M=0/W=2 Gauss2D stats.wavPLEM
+		else
+			CurveFit/Q/M=0/W=2 Gauss stats.wavPLEM
+		endif
+		if(V_FitError == 0)
+			WAVE W_Coef
+			intensity[i] = W_Coef[1]
+		else
+			intensity[i] = WaveMax(stats.wavPLEM)
+		endif
+
 		coordinates[i][0] = stats.numPositionX
 		coordinates[i][1] = stats.numPositionY
 		coordinates[i][2] = stats.numPositionZ
