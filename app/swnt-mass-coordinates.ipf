@@ -599,6 +599,42 @@ Function SMAaddCoordinates(currentCoordinates, [text])
 	return numCoords
 End
 
+Function/S SMAsearchCoordinate(coordinateX, coordinateY)
+	Variable coordinateX, coordinateY
+
+	Variable k
+	String listFound = ""
+	WAVE coordinates = PLEMd2getCoordinates()
+
+	// round coordinates
+	coordinateX = round(coordinateX/0.1)*0.1
+	coordinateY = round(coordinateY/0.1)*0.1
+
+	// separate Waves
+	Duplicate/FREE/R=[][0] coordinates coordinatesX
+	Duplicate/FREE/R=[][1] coordinates coordinatesY
+	Redimension/N=(-1, 0) coordinatesX, coordinatesY
+
+	k = -1
+	do
+		if(k==57)
+			print "hier"
+		endif
+		FindValue/S=(k+1)/T=1/V=(coordinateX) coordinatesX
+		k = V_Value
+		if(k == -1)
+			break
+		endif
+
+		if(round(coordinatesY[k]/2)*2 == round(coordinateY/2)*2)
+			listFound = AddListItem(num2str(k), listFound)
+			continue
+		endif
+	while(k < DimSize(coordinates, 0))
+
+	return listFound
+End
+
 // Zzero is the new zero position to which the z values will be corrected
 // i.e. the new focus point at (x,y) = (0,0)
 Function SMAcameraCoordinates([Zzero, export])
