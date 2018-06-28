@@ -640,13 +640,13 @@ End
 Function SMAcameraCoordinates([Zzero, export])
 	Variable Zzero
 	Variable export
-	
+
 	export = ParamIsDefault(export) ? 1 : !!export
 
 	Variable xstep = 48, ystep = 80, zstep = -1
 
 	Zzero = ParamIsDefault(Zzero) ? SMAcameraGetTiltPlane(0, 0) : Zzero
-	
+
 	printf "SMAcameraCoordinates(Zzero = %.2f, export = %d)\r", Zzero, export
 
 	// 4 scans in x = 300/64
@@ -662,13 +662,13 @@ Function SMAcameraCoordinates([Zzero, export])
 
 	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan00/WAVE=singlescan00
 	singlescan00[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero)
-	
+
 	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan10/WAVE=singlescan10
 	singlescan10[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 1
-	
+
 	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan15/WAVE=singlescan15
 	singlescan15[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 1.5
-	
+
 	Duplicate/O/R=[0 * 4 * 6, 1 * 4 * 6 - 1] wv root:SMAsinglescan20/WAVE=singlescan20
 	singlescan20[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zZero) - 2
 
