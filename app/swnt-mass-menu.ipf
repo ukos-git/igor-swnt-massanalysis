@@ -252,7 +252,9 @@ Function SMAtasksGenerateCoordinates()
 
 	WAVE coordinates = PLEMd2getCoordinates()
 	wv[][] = coordinates[exactscan[p][1]][q]
-	
-	print GetWavesDataFolder(wv, 2)
+
+	print "SMAcalcZcoordinateFromTiltPlane(wv = ", GetWavesDataFolder(wv, 2), ", zOffset = ", SMAcameraGetTiltPlane(0,0), ")"
+
+	print "Save/J/O/DLIM=\",\"/P=home ", GetWavesDataFolder(wv, 2), " as \"exactcoordinates.csv\""
 	Save/J/O/DLIM=","/P=home wv as "exactcoordinates.csv"
 End
