@@ -196,8 +196,8 @@ EndMacro
 Function SMAHistogramSliderProc(sa) : SliderControl
 	STRUCT WMSliderAction &sa
 	
-	variable resolution = 0.05
-	variable width = 11
+	variable resolution = 2.5
+	variable width = 100
 	SVAR/Z diffwave = root:diffwave
 	if(!SVAR_EXists(diffwave))
 		return 0
