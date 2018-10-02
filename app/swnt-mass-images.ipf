@@ -108,11 +108,14 @@ End
 // the wave stackCoordinates is split to coordinate lists that have the size stackSize.
 // the function can be called multiple times with varying stackNumber to merge differnt
 // parts of the coordinate list.
-Function/WAVE SMAmergeAndRename(stackCoordinates, stackNumber, stackSize)
+Function/WAVE SMAmergeStack(stackCoordinates, stackNumber, stackSize, [createNew])
 	WAVE stackCoordinates
 	Variable stackNumber, stackSize
+	Variable createNew
 
 	Variable rangeStart, rangeEnd
+	
+	createNew = ParamIsDefault(createNew) ? 1 : !!createNew
 
 	rangeStart = stackNumber * stackSize
 	rangeEnd   = (stackNumber + 1) * stackSize - 1
@@ -123,46 +126,51 @@ Function/WAVE SMAmergeAndRename(stackCoordinates, stackNumber, stackSize)
 		return $""
 	endif
 	Duplicate/O found 	root:found/WAVE=found
-	WAVE fullimage = SMAmergeImages(1, indices = found)
+	WAVE fullimage = SMAmergeImages(1, indices = found, createNew = createNew)
+
 	SMAconvertWaveToUint(fullimage, bit = 8)
-	Rename fullimage $UniqueName("fullimage", 1, 0)
 
 	return fullimage
 End
 
-Function SMAprocessImageStack([wv])
-	WAVE wv
+Function/WAVE SMAprocessImageStack([coordinates, createNew])
+	WAVE coordinates
+	Variable createNew
 
-	Variable i, numFullImages
-	Variable numImages = PLEMd2getMapsAvailable()
+	Variable i, numFullImages, numImages
 
-	if(ParamIsDefault(wv))
-		WAVE wv = root:SMAfullscan
-	endif
-	if(!WaveExists(wv))
-		SMAcameraCoordinates(export = 0)
-		WAVE wv = root:SMAfullscan
+	createNew = ParamIsDefault(createNew) ? 1 : !!createNew
+	if(ParamIsDefault(coordinates))
+		//WAVE coordinates = SMAcameraCoordinates(export = 0)
+		WAVE coordinates = PLEMd2getCoordinates()
 	endif
 
+	numImages = PLEMd2getMapsAvailable()
 	if(numImages == 0)
 		SMAload()
 		numImages = PLEMd2getMapsAvailable()
+		WAVE coordinates = PLEMd2getCoordinates(forceRenew = 1)
+	endif
+
+	if(!WaveExists(coordinates))
+		Abort
 	endif
 
 	numFullImages = floor(numImages / 24)
-	Wave fullimage = SMAmergeAndRename(wv, 0, 24)
+	Wave fullimage = SMAmergeStack(coordinates, 0, 24)
 	Duplicate/O fullimage root:SMAimagestack/WAVE=imagestack
 	Redimension/N=(-1, -1, numFullImages) imagestack
 
 	for(i = 1; i < numFullImages; i += 1)
-		Wave fullimage = SMAmergeAndRename(wv, i, 24)
+		Wave fullimage = SMAmergeStack(coordinates, i, 24, createNew = createNew)
 		if(WaveExists(fullimage))
 			MultiThread imagestack[][][i] = fullimage[p][q]
-			KillWaves/Z fullimage
 		endif
 	endfor
 
 	SMAimageStackopenWindow()
+	
+	return imagestack
 End
 
 // only valid for images
@@ -330,7 +338,9 @@ End
 
 Function SMAtestSizeAdjustment()
 	Variable i
-	String graphName1, graphName2
+	variable dim4size = 20
+	Variable dim4offset = 0.9700
+	Variable dim4delta  = 0.0010
 
 	NVAR/Z numSizeAdjustment = root:numSizeAdjustment
 	if(!NVAR_EXISTS(numSizeAdjustment))
@@ -338,19 +348,29 @@ Function SMAtestSizeAdjustment()
 		NVAR/Z numSizeAdjustment = root:numSizeAdjustment
 	endif
 
-	WAVE fullimage = SMAmergeImages(1, createNew = 0)
-	graphName1 = SMAbuildGraphPLEM()
-	graphName2 = SMAbuildGraphFullImage()
+	// load for magnification
+	STRUCT PLEMd2Stats stats
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
 
-	for(i = 0; i < 10; i += 1)
-		numSizeAdjustment = (0.9760 + i * 0.0001)
-		SMAread()
-		WAVE fullimage = SMAmergeImages(1, createNew = 1)
-		Duplicate/O fullimage $("root:fullImage_" + num2str(numSizeAdjustment * 1e4))
+	WAVE imagestack = SMAprocessImageStack(createNew = 0)
 
-		SavePICT/WIN=$graphName1/O/P=home/E=-5/B=72 as "fullImage_" + num2str(numSizeAdjustment * 1e4) + ".png"
-		SavePICT/WIN=$graphName2/O/P=home/E=-5/B=72 as "sizeAdjustment_" + num2str(numSizeAdjustment * 1e4) + ".png"
+	Duplicate/O imagestack root:SMAsizeAdjustment/WAVE=wv
+	Redimension/N=(-1, -1, -1, dim4size) wv
+	SetScale/P t, dim4offset, dim4delta, wv
+
+	Make/O/N=(dim4size) root:SMAnumSizeAdjustment/WAVE=dim4 = dim4offset + p * dim4delta
+
+	for(i = 0; i < dim4size; i += 1)
+		numSizeAdjustment = (dim4offset + i * dim4delta)
+		dim4[i] = stats.numMagnification / numSizeAdjustment
+		//SMAread()
+		SMAreset()
+		WAVE imagestack = SMAprocessImageStack(createNew = 1)
+		Multithread wv[][][][i] = imagestack[p][q][r]
+		SavePICT/WIN=win_SMAimageStack/O/P=home/E=-5/B=72 as "sizeAdjustment_" + num2str(numSizeAdjustment * 1e4) + ".png"
 	endfor
+
+	DoWindow/F win_SMAimageStack
 End
 
 Function/WAVE SMAestimateBackground(input)
