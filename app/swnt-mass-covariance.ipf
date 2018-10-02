@@ -11,7 +11,7 @@ Function/WAVE SMAgetSourceWave([overwrite])
 	String name = "source"
 	DFREF dfr = root:
 
-	overwrite = ParamIsDefault(overwrite) ? 0 : !!overwrite
+	overwrite = ParamIsDefault(overwrite) ? 1 : !!overwrite
 
 	WAVE/Z wv = dfr:$name
 	if(WaveExists(wv) && !overwrite)
