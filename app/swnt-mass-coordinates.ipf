@@ -637,7 +637,7 @@ End
 
 // Zzero is the new zero position to which the z values will be corrected
 // i.e. the new focus point at (x,y) = (0,0)
-Function SMAcameraCoordinates([Zzero, export])
+Function/WAVE SMAcameraCoordinates([Zzero, export])
 	Variable Zzero
 	Variable export
 
@@ -687,6 +687,8 @@ Function SMAcameraCoordinates([Zzero, export])
 		Save/J/O/DLIM=","/P=home singlescan40 as "singlescan40.csv"
 		Save/J/O/DLIM=","/P=home wv as "fullscan.csv"
 	endif
+	
+	return wv
 End
 
 Function SMAcameraGetIntensity()

@@ -95,7 +95,9 @@ Function SMAcovariance()
 	endif
 End
 
-Function SMAcopyWavelengthToRoot()
+// copy the wavelength from PLEM
+// this should be a PLEMd2 function
+Function/WAVE SMAcopyWavelengthToRoot()
 	variable numPoints
 	STRUCT PLEMd2Stats stats
 
@@ -106,4 +108,6 @@ Function SMAcopyWavelengthToRoot()
 	numPoints = DimSize(wavelength, 0)
 	Redimension/N=(numPoints + 1) wavelength_graph
 	wavelength_graph[numPoints] = wavelength_graph[numPoints - 1] + 1
+	
+	return wavelength
 End
