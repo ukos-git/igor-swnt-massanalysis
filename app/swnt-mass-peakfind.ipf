@@ -6,69 +6,80 @@
 #include "utilities-peakfind"
 #include "utilities-peakfit"
 
+// use root:source and root:wavelength wave to search for peaks
 Function SMAsinglePeakAction(startX, endX)
 	Variable startX, endX
-	
-	smareset(power=1)
 
-	WAVE source = SMAgetSourceWave(overwrite = 1)
+	variable i, dim0
 
-	STRUCT PLEMd2Stats stats
-	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
-	Duplicate/O stats.wavWavelength root:wavelength/WAVE=wl
+	// input waves
+	WAVE source = SMAgetSourceWave(overwrite = 0)
+	WAVE wl = root:wavelength
+	if(!WaveExists(wl))
+		WAVE wl = SMAcopyWavelengthToRoot()
+	endif
 
+	// search x coordinate in wavelength wave
 	findvalue/V=(startX)/T=1 wl
 	variable start = V_Value
 	findvalue/V=(endX)/T=1 wl
 	variable ende = V_value
+	if(start == -1 || ende == -1)
+		Abort "start or end not found in wavelength wave"
+	endif
 
-	// sync correlation
+	// sync correlation for specified range
 	Duplicate/O/R=[0,*][start, ende] source root:source_extracted/wave=source2
-	matrixop/O root:timecorrelation_extracted = getdiag(synccorrelation(source2^t), 0)
-
-	// lor fit
-	variable dim0 = DimSize(source, 0)
-	variable i
-	variable height, position, fwhm
-	Duplicate/O source root:source_fit/WAVE=myfitwave
-	myfitwave = NaN
-	Make/FREE/N=4 coefWave
-	Make/O/N=(dim0) root:source_maxHeight/WAVE=wvHeight
-	Make/O/N=(dim0) root:source_maxPosition/WAVE=wvPosition
-	Make/O/N=(dim0) root:source_maxFWHM/WAVE=wvFwhm
-	for(i = 0; i < dim0; i += 1)
-		CurveFit/Q lor, kwCWave=coefWave source[i][start, ende] /X=wl[start, ende] /D=myfitwave[i][start, ende]
-		wvHeight[i]   = coefWave[0] + coefWave[1] / coefWave[3]
-		wvPosition[i] = coefWave[2]
-		wvFwhm[i]     = 2 * sqrt(2 / ((1 / coefWave[3]) - (coefWave[0] / coefWave[1])) - coefWave[3])
-	endfor
-	dowindow/F $stats.strPLEM
+	MatrixOP/O root:source_extracted_timecorrelation/WAVE=extracted = getdiag(synccorrelation(source2^t), 0)
+	DoWindow source_extracted_timecorrelation_graph
 	if(!V_flag)
-		Display/N=$stats.strPLEM wvHeight as "PLEM peak action"
+		Display/N=source_extracted_timecorrelation_graph extracted
+	endif
+
+	dim0 = DimSize(source, 0)
+
+	// create output waves
+	Make/O/N=(DimSize(source, 0), 1024) root:source_extracted_fit/WAVE=myfitwave = NaN
+	SetScale/I y, startX, EndX, myfitwave
+	Make/O/N=(dim0) root:source_maxHeight/WAVE=wvHeight = NaN
+	Make/O/N=(dim0) root:source_maxHeight_err/WAVE=wvHeightErr = NaN
+	Make/O/N=(dim0) root:source_maxPosition/WAVE=wvPos = NaN
+	Make/O/N=(dim0) root:source_maxPosition_err/WAVE=wvPosnErr = NaN
+	Make/O/N=(dim0) root:source_maxFWHM/WAVE=wvFwhm = NaN
+
+	// do fit in specified range
+	Duplicate/FREE/R=[start, ende] wl wl_extracted
+	for(i = 0; i < dim0; i += 1)
+		Duplicate/FREE/R=[i][start, ende] source source_extracted
+		Redimension/N=(ende - start + 1) source_extracted
+
+		WAVE guess = Utilities#PeakFind(source_extracted, wvXdata = wl_extracted, maxPeaks = 1, smoothingFactor = 3) // align smoothingFactor to your needs
+		WAVE/WAVE coef = Utilities#BuildCoefWv(source_extracted, peaks = guess)
+		WAVE/WAVE peakParam = Utilities#fitGauss(source_extracted, wvXdata = wl_extracted, wvCoef = coef, cleanup = 1)
+		if(!WaveExists(peakParam))
+			printf "SMAsinglePeakAction: error fitting %d.\r", i
+			continue
+		endif
+		if(DimSize(peakParam, 0) != 1)
+			Abort "Code Inconsitency: More than one peak found."
+		endif
+		WAVE result = Utilities#peakParamToResult(peakParam)
+
+		WAVE peakfit = Utilities#CreateFitCurve(peakParam, startX, endX, 1024)
+		myfitwave[i][] = peakfit[q]
+
+		wvHeight[i]    = result[0][%intensity]
+		wvHeightErr[i] = result[0][%intensity_err]
+		wvPos[i]       = result[0][%position]
+		wvPosnErr[i]   = result[0][%position_err]
+		wvFwhm[i]      = result[0][%fwhm]
+	endfor
+
+	DoWindow source_extracted_peak_height
+	if(!V_flag)
+		Display/N=source_extracted_peak_height wvHeight as "PLEM peak action"
 	endif
 end
-
-Function SMApeakFindMass(verbose)
-	variable verbose
-	variable i
-
-	STRUCT SMAinfo info
-	SMAstructureLoad(info)
-	STRUCT SMAprefs prefs
-	SMAloadPackagePrefs(prefs)
-
-	if(info.numSpectra != DimSize(info.wavSpectra, 0))
-		print "SMApeakFindMass: error in SMAinfo structure"
-		return 0
-	endif
-
-	info.numSpectra = DimSize(info.wavSpectra, 0)
-	SMAstructureSave(info)
-	Redimension/N=(info.numSpectra) info.wavPeakFind
-	for(i = 0; i < info.numSpectra; i += 1)
-		info.wavPeakFind[i] = SMApeakFind(info.wavSpectra[i], verbose = verbose)
-	endfor
-End
 
 Function/WAVE SMApeakFind(input, [info, wvXdata, verbose, createWaves, maxPeaks, minPeakPercent, smoothingFactor])
 	WAVE input, wvXdata
@@ -87,16 +98,16 @@ Function/WAVE SMApeakFind(input, [info, wvXdata, verbose, createWaves, maxPeaks,
 		verbose = 0
 	endif
 	if(ParamIsDefault(createWaves))
-		createWaves = 0
+		createWaves = 1
 	endif
 	if(ParamIsDefault(maxPeaks))
-		maxPeaks = 2
+		maxPeaks = 1
 	endif
 	if(ParamIsDefault(minPeakPercent))
-		minPeakPercent = 0.9
+		minPeakPercent = 5
 	endif
 	if(ParamIsDefault(smoothingFactor))
-		smoothingFactor = 1
+		smoothingFactor = 10
 	endif
 	
 	Duplicate/FREE input, wv
@@ -154,33 +165,29 @@ End
 Function SMApeakAnalysis()
 	variable i, j, numPeaks, offset
 
-	STRUCT SMAinfo info
-	SMAstructureLoad(info)
+	STRUCT PLEMd2Stats stats
+	Variable dim0 = PLEMd2getMapsAvailable()
 
-	for(i = 0; i < info.numSpectra; i += 1)
-		WAVE/WAVE peakfind = info.wavPeakFind[i]
-		if(!WaveExists(peakfind))
-			continue
-		endif
-		numPeaks += DimSize(peakfind, 0)
-	endfor
+	Make/O/N=(dim0) root:peakfind_wl/WAVE=wl = 0
+	Make/O/N=(dim0) root:peakfind_int/WAVE=int = 0
+	Make/O/N=(dim0) root:peakfind_fwhm/WAVE=fwhm = 0
 
-	Make/O/N=(numPeaks) root:peakfind_wl/WAVE=wl
-	Make/O/N=(numPeaks) root:peakfind_int/WAVE=int
-	Make/O/N=(numPeaks) root:peakfind_fwhm/WAVE=fwhm
-
-	for(i = 7; i < info.numSpectra; i += 1)
-		WAVE/WAVE peakfind = info.wavPeakFind[i]
+//	for(i = 0; i < dim0; i += 1)
+	for(i = 10; i < 15; i += 1)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+		WAVE/WAVE peakfind = SMApeakFind(stats.wavPLEM, verbose = 4)
 		if(!WaveExists(peakfind))
 			continue
 		endif
 		numPeaks = DimSize(peakfind, 0)
 		for(j = 0; j < numPeaks; j += 1)
-			wl[offset + j]  = peakfind[j][%position]
-			int[offset + j] = peakfind[j][%intensity]
-			fwhm[offset + j] = peakfind[j][%fwhm]
+			if(peakfind[j][%intensity] < int[i])
+				continue
+			endif 
+			int[i] = peakfind[j][%intensity]
+			wl[i]  = peakfind[j][%position]
+			fwhm[i] = peakfind[j][%fwhm]
 		endfor
-		offset += numPeaks
 	endfor
 
 End
