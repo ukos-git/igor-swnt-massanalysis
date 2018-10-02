@@ -51,47 +51,62 @@ Function/WAVE SMAgetSourceWave([overwrite])
 End
 
 Function SMAcovariance()
-	variable i, numXvalues
-
-	Variable numSpec = PLEMd2getMapsAvailable()
 	STRUCT PLEMd2Stats stats
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
+
+	if(DimSize(stats.wavPLEM, 1) > 1)
+		SMAcovarianceMaps()
+		return 0
+	endif
 
 	WAVE source = SMAgetSourceWave(overwrite = 1)
-
-	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
-	numXvalues = DimSize(stats.wavPLEM, 0)
-	MAKE/O/N=(numXvalues) root:sum1/WAVE=sum1
-	MAKE/O/N=(numXvalues) root:sum2/WAVE=sum2
-
-	SMAcopyWavelengthToRoot()
-
-	for(i = 0; i < numSpec; i += 1)
-		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		WAVE nospikes = Utilities#removeSpikes(stats.wavPLEM)
-
-		sum1[] += nospikes[p]
-		sum2[] += nospikes[p]^2
-	endfor
-
-	sum1 = sum1 / numSpec
-	sum2 = sqrt(sum2 / numSpec)
-
 	ImageFilter NanZapMedian source
 
 	MatrixOP/O root:covariance_sym/WAVE=sym = syncCorrelation(source)
 	MatrixOP/O root:covariance_asym/WAVE=asym = asyncCorrelation(source)
 
 	MatrixOP/O root:covariance_sym_diag/WAVE=symdiag = getDiag(sym, 0)
-	MatrixOP/O root:covariance_asym_diag = getDiag(asym, 0)
+	MatrixOP/O root:covariance_asym_diag/WAVE=asymdiag = getDiag(asym, 0)
+
+	SMAcopyWavelengthToRoot()
+
+	SetScale/P x, DimOffset(stats.wavPLEM, 0), DimDelta(stats.wavPLEM, 0), sym, asym, symdiag, asymdiag
+	SetScale/P y, DimOffset(stats.wavPLEM, 0), DimDelta(stats.wavPLEM, 0), sym, asym
+
+	DoWindow SMAcovarianceGraphDiagonal
+	if(V_flag == 0)
+		Display/N=SMAcovarianceGraphDiagonal symdiag/TN=diag_syncCorrelation vs root:wavelength
+	endif
 
 	DoWindow SMAcovarianceGraph
 	if(V_flag == 0)
 		Display/N=SMAcovarianceGraph
-		AppendImage sym vs {root:wavelengthImage, root:wavelengthImage}
+		AppendImage/W=SMAcovarianceGraph sym
 	endif
-	DoWindow SMAcovarianceGraphDiagonal
+End
+
+Function SMAcovarianceMaps()
+	STRUCT PLEMd2Stats stats
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
+
+	WAVE source = SMAgetSourceWave(overwrite = 1)
+	ImageFilter NanZapMedian source
+
+	// skip intermediate sym, asym due to space limitations
+
+	MatrixOP/O root:covariance_sym_diag/WAVE=symdiag = getDiag(syncCorrelation(source), 0)
+	MatrixOP/O root:covariance_asym_diag/WAVE=asymdiag = getDiag(asyncCorrelation(source), 0)
+
+	// sym and asym have a non-monotonic wave scale
+	Redimension/N=(DimSize(stats.wavPLEM, 0), DimSize(stats.wavPLEM, 1)) symdiag, asymdiag
+	SetScale/P x, DimOffset(stats.wavPLEM, 0), DimDelta(stats.wavPLEM, 0), symdiag, asymdiag
+	SetScale/P y, DimOffset(stats.wavPLEM, 1), DimDelta(stats.wavPLEM, 1), symdiag, asymdiag
+	
+	DoWindow SMAcovarianceImage
 	if(V_flag == 0)
-		Display/N=SMAcovarianceGraphDiagonal symdiag vs root:wavelength
+		Display/N=SMAcovarianceImage
+		AppendImage/W=SMAcovarianceImage symdiag
+		ModifyImage covariance_sym_diag ctab= {*,*,Terrain256,0}
 	endif
 End
 
