@@ -37,47 +37,187 @@ Window SMAcameraFocusPointsGraph() : Graph
 EndMacro
 
 Function SMAimageStackopenWindow()
+	NVAR/Z numSizeAdjustment = root:numSizeAdjustment
+	if(!NVAR_EXISTS(numSizeAdjustment))
+		Variable/G root:numSizeAdjustment = 1
+	endif
+	NVAR/Z numSizeAdjustmentSingleStack = root:numSizeAdjustmentSingleStack
+	if(!NVAR_EXISTS(numSizeAdjustmentSingleStack))
+		Variable/G root:numSizeAdjustmentSingleStack = 0
+	endif
+
 	DoWindow win_SMAimageStack
 	if(!V_flag)
-		WMColorTableControlPanel#createColorTableControlPanel()
 		Execute "win_SMAimageStack()"
-		WMAppend3DImageSlider()
+		ControlBar 0
+
 		WMAppendAxisSlider()
+		ModifyControl WMAxSlSl proc=SliderProcSMAimageStackX
+
+		WAVE/Z imagestack = root:SMAimagestack
+		if(WaveExists(imagestack) && (DimSize(imagestack, 2) > 1))
+			WMAppend3DImageSlider()
+		endif
+
+		WMColorTableControlPanel#createColorTableControlPanel()
 	endif
 	DoWindow/F win_SMAimageStack
 End
 
 Window win_SMAimageStack() : Graph
 	PauseUpdate; Silent 1		// building window...
-	Display /W=(526.5,42.5,1184.25,643.25)
-	AppendImage root:SMAimagestack
-	ModifyImage SMAimagestack ctab= {0,254.9998,RedWhiteBlue256,0}
-	ModifyImage SMAimagestack plane= 6
-	ModifyGraph margin(right)=170
+	Display /W=(177.6,446,774.6,884.6)
+	AppendImage SMAimagestack
+	ModifyImage SMAimagestack ctab= {0,196.418918918919,RedWhiteBlue256,0}
+	ModifyGraph margin(right)=170,width={Aspect,1}
 	ModifyGraph grid(left)=1
 	ModifyGraph mirror(left)=2,mirror(bottom)=0
 	ModifyGraph nticks=10
 	ModifyGraph minor=1
 	ModifyGraph fSize=8
 	ModifyGraph standoff=0
+	ModifyGraph axOffset(left)=0.428571
 	ModifyGraph gridRGB(left)=(26205,52428,1)
 	ModifyGraph tkLblRot(left)=90
 	ModifyGraph btLen=3
 	ModifyGraph tlOffset=-2
 	ModifyGraph manTick(left)={0,20,0,0},manMinor(left)={4,5}
+	ModifyGraph manTick(bottom)={0,20,0,0},manMinor(bottom)={4,0}
+	SetAxis left 27.4111583619414,30.9717263870881
+	SetAxis bottom -1.0601059672648,296.077810472665
+	Cursor/P/I A SMAimagestack 187,193
 	ColorScale/C/N=text0/F=0/A=MC/X=67.37/Y=-25.31 image=SMAimagestack, heightPct=50
 	ColorScale/C/N=text0 axisRange={NaN,255,0}
-	ControlBar 30
-	PopupMenu selectColorTablePU,pos={681.00,69.00},size={200.00,19.00},proc=WMColorTableControlPanel#SelectColorTableProc
-	PopupMenu selectColorTablePU,fSize=12
-	PopupMenu selectColorTablePU,mode=14,value= #"\"*COLORTABLEPOPNONAMES*\""
-	Slider lowSliderSC,pos={673.00,117.00},size={79.00,220.00},proc=SMAfullstackSliderProc
-	Slider lowSliderSC,fSize=10,limits={0,255,0.579545},value= 77.65903
-	Slider lowSliderSC,userTicks={:Packages:ColorTableControlPanel:WMSliderTicks,:Packages:ColorTableControlPanel:WMSliderTickLabels}
-	Slider highSliderSC,pos={770.00,117.00},size={79.00,220.00},proc=SMAfullstackSliderProc
-	Slider highSliderSC,fSize=10,limits={0,255,0.579545},value= 254.9998
-	Slider highSliderSC,userTicks={:Packages:ColorTableControlPanel:WMSliderTicks,:Packages:ColorTableControlPanel:WMSliderTickLabels}
+	TextBox/C/N=zAxis/F=0/A=LT/X=103.13/Y=0.77 "\\JL\\Z24z=147µm"
+	ControlBar 3
+	GroupBox CBSeparator0,pos={0.00,0.00},size={600.00,2.40}
+	SetDrawLayer UserFront
+	SetDrawEnv linethick= 5
+	DrawLine 1.25144203951618,0.35850622406639,1.10248370618284,0.35850622406639
+	DrawLine 148,0.1,150,0.1
+	SetDrawEnv fsize= 24
+	DrawText 1.11534780391897,0.338713821409761,"0µm"
+	NewPanel/HOST=#/EXT=0/W=(0,0,147,438.6)  as "sizeAdjustment"
+	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
+	SetDrawLayer UserBack
+	DrawLine 15,117,124.2,117
+	Button sizeAdjustment,pos={24.00,75.00},size={99.00,18.00},proc=ButtonProcSizeAdjustment,title="sizeAdjustment"
+	SetVariable cnumSizeAdjustment,pos={6.00,12.00},size={129.00,13.80}
+	SetVariable cnumSizeAdjustment,limits={0.5,1.5,0.001},value= numSizeAdjustment
+	CheckBox checkSizeAdjustment,pos={33.00,51.00},size={80.40,12.00},title="only current stack"
+	CheckBox checkSizeAdjustment,variable= numSizeAdjustmentSingleStack
+	Button save,pos={456.00,54.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
+	Button save,labelBack=(65535,65535,65535)
+	Button save1,pos={18.00,135.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
+	Button save1,labelBack=(65535,65535,65535)
+	SetVariable cnumRotationAdjustment,pos={6.00,30.00},size={129.00,13.80}
+	SetVariable cnumRotationAdjustment,limits={-5,5,0.1},value= numRotationAdjustment
+	RenameWindow #,P0
+	SetActiveSubwindow ##
+	NewPanel/HOST=#/EXT=1/W=(18.6,0,0,438.6)  as "controls"
+	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
+	Slider WMAxSlY,pos={6.00,6.00},size={6.00,408.00},proc=SliderProcSMAimageStackY
+	Slider WMAxSlY,limits={0,1,0},value= 0.0389805097451274,side= 0,ticks= 0
+	RenameWindow #,P1
+	SetActiveSubwindow ##
 EndMacro
+
+Function SliderProcSMAimageStackY(sa) : SliderControl
+	STRUCT WMSliderAction &sa
+
+	switch( sa.eventCode )
+		case -1: // control being killed
+			break
+		default:
+			if( sa.eventCode & 1 ) // value set
+				String grfName= WinName(0, 1)
+				SVAR axisName = root:Packages:WMAxisSlider:$(grfName):gAxisName
+				axisName = "left"
+				WMAxisSliderProc(sa.ctrlName, sa.curval, sa.eventCode)
+			endif
+			break
+	endswitch
+
+	return 0
+End
+
+Function SliderProcSMAimageStackX(sa) : SliderControl
+	STRUCT WMSliderAction &sa
+
+	switch( sa.eventCode )
+		case -1: // control being killed
+			break
+		default:
+			if( sa.eventCode & 1 ) // value set
+				String grfName= WinName(0, 1)
+				SVAR axisName = root:Packages:WMAxisSlider:$(grfName):gAxisName
+				axisName = "bottom"
+				WMAxisSliderProc(sa.ctrlName, sa.curval, sa.eventCode)
+			endif
+			break
+	endswitch
+
+	return 0
+End
+
+Function ButtonProcSMAImageStackSave(ba) : ButtonControl
+	STRUCT WMButtonAction &ba
+	
+	NVAR cnumLayer = root:Packages:WM3DImageSlider:win_SMAimageStack:gLayer
+	
+	variable i
+	variable numLayers = 8 // hard coded
+	variable zaxis
+
+	switch( ba.eventCode )
+		case 2: // mouse up
+
+		for(i = 0; i < numLayers; i += 1)
+			cnumLayer=i
+			WM3DImageSliderProc("",0,0)
+			zaxis = 150 - i * 0.5 // hard coded
+			TextBox/C/N=zAxis "\\JL\\Z24z=" + num2str(round(zaxis * 10)/10) + "µm"
+			SavePICT/O/P=home/E=-5/B=288 as "mkl12_focusscan_" + num2str(round(zaxis * 10)) + ".png"
+		endfor
+			break
+		case -1: // control being killed
+			break
+	endswitch
+
+	return 0
+End
+
+Function ButtonProcSizeAdjustment(ba) : ButtonControl
+	STRUCT WMButtonAction &ba
+
+	variable numLayer = 0
+	NVAR singleStack = root:numSizeAdjustmentSingleStack
+	NVAR/Z cnumLayer = root:Packages:WM3DImageSlider:win_SMAimageStack:gLayer
+	if(NVAR_EXISTS(cnumLayer))
+		numLayer = cnumLayer
+	endif
+
+	switch( ba.eventCode )
+		case 2: // mouse up
+
+			smareset()
+			WAVE coordinates = PLEMd2getCoordinates(forceRenew = 0)
+
+			if(singleStack)
+				Wave fullimage = SMAmergeStack(coordinates, 2, 24)
+				WAVE imagestack = root:SMAimagestack
+				MultiThread imagestack[][][numLayer] = fullimage[p][q]
+			else
+				SMAprocessImageStack(coordinates = coordinates, createNew = 1)
+				//SMAtestsizeAdjustment()
+			endif
+			break
+		case -1: // control being killed
+			break
+	endswitch
+
+	return 0
+End
 
 // derives from WMColorTableControlPanel#SliderProc
 Function SMAfullstackSliderProc(sa) : SliderControl
