@@ -18,58 +18,25 @@ Menu "GraphMarquee"
 End
 
 Menu "MassAnalysis"
-	"Get TiltPlane (tiltscan)", /Q, SMAtasksGetTiltPlane()
+	"Load Spectra", SMAtasksLoadExactscan()
+	"Load CameraScan", SMAprocessImageStack()
+
+	"Load Tiltscan", /Q, SMAtasksGetTiltPlane()
 	"Recalc TiltPlane", SMAcameraGetTiltPlaneParameters(createNew = 1)
-	"Get focus (pointzero)", SMAtasksPointZero()
-	"Load CameraScan (one focusplane)", /Q, SMAmergeImages(0)
-	"Images: Substract Median Background", SMAtasksImagesMedianBG()
-	"Load CameraScans (multiple z-focusplanes)", SMAprocessImageStack()
+
+	"Load PointZero", SMAtasksPointZero()
 	"Load CameraScan (timeSeries to z)", SMAmergeTimeSeries()
-	"Select Spectra Panel", SMAopenPanelSelectWaves()
+
+	"Background: Median", SMABackgroundMedian(power = 0)
+
 	"generate exactscan", SMAtasksGenerateExactscan()
-	"load exactscan", SMAtasksLoadExactscan()
 	"convert excactscan to exactcoordinates", SMAtasksGenerateCoordinates()
 	"single peak between cursor", SMAsinglePeakAction(hcsr(A), hcsr(B))
 	"Histogram", SMAtasksHistogram()
+
 	"Maps: Quick Analysis", SMAquickAnalyseMap()
+	"Select Spectra Panel", SMAopenPanelSelectWaves()
 End
-
-Function SMAtasksImagesMedianBG()
-	Variable pOffset, qOffset
-
-	WAVE/Z wv = root:fullimage
-	if(WaveExists(wv))
-		Duplicate/O wv root:fullimage_autobackup
-		pOffset = ScaleToIndex(wv, 0, 0)
-		qOffset = ScaleToIndex(wv, 0, 1)
-		print "minimum at", pOffset, qOffset
-
-		DoWindow/F SMAgetCoordinatesfullImage
-		if(V_flag)
-			Cursor/I A fullimage 0, 0
-		endif
-	endif
-
-	print "merge images"
-	SMAbackgroundMedian(power = 0)
-	Make/FREE/N=24 indices=p
-	WAVE fullimage = SMAmergeImages(0, createNew = 1, indices=indices)
-
-	print "substract overall background"
-	WAVE background = SMAestimateBackground(fullimage)
-	MultiThread fullimage -= background
-	MultiThread fullimage = fullimage[p][q] < 0 ? 0 : fullimage[p][q]
-	
-	SMAconvertWaveToUint(fullimage)
-	
-	DoWindow/F SMAgetCoordinatesfullImage
-	if(V_flag)
-		Cursor/I/P A fullimage pOffset, qOffset
-		SetScaleToCursor()
-		ModifyImage fullimage ctab= {*,*,Blue,1}
-	endif
-End
-
 
 Function SMAquickAnalyseMap()
 	variable i, numMaps
@@ -154,6 +121,10 @@ Function SMAtasksGenerateExactscan([wv])
 		WAVE wv = root:coordinates
 		print "SMAtasksGenerateExactscan(wv = root:coordinates)"
 	endif
+	if(!WaveExists(wv))
+		print "SMAtasksGenerateExactscan: Can not find coordinates"
+		return 1
+	endif
 	
 	dim0 = DimSize(wv, 0)
 	dim1 = DimSize(wv, 1)
@@ -166,6 +137,8 @@ Function SMAtasksGenerateExactscan([wv])
 	SMAcalcZcoordinateFromTiltPlane(wv = exactscan)
 
 	Save/J/O/DLIM=","/P=home exactscan as "exactscan.csv"
+
+	return 0
 End
 
 Function SMAtasksPointZero()
