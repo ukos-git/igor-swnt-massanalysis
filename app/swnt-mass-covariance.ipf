@@ -20,7 +20,7 @@ Function/WAVE SMAgetSourceWave([overwrite])
 		endif
 	endif
 
-	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
 	dim1 = DimSize(stats.wavPLEM, 0)
 	dim2 = DimSize(stats.wavPLEM, 1)
 	dim2 = dim2 == 0 ? 1 : dim2
