@@ -119,6 +119,8 @@ Function/WAVE SMAcopyWavelengthToRoot()
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 
 	Duplicate/O stats.wavWavelength root:wavelength/WAVE=wavelength
+
+	// @todo: delete wavelengthImage here as it adds wrong assumtion. Instead use SetScale where 2D Waves need to be plotted.
 	Duplicate/O stats.wavWavelength root:wavelengthImage/WAVE=wavelength_graph
 	numPoints = DimSize(wavelength, 0)
 	Redimension/N=(numPoints + 1) wavelength_graph
