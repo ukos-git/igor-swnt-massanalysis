@@ -69,7 +69,10 @@ Window win_SMAimageStack() : Graph
 	Display /W=(177.6,446,774.6,884.6)
 	AppendImage SMAimagestack
 	ModifyImage SMAimagestack ctab= {0,196.418918918919,RedWhiteBlue256,0}
+	ModifyImage SMAimagestack plane= 1
 	ModifyGraph margin(right)=170,width={Aspect,1}
+	ModifyGraph mode=3
+	ModifyGraph marker=8
 	ModifyGraph grid(left)=1
 	ModifyGraph mirror(left)=2,mirror(bottom)=0
 	ModifyGraph nticks=10
@@ -118,8 +121,8 @@ Window win_SMAimageStack() : Graph
 	SetActiveSubwindow ##
 	NewPanel/HOST=#/EXT=1/W=(19,0,0,439)  as "controls"
 	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
-	Slider WMAxSlY,pos={6.00,6.00},size={6.00,408.00},proc=SliderProcSMAimageStackY
-	Slider WMAxSlY,limits={0,1,0},value= 0.0389805097451274,side= 0,ticks= 0
+	Slider WMAxSlY,pos={6.00,6.00},size={10.00,408.00},proc=SliderProcSMAimageStackY
+	Slider WMAxSlY,limits={0,1,0},value= 0.644677661169415,side= 0,ticks= 0
 	RenameWindow #,P1
 	SetActiveSubwindow ##
 EndMacro
