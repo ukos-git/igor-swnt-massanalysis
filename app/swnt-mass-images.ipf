@@ -342,10 +342,10 @@ Function/S SMAbuildGraphFullImage()
 End
 
 Function SMAtestSizeAdjustment()
-	Variable i
-	variable dim4size = 20
-	Variable dim4offset = 0.9700
-	Variable dim4delta  = 0.0010
+	Variable i	
+	variable dim4size = 10
+	Variable dim4offset = 0.9760
+	Variable dim4delta = 0.0001
 
 	NVAR/Z numSizeAdjustment = root:numSizeAdjustment
 	if(!NVAR_EXISTS(numSizeAdjustment))
@@ -372,7 +372,6 @@ Function SMAtestSizeAdjustment()
 		SMAreset()
 		WAVE imagestack = SMAprocessImageStack(createNew = 1)
 		Multithread wv[][][][i] = imagestack[p][q][r]
-		SavePICT/WIN=win_SMAimageStack/O/P=home/E=-5/B=72 as "sizeAdjustment_" + num2str(numSizeAdjustment * 1e4) + ".png"
 	endfor
 
 	DoWindow/F win_SMAimageStack
