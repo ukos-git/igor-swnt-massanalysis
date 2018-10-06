@@ -97,24 +97,26 @@ Window win_SMAimageStack() : Graph
 	DrawLine 148,0.1,150,0.1
 	SetDrawEnv fsize= 24
 	DrawText 1.11534780391897,0.338713821409761,"0µm"
-	NewPanel/HOST=#/EXT=0/W=(0,0,147,438.6)  as "sizeAdjustment"
+	NewPanel/HOST=#/EXT=0/W=(0,0,216,439)  as "sizeAdjustment"
 	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
 	SetDrawLayer UserBack
-	DrawLine 15,117,124.2,117
-	Button sizeAdjustment,pos={24.00,75.00},size={99.00,18.00},proc=ButtonProcSizeAdjustment,title="sizeAdjustment"
-	SetVariable cnumSizeAdjustment,pos={6.00,12.00},size={129.00,13.80}
-	SetVariable cnumSizeAdjustment,limits={0.5,1.5,0.001},value= numSizeAdjustment
-	CheckBox checkSizeAdjustment,pos={33.00,51.00},size={80.40,12.00},title="only current stack"
+	DrawLine 15,99,124.2,99
+	Button sizeAdjustment,pos={24.00,57.00},size={99.00,18.00},proc=ButtonProcSizeAdjustment,title="sizeAdjustment"
+	SetVariable cnumSizeAdjustment,pos={6.00,12.00},size={187.00,18.00}
+	SetVariable cnumSizeAdjustment,limits={0.9,1.1,0.001},value= numSizeAdjustment
+	CheckBox checkSizeAdjustment,pos={33.00,33.00},size={113.00,17.00},title="only current stack"
 	CheckBox checkSizeAdjustment,variable= numSizeAdjustmentSingleStack
 	Button save,pos={456.00,54.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
 	Button save,labelBack=(65535,65535,65535)
-	Button save1,pos={18.00,135.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
+	Button save1,pos={18.00,117.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
 	Button save1,labelBack=(65535,65535,65535)
 	SetVariable cnumRotationAdjustment,pos={6.00,30.00},size={129.00,13.80}
 	SetVariable cnumRotationAdjustment,limits={-5,5,0.1},value= numRotationAdjustment
+	CheckBox SMAimagestack_check_fullcalc,pos={37.00,170.00},size={60.00,17.00},title="full calc"
+	CheckBox SMAimagestack_check_fullcalc,variable= numFullCalcultions
 	RenameWindow #,P0
 	SetActiveSubwindow ##
-	NewPanel/HOST=#/EXT=1/W=(18.6,0,0,438.6)  as "controls"
+	NewPanel/HOST=#/EXT=1/W=(19,0,0,439)  as "controls"
 	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
 	Slider WMAxSlY,pos={6.00,6.00},size={6.00,408.00},proc=SliderProcSMAimageStackY
 	Slider WMAxSlY,limits={0,1,0},value= 0.0389805097451274,side= 0,ticks= 0

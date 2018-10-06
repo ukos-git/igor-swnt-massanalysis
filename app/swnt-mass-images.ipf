@@ -3,8 +3,8 @@
 
 #include "utilities-time"
 
-Function/WAVE SMAmergeImages(quick, [createNew, indices])
-	Variable createNew, quick
+Function/WAVE SMAmergeImages([createNew, indices])
+	Variable createNew
 	WAVE indices
 
 	Variable pixelX, pixelY, resolution, imageborders
@@ -19,11 +19,16 @@ Function/WAVE SMAmergeImages(quick, [createNew, indices])
 		numMapsAvailable = PLEMd2getMapsAvailable()
 	endif
 
+	NVAR/Z gquick = root:numFullCalcultions
+	if(NVAR_EXISTS(gquick))
+		Variable/G root:numFullCalcultions
+		NVAR gquick = root:numFullCalcultions
+	endif
+	Variable quick = !gquick // quick fix for quick logic
+
 	if(ParamIsDefault(indices))
 		Make/FREE/N=(numMapsAvailable) indices = p
 	endif
-
-	quick = !!quick
 
 	createNew = ParamIsDefault(createNew) ? 1 : !!createNew
 
@@ -126,7 +131,7 @@ Function/WAVE SMAmergeStack(stackCoordinates, stackNumber, stackSize, [createNew
 		return $""
 	endif
 	Duplicate/O found 	root:found/WAVE=found
-	WAVE fullimage = SMAmergeImages(1, indices = found, createNew = createNew)
+	WAVE fullimage = SMAmergeImages(indices = found, createNew = createNew)
 
 	SMAconvertWaveToUint(fullimage, bit = 8)
 
