@@ -34,7 +34,7 @@ Function SMAread()
 		return 0
 	endif
 
-	printf "SMAread: reading from %s", filos.strFolder
+	printf "SMAread: reading from %s\r", filos.strFolder
 	for(i = 0; i < numFiles; i += 1)
 		file = StringFromList(i, filos.strFileList)
 		PLEMd2Open(strFile = filos.strFolder + file, display = 0)
