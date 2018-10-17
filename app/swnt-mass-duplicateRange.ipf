@@ -170,9 +170,7 @@ Function/WAVE SMAduplicateRange(FirstImage)
 	endif
 	SetScale/P z, zAxis[FirstImage][2], zStep, wv
 	// set x,y Axis offset
-	SetScale/P x, DimOffset(wv, 0) - offsetY, DimDelta(stats.wavPLEM, 0), wv
-	SetScale/P y, DimOffset(wv, 1) - offsetX , DimDelta(stats.wavPLEM, 1), wv
-	
+	Utilities#AddWaveScaleOffset(wv, offsetY, offsetX)
 	
 	for(i = 0; i < dim2; i += 1)
 		numPLEM = FirstImage + i * StackSize
