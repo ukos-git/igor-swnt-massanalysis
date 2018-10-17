@@ -158,6 +158,16 @@ Function SetScaleToCursor()
 	SetScale/P y, - qcsr(A) * DimDelta(image, 1), DimDelta(image, 1), image
 End
 
+
+// @todo to this
+Function SMAsetWaveScaleZero(wv, offsetX, offsetY)
+	WAVE wv
+	Variable offsetX, offsetY
+
+	SetScale/P x, DimOffset(wv, 0) - offsetY, DimDelta(wv, 0), wv
+	SetScale/P y, DimOffset(wv, 1) - offsetX , DimDelta(wv, 1), wv
+End
+
 Function GetCoordinates()
 	Variable temp, i, j
 	Variable numCoords, numPeaks

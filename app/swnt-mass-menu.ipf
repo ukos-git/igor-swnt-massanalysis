@@ -15,6 +15,8 @@ End
 Menu "GraphMarquee"
 	"Erase Points", SMA_EraseMarqueeArea()
 	"Extract z-dimension", SMA_ExtractSumMarqueeArea()
+	"Display Original", SMAdisplayOriginal()
+	"Duplicate Range", SMADuplicateRangeFromMarquee()
 End
 
 Menu "MassAnalysis"
