@@ -32,8 +32,8 @@ Function SMA_EraseMarqueeArea()
 	if (V_flag == 0)
 		return 0
 	endif
-	WAVE coordinates = SMA_PromptTrace()
 
+	WAVE coordinates = SMA_PromptTrace()
 	WAVE indices2 = CoordinateFinderXYrange(coordinates, V_bottom, V_top, V_left, V_right, verbose = 1)
 	numMatches = DimSize(indices2, 0)
 	if(!numMatches)
