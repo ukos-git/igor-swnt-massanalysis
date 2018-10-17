@@ -4,17 +4,23 @@
 // Append the given spectra to a 2-dimensional wave.
 //
 // @param overwrite if set to 1: recreate the wave if it already exists
-Function/WAVE SMAgetSourceWave([overwrite])
+// @param range     specify the spectra ids with a numeric, uint wave
+Function/WAVE SMAgetSourceWave([overwrite, range])
 	Variable overwrite
+	WAVE/U/I range
 
 	Variable i, dim1, dim2, numMarkers
 	STRUCT PLEMd2Stats stats
 
-	Variable dim0 = PLEMd2getMapsAvailable()
+	Variable dim0
 	String name = "source"
 	DFREF dfr = root:
 
 	overwrite = ParamIsDefault(overwrite) ? 1 : !!overwrite
+	if(ParamIsDefault(range))
+		Make/FREE/U/I/N=(PLEMd2getMapsAvailable()) range = p
+	endif
+	dim0 = DimSize(range, 0)
 
 	WAVE/Z wv = dfr:$name
 	if(WaveExists(wv) && !overwrite)
@@ -23,13 +29,13 @@ Function/WAVE SMAgetSourceWave([overwrite])
 		endif
 	endif
 
-	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(range[1]))
 	dim1 = DimSize(stats.wavPLEM, 0)
 	dim2 = DimSize(stats.wavPLEM, 1)
 	dim2 = dim2 == 0 ? 1 : dim2
 	Make/O/N=(dim0, dim1 * dim2) dfr:$name/WAVE=wv
 	for(i = 0; i < dim0; i += 1)
-		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(range[i]))
 		WAVE nospikes = Utilities#removeSpikes(stats.wavPLEM)
 		wv[i][0, DimSize(nospikes, 0) * DimSize(nospikes, 1) - 1] = nospikes[mod(q, dim1)][floor(q / dim1)]
 	endfor
