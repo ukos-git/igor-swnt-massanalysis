@@ -115,13 +115,13 @@ Function/WAVE CoordinateFinderXYrange(coordinates, xmin, xmax, ymin, ymax, [verb
 	return indices
 End
 
-Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose])
+Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose, accuracy])
 	WAVE coordinates
 	Variable xVal, yVal, zVal, verbose
-
-	Variable accuracy = 0.5
+	Variable accuracy
 
 	verbose = ParamIsDefault(verbose) ? 0 : !!verbose
+	accuracy = ParamIsDefault(accuracy) ? 0.5 : abs(accuracy)
 
 	Duplicate/FREE/R=[][0] coordinates, coordinateX
 	Duplicate/FREE/R=[][1] coordinates, coordinateY
