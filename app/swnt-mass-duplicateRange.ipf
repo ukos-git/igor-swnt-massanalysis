@@ -1,7 +1,5 @@
 ﻿#pragma TextEncoding = "UTF-8"
-#pragma rtGlobals=3		// Use modern global access method and strict wave access.
-
-#include "utilities-images"
+#pragma rtGlobals=3
 
 Function SMAdisplayOriginal([numPLEM])
 	Variable numPLEM

@@ -1,8 +1,6 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
-#include "utilities-globalvar"
-
 Function SMAorderAsc(minimum, maximum)
 	Variable &minimum, &maximum
 

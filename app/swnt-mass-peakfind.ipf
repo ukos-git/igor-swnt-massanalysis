@@ -1,11 +1,6 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
-// require igor-common-utilities
-// https://github.com/ukos-git/igor-common-utilities
-#include "utilities-peakfind"
-#include "utilities-peakfit"
-
 // use root:source and root:wavelength wave to search for peaks
 Function SMAsinglePeakAction(startX, endX, [source])
 	Variable startX, endX

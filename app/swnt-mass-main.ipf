@@ -7,6 +7,11 @@
 #include "FILOprefs"
 #include "FILOstructure"
 #include "FILOtools"
+
+// requires igor-common-utilites
+// https://github.com/ukos-git/igor-common-utilities
+#include "common-utilities"
+
 // requires PLEM (igor-swnt-plem)
 // https://github.com/ukos-git/igor-swnt-plem
 

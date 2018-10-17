@@ -5,10 +5,6 @@
 // https://github.com/ukos-git/igor-file-loader
 // released under MIT license by same author @ukos-git
 
-// require igor-common-utilities
-// https://github.com/ukos-git/igor-common-utilities
-#include "utilities-globalvar"
-
 static strConstant cstructure = "structure" // path for global vars in Package dfr
 static strConstant cpeakfit   = "peakFit"   // path for temp peakfit waves
 static Constant	cversion   = 0004

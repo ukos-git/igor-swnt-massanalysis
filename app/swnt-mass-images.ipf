@@ -1,9 +1,6 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
-#include "utilities-time"
-#include "utilities-images"
-
 Function/WAVE SMAmergeImages([createNew, indices])
 	Variable createNew
 	WAVE indices

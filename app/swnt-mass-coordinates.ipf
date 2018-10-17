@@ -1,7 +1,5 @@
 #pragma TextEncoding = "Windows-1252"
-#pragma rtGlobals=3		// Use modern global access method and strict wave access.
-
-#include "utilities-images"
+#pragma rtGlobals=3
 
 Function SMA_FindMatchingSpectra(coordinates)
 	WAVE coordinates
