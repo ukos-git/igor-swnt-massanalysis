@@ -47,8 +47,7 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	dim1 = DimSize(stats.wavPLEM, 1)
 
 	// append all Images to one big Image (fullimage)
-	WAVE medianImage = SMAgetMedian(overwrite = 1)
-	wave background = SMAestimateBackground(medianImage)
+	wave background = SMAestimateBackground(SMAgetMedian())
 	ImageFilter/O /N=101/P=1 avg background
 	Duplicate/O background root:backround
 	resolution = (abs(DimDelta(stats.wavPLEM, 0)) + abs(DimDelta(stats.wavPLEM, 1))) / 2
