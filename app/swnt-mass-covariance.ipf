@@ -121,11 +121,17 @@ End
 
 // copy the wavelength from PLEM
 // this should be a PLEMd2 function
-Function/WAVE SMAcopyWavelengthToRoot()
+//
+// @param numPLEM [optional] specify the id of the spectrum where wavelength comes from.
+Function/WAVE SMAcopyWavelengthToRoot([numPLEM])
+	variable numPLEM
+
 	variable numPoints
 	STRUCT PLEMd2Stats stats
 
-	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+	numPLEM = ParamIsDefault(numPLEM) ? 0 : numPLEM
+
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(numPLEM))
 
 	Duplicate/O stats.wavWavelength root:wavelength/WAVE=wavelength
 
