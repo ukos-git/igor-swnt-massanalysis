@@ -2,6 +2,7 @@
 #pragma rtGlobals=3
 
 #include "utilities-time"
+#include "utilities-images"
 
 Function/WAVE SMAmergeImages([createNew, indices])
 	Variable createNew
@@ -216,7 +217,7 @@ Function SMA_ExtractSumMarqueeArea()
 		return 0
 	endif
 	
-	WAVE/Z image = getTopWindowImage()
+	WAVE/Z image = Utilities#getTopWindowImage()
 	pStart = ScaleToIndex(image, V_left, 0)
 	pEnd = ScaleToIndex(image, V_right, 0)
 	qStart = ScaleToIndex(image, V_bottom, 1)

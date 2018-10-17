@@ -1,6 +1,8 @@
 ﻿#pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 
+#include "utilities-images"
+
 Function SMAdisplayOriginal([numPLEM])
 	Variable numPLEM
 
@@ -153,7 +155,7 @@ Function/WAVE SMAduplicateRange(FirstImage)
 	Struct PLEMd2stats stats
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(FirstImage))
 
-	WAVE imagestack = getTopWindowImage()
+	WAVE imagestack = Utilities#getTopWindowImage()
 	if(WaveExists(imagestack))
 		dim2 = DimSize(imagestack, 2)
 	endif

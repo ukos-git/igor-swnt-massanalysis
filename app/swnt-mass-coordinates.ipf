@@ -1,6 +1,8 @@
 #pragma TextEncoding = "Windows-1252"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 
+#include "utilities-images"
+
 Function SMA_FindMatchingSpectra(coordinates)
 	WAVE coordinates
 
@@ -121,28 +123,11 @@ Function/Wave SMA_PromptTrace()
 	endif
 End
 
-Function/WAVE getTopWindowImage()
-	String topWindowImages =	ImageNameList("",";")
-
-	if(ItemsInList(topWindowImages) == 0)
-		print "no Image found in top graph"
-		return $""
-	endif
-
-	WAVE/Z image = ImageNameToWaveRef("", StringFromList(0, topWindowImages))
-	if(!WaveExists(image))
-		print "image wave does not exist."
-		return $""
-	endif
-
-	return image
-End
-
 Function SetScaleToCursor()
 	Variable aExists = 0
 	String topWindowImages =	ImageNameList("",";")
 
-	WAVE/Z image = getTopWindowImage()
+	WAVE/Z image = Utilities#getTopWindowImage()
 	if(!WaveExists(image))
 		print "image wave does not exist."
 		return 0
