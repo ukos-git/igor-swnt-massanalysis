@@ -1,2 +1,0 @@
-2017-10
-* camerascan: around -6um below laser focus is best image
