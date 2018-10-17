@@ -151,7 +151,7 @@ Function/WAVE SMAprocessImageStack([coordinates, createNew])
 
 	numImages = PLEMd2getMapsAvailable()
 	if(numImages == 0)
-		SMAload()
+		SMAread()
 		numImages = PLEMd2getMapsAvailable()
 		WAVE coordinates = PLEMd2getCoordinates(forceRenew = 1)
 	endif
