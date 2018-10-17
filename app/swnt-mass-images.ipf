@@ -20,8 +20,8 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	endif
 
 	NVAR/Z gquick = root:numFullCalcultions
-	if(NVAR_EXISTS(gquick))
-		Variable/G root:numFullCalcultions
+	if(!NVAR_EXISTS(gquick))
+		Variable/G root:numFullCalcultions = 0
 		NVAR gquick = root:numFullCalcultions
 	endif
 	Variable quick = !gquick // quick fix for quick logic
