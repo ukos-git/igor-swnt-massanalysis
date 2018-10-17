@@ -1,7 +1,7 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
-// requires IM FILO (igor-file-loader)
+// requires IM FILO (igor-file-loader) version 0002
 // https://github.com/ukos-git/igor-file-loader
 #include "FILOmain"
 #include "FILOprefs"
@@ -13,12 +13,20 @@
 strConstant cSMApackage = "swnt-mass-analysis"
 StrConstant cstrSMAroot = "root:Packages:SMA:"
 
-// call SMAread() directly.
 Function SMAload()
 	FILO#load(fileType = ".ibw", packageID = 1)
-	if(!PLEMd2getMapsAvailable())
-		SMAread()
-	endif
+End
+
+Function SMAadd()
+	FILO#load(fileType = ".ibw", packageID = 1, appendToList = 1)
+End
+
+Function SMAprint()
+	STRUCT FILO#experiment filos
+	FILO#structureLoad(filos)
+
+	print filos.strFileList
+	print filos.strFolder
 End
 
 Function SMAread()
@@ -37,11 +45,11 @@ Function SMAread()
 	printf "SMAread: reading from %s\r", filos.strFolder
 	for(i = 0; i < numFiles; i += 1)
 		file = StringFromList(i, filos.strFileList)
-		PLEMd2Open(strFile = filos.strFolder + file, display = 0)
+		PLEMd2Open(strFile = file, display = 0)
 	endfor
 	// hotfix for file load
 	file = StringFromList(0, filos.strFileList)
-	PLEMd2Open(strFile = filos.strFolder + file, display = 0)
+	PLEMd2Open(strFile = file, display = 0)
 End
 
 Function SMAmapInfo()
