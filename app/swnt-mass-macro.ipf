@@ -66,13 +66,11 @@ End
 
 Window win_SMAimageStack() : Graph
 	PauseUpdate; Silent 1		// building window...
-	Display /W=(177.6,446,774.6,884.6)
+	Display /W=(261.6,180.8,816.6,619.4)
 	AppendImage SMAimagestack
 	ModifyImage SMAimagestack ctab= {0,196.418918918919,RedWhiteBlue256,0}
 	ModifyImage SMAimagestack plane= 1
 	ModifyGraph margin(right)=170,width={Aspect,1}
-	ModifyGraph mode=3
-	ModifyGraph marker=8
 	ModifyGraph grid(left)=1
 	ModifyGraph mirror(left)=2,mirror(bottom)=0
 	ModifyGraph nticks=10
@@ -86,42 +84,46 @@ Window win_SMAimageStack() : Graph
 	ModifyGraph tlOffset=-2
 	ModifyGraph manTick(left)={0,20,0,0},manMinor(left)={4,5}
 	ModifyGraph manTick(bottom)={0,20,0,0},manMinor(bottom)={4,0}
-	SetAxis left 27.4111583619414,30.9717263870881
-	SetAxis bottom -1.0601059672648,296.077810472665
+	SetAxis bottom -25.0880129730861,285.262665759946
 	Cursor/P/I A SMAimagestack 187,193
 	ColorScale/C/N=text0/F=0/A=MC/X=67.37/Y=-25.31 image=SMAimagestack, heightPct=50
 	ColorScale/C/N=text0 axisRange={NaN,255,0}
 	TextBox/C/N=zAxis/F=0/A=LT/X=103.13/Y=0.77 "\\JL\\Z24z=147µm"
-	ControlBar 3
+	ControlBar 45
 	GroupBox CBSeparator0,pos={0.00,0.00},size={600.00,2.40}
+	GroupBox CBSeparator1,pos={0.00,0.00},size={597.00,2.40}
+	Slider WMAxSlSl,pos={49.80,9.00},size={526.80,6.00},proc=SliderProcSMAimageStackX
+	Slider WMAxSlSl,limits={0,1,0},value= 0.435838150289017,side= 0,vert= 0,ticks= 0
+	PopupMenu WMAxSlPop,pos={9.60,4.80},size={15.60,15.60},proc=WMAxSlPopProc
+	PopupMenu WMAxSlPop,mode=0,value= #"\"Instructions...;Set Axis...;Zoom Factor...;Resync position;Resize;Remove\""
 	SetDrawLayer UserFront
 	SetDrawEnv linethick= 5
 	DrawLine 1.25144203951618,0.35850622406639,1.10248370618284,0.35850622406639
 	DrawLine 148,0.1,150,0.1
 	SetDrawEnv fsize= 24
 	DrawText 1.11534780391897,0.338713821409761,"0µm"
-	NewPanel/HOST=#/EXT=0/W=(0,0,216,439)  as "sizeAdjustment"
+	NewPanel/HOST=#/EXT=0/W=(0,0,216,438.6)  as "sizeAdjustment"
 	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
 	SetDrawLayer UserBack
 	DrawLine 15,99,124.2,99
-	Button sizeAdjustment,pos={24.00,57.00},size={99.00,18.00},proc=ButtonProcSizeAdjustment,title="sizeAdjustment"
-	SetVariable cnumSizeAdjustment,pos={6.00,12.00},size={187.00,18.00}
+	Button sizeAdjustment,pos={24.00,75.00},size={99.00,18.00},proc=ButtonProcSizeAdjustment,title="sizeAdjustment"
+	SetVariable cnumSizeAdjustment,pos={6.00,12.00},size={186.60,13.80}
 	SetVariable cnumSizeAdjustment,limits={0.9,1.1,0.001},value= numSizeAdjustment
-	CheckBox checkSizeAdjustment,pos={33.00,33.00},size={113.00,17.00},title="only current stack"
+	CheckBox checkSizeAdjustment,pos={33.00,51.00},size={80.40,12.00},title="only current stack"
 	CheckBox checkSizeAdjustment,variable= numSizeAdjustmentSingleStack
 	Button save,pos={456.00,54.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
 	Button save,labelBack=(65535,65535,65535)
 	Button save1,pos={18.00,117.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
 	Button save1,labelBack=(65535,65535,65535)
-	SetVariable cnumRotationAdjustment,pos={6.00,30.00},size={129.00,13.80}
+	SetVariable cnumRotationAdjustment,pos={6.00,27.00},size={184.20,13.80}
 	SetVariable cnumRotationAdjustment,limits={-5,5,0.1},value= numRotationAdjustment
-	CheckBox SMAimagestack_check_fullcalc,pos={37.00,170.00},size={60.00,17.00},title="full calc"
+	CheckBox SMAimagestack_check_fullcalc,pos={36.60,169.80},size={42.00,12.00},title="full calc"
 	CheckBox SMAimagestack_check_fullcalc,variable= numFullCalcultions
 	RenameWindow #,P0
 	SetActiveSubwindow ##
-	NewPanel/HOST=#/EXT=1/W=(19,0,0,439)  as "controls"
+	NewPanel/HOST=#/EXT=1/W=(18.6,0,0,438.6)  as "controls"
 	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
-	Slider WMAxSlY,pos={6.00,6.00},size={10.00,408.00},proc=SliderProcSMAimageStackY
+	Slider WMAxSlY,pos={6.00,6.00},size={6.00,408.00},proc=SliderProcSMAimageStackY
 	Slider WMAxSlY,limits={0,1,0},value= 0.644677661169415,side= 0,ticks= 0
 	RenameWindow #,P1
 	SetActiveSubwindow ##

@@ -20,9 +20,9 @@ Function SMAsinglePeakAction(startX, endX)
 	endif
 
 	// search x coordinate in wavelength wave
-	findvalue/V=(startX)/T=1 wl
+	FindValue/V=(startX)/T=1 wl
 	variable start = V_Value
-	findvalue/V=(endX)/T=1 wl
+	FindValue/V=(endX)/T=1 wl
 	variable ende = V_value
 	if(start == -1 || ende == -1)
 		Abort "start or end not found in wavelength wave"
