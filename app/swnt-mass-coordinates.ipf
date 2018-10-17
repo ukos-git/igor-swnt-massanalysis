@@ -123,36 +123,6 @@ Function/Wave SMA_PromptTrace()
 	endif
 End
 
-Function SetScaleToCursor()
-	Variable aExists = 0
-	String topWindowImages =	ImageNameList("",";")
-
-	WAVE/Z image = Utilities#getTopWindowImage()
-	if(!WaveExists(image))
-		print "image wave does not exist."
-		return 0
-	endif
-
-	aExists = strlen(CsrInfo(A)) > 0
-	if(!aExists)
-		print "Cursor A not in Graph"
-		return 0
-	endif
-
-	SetScale/P x, - pcsr(A) * DimDelta(image, 0), DimDelta(image, 0), image
-	SetScale/P y, - qcsr(A) * DimDelta(image, 1), DimDelta(image, 1), image
-End
-
-
-// @todo to this
-Function SMAsetWaveScaleZero(wv, offsetX, offsetY)
-	WAVE wv
-	Variable offsetX, offsetY
-
-	SetScale/P x, DimOffset(wv, 0) - offsetY, DimDelta(wv, 0), wv
-	SetScale/P y, DimOffset(wv, 1) - offsetX , DimDelta(wv, 1), wv
-End
-
 Function GetCoordinates()
 	Variable temp, i, j
 	Variable numCoords, numPeaks
