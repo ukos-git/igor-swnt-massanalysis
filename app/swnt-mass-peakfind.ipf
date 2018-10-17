@@ -7,13 +7,16 @@
 #include "utilities-peakfit"
 
 // use root:source and root:wavelength wave to search for peaks
-Function SMAsinglePeakAction(startX, endX)
+Function SMAsinglePeakAction(startX, endX, [source])
 	Variable startX, endX
+	WAVE source
 
 	variable i, dim0
 
 	// input waves
-	WAVE source = SMAgetSourceWave(overwrite = 0)
+	if(paramIsDefault(source))
+		WAVE source = SMAgetSourceWave(overwrite = 0)
+	endif
 	WAVE wl = root:wavelength
 	if(!WaveExists(wl))
 		WAVE wl = SMAcopyWavelengthToRoot()
