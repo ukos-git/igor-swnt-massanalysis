@@ -106,7 +106,6 @@ Function SMAtasksLoadExactscan()
 	if(!numMaps)
 		SMAread()
 	endif
-	SMAbackgroundMedian()
 	SMAgetSourceWave(overwrite = 1)
 End
 
