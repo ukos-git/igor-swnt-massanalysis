@@ -1,6 +1,9 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
+// Append the given spectra to a 2-dimensional wave.
+//
+// @param overwrite if set to 1: recreate the wave if it already exists
 Function/WAVE SMAgetSourceWave([overwrite])
 	Variable overwrite
 
