@@ -10,7 +10,7 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	Variable pixelX, pixelY, resolution, imageborders
 	Variable numMaps
 	Variable i, j, k, dim0, dim1
-	variable imagearea = 311
+	variable imagearea = 400
 	STRUCT PLEMd2Stats stats
 
 	Variable numMapsAvailable = PLEMd2getMapsAvailable()
