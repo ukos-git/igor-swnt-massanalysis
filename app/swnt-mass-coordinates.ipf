@@ -340,8 +340,7 @@ Function SMAgetCoordinates()
 	//Duplicate/FREE fullimage, currentImage
 	//SMAparticleAnalysis(currentImage)
 
-	WAVE medianImage = SMAgetMedian(overwrite = 1)
-	WAVE background = SMAestimateBackground(medianImage)
+	WAVE background = SMAestimateBackground()
 	for(i = 0; i < numMaps; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		Duplicate/FREE stats.wavPLEM, currentImage

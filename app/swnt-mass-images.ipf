@@ -40,12 +40,17 @@ Function/WAVE SMAmergeImages([createNew, indices])
 
 	Variable timerRefNum = StartMSTimer
 
+	wave background = root:backgroundImage
+	if(!WaveExists(background))
+		wave background = SMAestimateBackground()
+		Duplicate/O background root:backgroundImage
+	endif
+
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 	dim0 = DimSize(stats.wavPLEM, 0)
 	dim1 = DimSize(stats.wavPLEM, 1)
 
 	// append all Images to one big Image (fullimage)
-	wave background = SMAestimateBackground(SMAgetMedian())
 	ImageFilter/O /N=101/P=1 avg background
 	Duplicate/O background root:backround
 	resolution = (abs(DimDelta(stats.wavPLEM, 0)) + abs(DimDelta(stats.wavPLEM, 1))) / 2
@@ -374,24 +379,36 @@ Function SMAtestSizeAdjustment()
 	DoWindow/F win_SMAimageStack
 End
 
-Function/WAVE SMAestimateBackground(input)
-	WAVE input
-
+Function/WAVE SMAestimateBackground()
 	Variable pVal, qVal
 	Variable i
+	Variable originalQ25, originalQ75, resultingQ25, resultingQ75
 
 	Variable V_fitOptions=4 // used to suppress CurveFit dialog
 	Variable V_FitQuitReason // stores the CurveFit Quit Reason
 	Variable V_FitError // Curve Fit error
 
-	Duplicate/FREE input background
+	WAVE medianImage = SMAgetMedian(overwrite = 1)
 
-	// ImageFilter/O NaNZapMedian background
-	ImageFilter/O /N=5 median background // remove spikes
-	Smooth 5, background
-	ImageFilter/O /N=101/P=1 avg background
+	Duplicate/FREE medianImage background
+	ImageFilter NaNZapMedian background // rotation rotation induced borders
+	ImageFilter/O/N=5 median background // remove spikes
+	Smooth 5, background // smooth along the trenches (spikes)
+	ImageFilter/O/N=101/P=3 avg background // reduce information
 
-	// remove gaussian background from illumination if possible
+	// align wave so that it has somewhat equal boundaries as original
+	StatsQuantiles/Q medianImage
+	originalQ75 = V_Q75
+	StatsQuantiles/Q background
+	resultingQ75 = V_Q75
+	background[][] = background[p][q] / resultingQ75 * originalQ75
+	StatsQuantiles/Q medianImage
+	originalQ25 = V_Q25
+	StatsQuantiles/Q background
+	resultingQ25 = V_Q25
+	background[][] = background[p][q] - resultingQ25 + originalQ25
+
+	// set to gaussian background from illumination if possible
 	Make/O/T/N=3 T_Constraints = {"K1 > 0","K3 > 0","K5 > 0"}
 	V_FitError = 0
 	CurveFit/Q Gauss2D background /C=T_Constraints
@@ -399,7 +416,7 @@ Function/WAVE SMAestimateBackground(input)
 		Wave W_coef, W_sigma
 		W_coef[] = abs(W_sigma[p] / W_coef[p]) > 0.3 ? NaN : W_coef[p]
 		if(numType(sum(W_coef) == 0))
-			background -= Gauss2D(W_coef, x, y)
+			background = Gauss2D(W_coef, x, y)
 		endif
 		WaveClear W_coef, W_sigma
 	endif
