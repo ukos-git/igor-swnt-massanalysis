@@ -66,7 +66,7 @@ End
 
 Window win_SMAimageStack() : Graph
 	PauseUpdate; Silent 1		// building window...
-	Display /W=(261.6,180.8,816.6,619.4)
+	Display /W=(1058.4,194,1659,632.6)
 	AppendImage SMAimagestack
 	ModifyImage SMAimagestack ctab= {0,196.418918918919,RedWhiteBlue256,0}
 	ModifyImage SMAimagestack plane= 1
@@ -84,18 +84,12 @@ Window win_SMAimageStack() : Graph
 	ModifyGraph tlOffset=-2
 	ModifyGraph manTick(left)={0,20,0,0},manMinor(left)={4,5}
 	ModifyGraph manTick(bottom)={0,20,0,0},manMinor(bottom)={4,0}
-	SetAxis bottom -25.0880129730861,285.262665759946
 	Cursor/P/I A SMAimagestack 187,193
 	ColorScale/C/N=text0/F=0/A=MC/X=67.37/Y=-25.31 image=SMAimagestack, heightPct=50
 	ColorScale/C/N=text0 axisRange={NaN,255,0}
 	TextBox/C/N=zAxis/F=0/A=LT/X=103.13/Y=0.77 "\\JL\\Z24z=147µm"
-	ControlBar 45
 	GroupBox CBSeparator0,pos={0.00,0.00},size={600.00,2.40}
 	GroupBox CBSeparator1,pos={0.00,0.00},size={597.00,2.40}
-	Slider WMAxSlSl,pos={49.80,9.00},size={526.80,6.00},proc=SliderProcSMAimageStackX
-	Slider WMAxSlSl,limits={0,1,0},value= 0.435838150289017,side= 0,vert= 0,ticks= 0
-	PopupMenu WMAxSlPop,pos={9.60,4.80},size={15.60,15.60},proc=WMAxSlPopProc
-	PopupMenu WMAxSlPop,mode=0,value= #"\"Instructions...;Set Axis...;Zoom Factor...;Resync position;Resize;Remove\""
 	SetDrawLayer UserFront
 	SetDrawEnv linethick= 5
 	DrawLine 1.25144203951618,0.35850622406639,1.10248370618284,0.35850622406639
@@ -105,20 +99,21 @@ Window win_SMAimageStack() : Graph
 	NewPanel/HOST=#/EXT=0/W=(0,0,216,438.6)  as "sizeAdjustment"
 	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
 	SetDrawLayer UserBack
-	DrawLine 15,99,124.2,99
-	Button sizeAdjustment,pos={24.00,75.00},size={99.00,18.00},proc=ButtonProcSizeAdjustment,title="sizeAdjustment"
-	SetVariable cnumSizeAdjustment,pos={6.00,12.00},size={186.60,13.80}
+	DrawLine 15,135,124.2,135
+	Button mergeImageStack,pos={24.00,87.00},size={99.00,18.00},proc=ButtonProcMergeImages,title="mergeImageStack"
+	SetVariable cnumSizeAdjustment,pos={6.00,12.00},size={186.00,13.80}
 	SetVariable cnumSizeAdjustment,limits={0.9,1.1,0.001},value= numSizeAdjustment
 	CheckBox checkSizeAdjustment,pos={33.00,51.00},size={80.40,12.00},title="only current stack"
 	CheckBox checkSizeAdjustment,variable= numSizeAdjustmentSingleStack
 	Button save,pos={456.00,54.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
 	Button save,labelBack=(65535,65535,65535)
-	Button save1,pos={18.00,117.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
+	Button save1,pos={24.00,153.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
 	Button save1,labelBack=(65535,65535,65535)
-	SetVariable cnumRotationAdjustment,pos={6.00,27.00},size={184.20,13.80}
+	SetVariable cnumRotationAdjustment,pos={6.00,27.00},size={186.00,13.80}
 	SetVariable cnumRotationAdjustment,limits={-5,5,0.1},value= numRotationAdjustment
-	CheckBox SMAimagestack_check_fullcalc,pos={36.60,169.80},size={42.00,12.00},title="full calc"
+	CheckBox SMAimagestack_check_fullcalc,pos={32.40,66.60},size={42.00,12.00},title="full calc"
 	CheckBox SMAimagestack_check_fullcalc,variable= numFullCalcultions
+	Button sizeAdjustment,pos={24.00,111.00},size={99.00,18.00},proc=ButtonProcSizeAdjustment,title="sizeAdjustment"
 	RenameWindow #,P0
 	SetActiveSubwindow ##
 	NewPanel/HOST=#/EXT=1/W=(18.6,0,0,438.6)  as "controls"
@@ -194,7 +189,7 @@ Function ButtonProcSMAImageStackSave(ba) : ButtonControl
 	return 0
 End
 
-Function ButtonProcSizeAdjustment(ba) : ButtonControl
+Function ButtonProcMergeImages(ba) : ButtonControl
 	STRUCT WMButtonAction &ba
 
 	variable numLayer = 0
@@ -211,13 +206,26 @@ Function ButtonProcSizeAdjustment(ba) : ButtonControl
 			WAVE coordinates = PLEMd2getCoordinates(forceRenew = 0)
 
 			if(singleStack)
-				Wave fullimage = SMAmergeStack(coordinates, 2, 24)
+				Wave fullimage = SMAmergeStack(coordinates, numLayer, 24)
 				WAVE imagestack = root:SMAimagestack
 				MultiThread imagestack[][][numLayer] = fullimage[p][q]
 			else
 				SMAprocessImageStack(coordinates = coordinates, createNew = 1)
-				//SMAtestsizeAdjustment()
 			endif
+			break
+		case -1: // control being killed
+			break
+	endswitch
+
+	return 0
+End
+
+Function ButtonProcSizeAdjustment(ba) : ButtonControl
+	STRUCT WMButtonAction &ba
+
+	switch( ba.eventCode )
+		case 2: // mouse up
+			SMAtestsizeAdjustment()
 			break
 		case -1: // control being killed
 			break
