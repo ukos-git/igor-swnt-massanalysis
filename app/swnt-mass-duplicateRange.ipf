@@ -158,6 +158,7 @@ Function/WAVE SMAduplicateRange(FirstImage)
 		dim2 = DimSize(imagestack, 2)
 	endif
 
+	// prepare output wave container
 	outputName = UniqueName(outputName, 1, 0)
 	Duplicate/R=(yStart + offsetY, yEnd + offsetY)(xStart + offsetX, xEnd + offsetX) stats.wavPLEM $outputName/WAVE=wv
 	Redimension/N=(-1, -1, dim2) wv
@@ -169,7 +170,8 @@ Function/WAVE SMAduplicateRange(FirstImage)
 	SetScale/P z, zAxis[FirstImage][2], zStep, wv
 	// set x,y Axis offset
 	Utilities#AddWaveScaleOffset(wv, offsetY, offsetX)
-	
+
+	// write output wave
 	for(i = 0; i < dim2; i += 1)
 		numPLEM = FirstImage + i * StackSize
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(numPLEM))
