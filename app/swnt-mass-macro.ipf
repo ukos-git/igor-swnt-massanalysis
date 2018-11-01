@@ -49,10 +49,8 @@ Function SMAimageStackopenWindow()
 	DoWindow win_SMAimageStack
 	if(!V_flag)
 		Execute "win_SMAimageStack()"
-		ControlBar 0
 
 		WMAppendAxisSlider()
-		ModifyControl WMAxSlSl proc=SliderProcSMAimageStackX
 
 		WAVE/Z imagestack = root:SMAimagestack
 		if(WaveExists(imagestack) && (DimSize(imagestack, 2) > 1))
