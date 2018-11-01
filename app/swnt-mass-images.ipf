@@ -1,14 +1,16 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
+// append all Images to one big Image (fullimage)
 Function/WAVE SMAmergeImages([createNew, indices])
 	Variable createNew
 	WAVE indices
 
 	Variable pixelX, pixelY, resolution, imageborders
+	Variable positionX, positionY
 	Variable numMaps
 	Variable i, j, k, dim0, dim1
-	variable imagearea = 400
+	variable imagearea = 320
 	STRUCT PLEMd2Stats stats
 
 	Variable numMapsAvailable = PLEMd2getMapsAvailable()
@@ -29,7 +31,6 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	endif
 
 	createNew = ParamIsDefault(createNew) ? 1 : !!createNew
-
 	if(!createNew)
 		WAVE/Z fullimage = root:fullimage
 		if(WaveExists(fullimage))
@@ -47,23 +48,23 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	endif
 
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+
+	// create output image
+	resolution = (abs(DimDelta(stats.wavPLEM, 0)) + abs(DimDelta(stats.wavPLEM, 1))) / 2
+	WAVE imageRange = ImageDimensions(indices=indices)
+	dim0 = abs(imageRange[%x][%max] - imageRange[%x][%min]) / resolution
+	dim1 = abs(imageRange[%y][%max] - imageRange[%y][%min]) / resolution
+	Make/O/N=(dim0, dim1) root:fullimage/WAVE=fullimage = 0
+	Make/FREE/B/U/N=(dim0, dim1) fullimagenorm = 0
+	SetScale/I x, imageRange[%x][%min], imageRange[%x][%max], fullimage
+	SetScale/I y, imageRange[%y][%min], imageRange[%y][%max], fullimage
+
+	// create intermediate image
 	dim0 = DimSize(stats.wavPLEM, 0)
 	dim1 = DimSize(stats.wavPLEM, 1)
-
-	// append all Images to one big Image (fullimage)
-	ImageFilter/O /N=101/P=1 avg background
-	Duplicate/O background root:backround
-	resolution = (abs(DimDelta(stats.wavPLEM, 0)) + abs(DimDelta(stats.wavPLEM, 1))) / 2
-	resolution = ceil(imagearea / resolution)
-
-	Make/O/N=(resolution, resolution) root:fullimage/WAVE=fullimage = 0
-	Make/FREE/B/U/N=(resolution, resolution) fullimagenorm = 0
 	Make/FREE/N=(dim0, dim1) currentImage
 
-	imageborders = abs(imagearea - 300 - 1) / 2
-	SetScale/I x, 0 - imageborders , 300 + imageborders, fullimage
-	SetScale/I y, 0 - imageborders , 300 + imageborders, fullimage
-
+	// add current image to output image
 	numMaps = DimSize(indices, 0)
 	for(i = 0; i < numMaps; i += 1)
 		if(numtype(indices[i]) != 0)
@@ -75,16 +76,18 @@ Function/WAVE SMAmergeImages([createNew, indices])
 			ImageFilter/O /N=5 median currentImage // remove spikes
 		endif
 		for(j = 0; j < dim0; j += 1)
-			pixelX = ScaleToIndex(fullimage, IndexToScale(stats.wavPLEM, j, 0), 0)
-			if((pixelX < 0) || (pixelX >= resolution))
+			positionX = IndexToScale(stats.wavPLEM, j, 0)
+			pixelX = ScaleToIndex(fullimage, positionX, 0)
+			if((pixelX < 0) || (pixelX > DimSize(fullimage, 0) - 1))
 				continue
 			endif
 			for(k = 0; k < dim1; k += 1)
 				if(numtype(currentImage[j][k]) != 0)
 					continue
 				endif
-				pixelY = ScaleToIndex(fullimage, IndexToScale(stats.wavPLEM, k, 1), 1)
-				if((pixelY < 0) || (pixelY >= resolution))
+				positionY = IndexToScale(stats.wavPLEM, k, 1)
+				pixelY = ScaleToIndex(fullimage, positionY, 1)
+				if((pixelY < 0) || (pixelY > DimSize(fullimage, 1) - 1))
 					continue
 				endif
 

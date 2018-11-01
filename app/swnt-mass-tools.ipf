@@ -157,3 +157,58 @@ Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose, accuracy])
 	endif
 	return indices[0]
 End
+
+Function/WAVE ImageDimensions([indices])
+	WAVE indices
+
+	variable i, numMapsAvailable
+	variable xMin, xMax, yMin, yMax
+	STRUCT PLEMd2Stats stats
+
+	numMapsAvailable = PLEMd2getMapsAvailable()
+	if(ParamIsDefault(indices))
+		Make/FREE/N=(numMapsAvailable) indices = p
+	endif
+
+	for(i = 0; i < DimSize(indices, 0); i += 1)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(indices[i]))
+		xMin = min(ScaleMin(stats.wavPLEM, 0), xMin)
+		xMax = max(ScaleMax(stats.wavPLEM, 0), xMax)
+		yMin = min(ScaleMin(stats.wavPLEM, 1), yMin)
+		yMax = max(ScaleMax(stats.wavPLEM, 1)	, yMax)
+	endfor
+
+	Make/FREE/N=(2,2) wv
+	SetDimLabel 0, 0, x, wv
+	SetDimLabel 0, 1, y, wv
+	SetDimLabel 1, 0, min, wv
+	SetDimLabel 1, 1, max, wv
+	wv[%x][%min] = xMin
+	wv[%x][%max] = xMax
+	wv[%y][%min] = yMin
+	wv[%y][%max] = yMax
+
+	return wv
+End
+
+Function ScaleMin(wv, dim)
+	WAVE wv
+	variable dim
+
+	if(DimDelta(wv, dim) > 0)
+		return DimOffset(wv, dim)
+	else
+		return DimOffset(wv, dim) + DimSize(wv, dim) * DimDelta(wv, dim)
+	endif
+End
+
+Function ScaleMax(wv, dim)
+	WAVE wv
+	variable dim
+
+	if(DimDelta(wv, dim) < 0)
+		return DimOffset(wv, dim)
+	else
+		return DimOffset(wv, dim) + DimSize(wv, dim) * DimDelta(wv, dim)
+	endif
+End
