@@ -93,7 +93,6 @@ Function/WAVE SMAmergeImages([createNew, indices])
 			endfor
 		endfor
 	endfor
-
 	MultiThread fullimage[][] = fullimagenorm[p][q] == 0 ? NaN : fullimage[p][q] / fullimagenorm[p][q]
 
 	// interpolate values, that were not found directly
@@ -105,7 +104,6 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	endif
 
 	SMAbuildGraphFullImage()
-
 	Utilities#lap(timerRefNum, "SMAmergeImages")
 
 	return fullimage
@@ -471,7 +469,7 @@ Function/WAVE SMAgetMedian([overwrite])
 		myMedian[pVal][qVal] = median(currentPixel)
 		WaveClear currentPixel
 	endfor
-	duplicate/o bgmatrix root:temp
+	Duplicate/o bgmatrix root:temp
 	WaveClear bgMatrix
 
 	if(dim1 == 1)
