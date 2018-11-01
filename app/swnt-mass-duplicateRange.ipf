@@ -173,7 +173,7 @@ Function/WAVE SMAduplicateRange(FirstImage)
 	for(i = 0; i < dim2; i += 1)
 		numPLEM = FirstImage + i * StackSize
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(numPLEM))
-		Duplicate/FREE/R=(yStart, yEnd)(xStart, xEnd) stats.wavPLEM image
+		Duplicate/FREE/R=(yStart + offsetY, yEnd + offsetY)(xStart + offsetX, xEnd + offsetX) stats.wavPLEM image
 		wv[][][i] = image[p][q]
 	endfor
 
