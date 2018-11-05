@@ -33,46 +33,62 @@ Menu "MassAnalysis"
 
 	"generate exactscan", SMAtasksGenerateExactscan()
 	"convert excactscan to exactcoordinates", SMAtasksGenerateCoordinates()
-	"single peak between cursor", SMAsinglePeakAction(hcsr(A), hcsr(B))
+
 	"Histogram", SMAtasksHistogram()
 
-	"Maps: Quick Analysis", SMAquickAnalyseMap()
+	"Simple Analysis", SMAquickAnalyse()
+	"Best Peak Analysis", SMApeakAnalysis()
+	"Single Peak Analysis", SMAsinglePeakAction(hcsr(A), hcsr(B))
+
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
 End
 
-Function SMAquickAnalyseMap()
+Function SMAquickAnalyse()
 	variable i, numMaps
 	
 	Struct PLEMd2stats stats
 	
 	numMaps = Plemd2getMapsAvailable()
-	smareset(power=1)
+	//smareset(power=1)
 
-	make/O/N=(numMaps) root:intensity/WAVE=intensity
-	make/O/N=(numMaps) root:emission/WAVE=emi
-	make/O/N=(numMaps) root:excitation/WAVE=exc
+	make/O/N=(numMaps) root:peakIntensity/WAVE=intensity
+	if(DimSize(stats.wavPLEM, 1) > 1)
+		make/O/N=(numMaps) root:peakEmission/WAVE=emi
+		make/O/N=(numMaps) root:peakExcitation/WAVE=exc
+	else
+		make/O/N=(numMaps) root:peakLocation/WAVE=loc
+	endif
+	
 	for(i=0; i < numMaps; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		
-		duplicate/FREE/R=[][6,*]stats.wavPLEM, corrected
-		smooth 255, corrected
+		if(DimSize(stats.wavPLEM, 1) > 1)
+			Duplicate/FREE/R=[][3,*] stats.wavPLEM, corrected
+		else
+			Duplicate/FREE stats.wavPLEM corrected
+			Redimension/N=(-1,0) corrected
+		endif
+		Smooth 255, corrected
 
 		WaveStats/Q corrected
-		print V_maxRowLoc, V_maxColLoc
 		intensity[i] = V_max
-		emi[i] = V_maxRowLoc
-		exc[i] = V_maxColLoc
-		
-		print i, PLEMd2strPLEM(i), V_max, V_maxRowLoc, V_maxColLoc
+		if(DimSize(stats.wavPLEM, 1) > 1)
+			emi[i] = stats.wavWavelength[V_maxRowLoc]
+			exc[i] = stats.wavExcitation[V_maxColLoc]
+		else
+			loc[i] = stats.wavWavelength[V_maxRowLoc]
+		endif
 	endfor
-	
-	DoWindow/F SMAmapAnalysis
-	if(!V_flag)
-		Display/N=SMAmapAnalysis
-		AppendToGraph exc vs emi
-		ModifyGraph mode=3,marker=19,zColor(excitation)={intensity,*,*,YellowHot,0}
-		SetAxis bottom 800,1100
-		SetAxis left 500,750
+
+	if(DimSize(stats.wavPLEM, 1) > 1)
+		DoWindow/F SMAmapAnalysis
+		if(!V_flag)
+			Display/N=SMAmapAnalysis
+			AppendToGraph exc vs emi
+			ModifyGraph mode=3,marker=19,zColor(excitation)={intensity,*,*,YellowHot,0}
+			SetAxis bottom 800,1100
+			SetAxis left 500,750
+		endif
 	endif
 end
 

@@ -109,6 +109,9 @@ Function/WAVE SMApeakFind(input, [info, wvXdata, verbose, createWaves, maxPeaks,
 	endif
 	
 	Duplicate/FREE input, wv
+	if(DimSize(wv, 1) == 1)
+		Redimension/N=(-1,0) wv
+	endif
 
 	if(verbose)
 		printf "SMApeakFind(%s, verbose=%d)\r", GetWavesDatafolder(input, 2), verbose
@@ -166,14 +169,16 @@ Function SMApeakAnalysis()
 	STRUCT PLEMd2Stats stats
 	Variable dim0 = PLEMd2getMapsAvailable()
 
-	Make/O/N=(dim0) root:peakfind_wl/WAVE=wl = 0
-	Make/O/N=(dim0) root:peakfind_int/WAVE=int = 0
-	Make/O/N=(dim0) root:peakfind_fwhm/WAVE=fwhm = 0
+	Make/O/N=(dim0) root:peakLocation/WAVE=loc = NaN
+	Make/O/N=(dim0) root:peakIntensity/WAVE=int = NaN
+	Make/O/N=(dim0) root:peakFWHM/WAVE=fwhm = NaN
 
-//	for(i = 0; i < dim0; i += 1)
-	for(i = 10; i < 15; i += 1)
+	SMAquickAnalyse()
+
+	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		WAVE/WAVE peakfind = SMApeakFind(stats.wavPLEM, verbose = 4)
+		Duplicate/FREE/R=[loc[i]-50,loc[i]+50] stats.wavPLEM wv
+		WAVE/WAVE peakfind = SMApeakFind(wv, verbose = 4)
 		if(!WaveExists(peakfind))
 			continue
 		endif
@@ -183,9 +188,8 @@ Function SMApeakAnalysis()
 				continue
 			endif 
 			int[i] = peakfind[j][%intensity]
-			wl[i]  = peakfind[j][%position]
+			loc[i]  = peakfind[j][%position]
 			fwhm[i] = peakfind[j][%fwhm]
 		endfor
 	endfor
-
 End
