@@ -59,7 +59,13 @@ Function/WAVE SMAgetSourceWave([overwrite, range])
 	return wv
 End
 
-Function SMAcovariance()
+Function SMAcovariance([normalized])
+	Variable normalized
+
+	if(ParamIsDefault(normalized))
+		normalized=0
+	endif
+
 	STRUCT PLEMd2Stats stats
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
 
@@ -70,6 +76,9 @@ Function SMAcovariance()
 
 	WAVE source = SMAgetSourceWave(overwrite = 1)
 	ImageFilter NanZapMedian source
+	if(normalized)
+		MatrixoP/O source = normalizeRows(source)
+	endif
 
 	MatrixOP/O root:covariance_sym/WAVE=sym = syncCorrelation(source)
 	MatrixOP/O root:covariance_asym/WAVE=asym = asyncCorrelation(source)
