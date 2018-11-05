@@ -44,6 +44,7 @@ Function SMAread()
 	numFiles = ItemsInList(filos.strFileList)
 	if(numFiles == 0)
 		SMAload()
+		FILO#structureLoad(filos)
 	endif
 
 	printf "SMAread: reading from %s\r", filos.strFolder
