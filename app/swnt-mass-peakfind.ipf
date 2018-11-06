@@ -180,10 +180,13 @@ Function SMApeakAnalysis()
 			continue
 		endif
 		numPeaks = DimSize(peakfind, 0)
-		for(j = 0; j < 1; j += 1)
+		for(j = 0; j < numPeaks; j += 1)
 			if(peakfind[j][%intensity] < int[i])
 				continue
-			endif 
+			endif
+			if((peakfind[j][%fwhm] < 5) || (peakfind[j][%fwhm] > 30))
+				continue
+			endif
 			int[i] = peakfind[j][%intensity]
 			loc[i]  = peakfind[j][%position]
 			fwhm[i] = peakfind[j][%fwhm]
