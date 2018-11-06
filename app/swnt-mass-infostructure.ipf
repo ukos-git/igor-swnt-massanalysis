@@ -13,21 +13,20 @@ Structure SMAinfo
 	Variable numVersion, numSpectra
 
 	DFREF dfrStructure
-	DFREF dfrPeakFit
 
 	WAVE/WAVE wavSpectra, wavPeakFind
 EndStructure
 
 static Function SMAstructureInitGlobalVariables()
-	DFREF dfrStructure = $SMAstructureDF()
-	DFREF dfrPeakFit   = $SMApeakfitDF()
+	DFREF dfrPeakFit   = SMApeakfitDF()
 
+	DFREF dfrStructure = SMAstructureDF()
 	Utilities#createNVAR("numVersion", dfr = dfrStructure, set = cversion)
 	Utilities#createNVAR("numSpectra", dfr = dfrStructure, init = 0)
 End
 
 static Function SMAstructureInitWaves()
-	DFREF dfrStructure = $SMAstructureDF()
+	DFREF dfrStructure = SMAstructureDF()
 
 	WAVE/Z/WAVE/SDFR=dfrStructure wavSpectra = spectra
 	if(!WaveExists(wavSpectra))
@@ -48,11 +47,10 @@ Function SMAstructureLoad(info)
 		SMAstructureUpdate(info)
 	endif
 
-	DFREF info.dfrStructure = $SMAstructureDF()
+	DFREF info.dfrStructure = SMAstructureDF()
 	if(DataFolderRefStatus(info.dfrStructure) == 0)
 		print "SMAstructureLoad: \tUnexpected Behaviour."
 	endif
-	DFREF info.dfrPeakFit   = $SMApeakfitDF()
 	if(DataFolderRefStatus(info.dfrStructure) == 0)
 		print "SMAstructureLoad: \tUnexpected Behaviour."
 	endif
@@ -76,7 +74,7 @@ End
 Function SMAstructureSave(info)
 	STRUCT SMAinfo &info
 
-	DFREF dfrstructure = $SMAstructureDF()
+	DFREF dfrstructure = SMAstructureDF()
 
 	Utilities#saveNVAR("numVersion", info.numVersion, dfr = dfrStructure)
 	Utilities#saveNVAR("numSpectra", info.numSpectra, dfr = dfrStructure)
@@ -86,22 +84,24 @@ static Function/S SMApackageDF()
 	return "root:Packages:" + PossiblyQuoteName(cSMApackage)
 End
 
-static Function/S SMAstructureDF()
-	return SMApackageDF() + ":" + cstructure
+static Function/DF SMAstructureDF()
+	string strDFR = SMApackageDF() + ":" + cstructure
+	DFREF dfr = $strDFR
+	return dfr
 End
 
-static Function/S SMApeakfitDF()
-	return SMApackageDF() + ":" + cpeakfit
+Function/DF SMApeakfitDF()
+	string strDFR = SMApackageDF() + ":" + cpeakfit
+	DFREF dfr = $strDFR
+	return dfr
 End
 
 static Function SMAstructureIsInit()
-	String strDataFolder = SMAstructureDF()
-
-	if(!DataFolderExists(strDataFolder))
+	DFREF dfrStructure = SMAstructureDF()
+	if(!DataFolderRefStatus(dfrStructure))
 		return 0
 	endif
 
-	DFREF dfrStructure = $SMAstructureDF()
 	NVAR/Z/SDFR=dfrStructure numVersion
 	if(!NVAR_EXISTS(numVersion))
 		return 0

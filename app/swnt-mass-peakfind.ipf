@@ -81,19 +81,12 @@ Function SMAsinglePeakAction(startX, endX, [source])
 	endif
 end
 
-Function/WAVE SMApeakFind(input, [info, wvXdata, verbose, createWaves, maxPeaks, minPeakPercent, smoothingFactor])
+Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPeakPercent, smoothingFactor])
 	WAVE input, wvXdata
-	STRUCT SMAinfo &info
 	variable verbose, createWaves, maxPeaks, minPeakPercent, smoothingFactor
 
 	variable numResults, i
 
-	STRUCT SMAinfo info_copy
-	if(ParamIsDefault(info))
-		SMAstructureLoad(info_copy)
-	else
-		info_copy = info
-	endif
 	if(ParamIsDefault(verbose))
 		verbose = 0
 	endif
@@ -127,7 +120,8 @@ Function/WAVE SMApeakFind(input, [info, wvXdata, verbose, createWaves, maxPeaks,
 	else
 		WAVE guess = Utilities#PeakFind(nospikes, wvXdata = wvXdata, sorted = 1, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
 	endif
-	WAVE/WAVE coef = Utilities#BuildCoefWv(nospikes, peaks = guess, dfr = info_copy.dfrPeakFit, verbose = verbose)
+	DFREF dfr = SMApeakfitDF()
+	WAVE/WAVE coef = Utilities#BuildCoefWv(nospikes, peaks = guess, dfr = dfr, verbose = verbose)
 	WAVE/WAVE peakParam = Utilities#fitGauss(nospikes, wvCoef = coef, verbose = verbose)
 	
 	if(verbose > 2)
