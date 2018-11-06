@@ -136,6 +136,8 @@ Function/WAVE SMApeakFind(input, [info, wvXdata, verbose, createWaves, maxPeaks,
 			print output
 		endfor
 	endif
+	Utilities#KillWaveOfWaves(coef)
+
 
 	if(verbose > 3)
 		Duplicate/O nospikes root:nospikes
@@ -157,7 +159,6 @@ Function/WAVE SMApeakFind(input, [info, wvXdata, verbose, createWaves, maxPeaks,
 		res = nospikes - peakfit
 	endif
 
-	Utilities#KillWaveOfWaves(coef)
 	WAVE result = Utilities#peakParamToResult(peakParam)
 
 	return result
