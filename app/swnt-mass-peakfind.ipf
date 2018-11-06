@@ -121,9 +121,9 @@ Function/WAVE SMApeakFind(input, [info, wvXdata, verbose, createWaves, maxPeaks,
 	 //WAVE nobackground = Utilities#RemoveBackground(nospikes)
 
 	if(ParamIsDefault(wvXdata))
-		WAVE guess = Utilities#PeakFind(nospikes, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
+		WAVE guess = Utilities#PeakFind(nospikes, sorted = 1, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
 	else
-		WAVE guess = Utilities#PeakFind(nospikes, wvXdata = wvXdata, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
+		WAVE guess = Utilities#PeakFind(nospikes, wvXdata = wvXdata, sorted = 1, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
 	endif
 	WAVE/WAVE coef = Utilities#BuildCoefWv(nospikes, peaks = guess, dfr = info_copy.dfrPeakFit, verbose = verbose)
 	WAVE/WAVE peakParam = Utilities#fitGauss(nospikes, wvCoef = coef, verbose = verbose)
@@ -173,17 +173,14 @@ Function SMApeakAnalysis()
 	Make/O/N=(dim0) root:peakIntensity/WAVE=int = NaN
 	Make/O/N=(dim0) root:peakFWHM/WAVE=fwhm = NaN
 
-	SMAquickAnalyse()
-
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		Duplicate/FREE/R=[loc[i]-50,loc[i]+50] stats.wavPLEM wv
-		WAVE/WAVE peakfind = SMApeakFind(wv, verbose = 4)
+		WAVE/WAVE peakfind = SMApeakFind(stats.wavPLEM, wvXdata = stats.wavWavelength, maxPeaks = 3, verbose = 0)
 		if(!WaveExists(peakfind))
 			continue
 		endif
 		numPeaks = DimSize(peakfind, 0)
-		for(j = 0; j < numPeaks; j += 1)
+		for(j = 0; j < 1; j += 1)
 			if(peakfind[j][%intensity] < int[i])
 				continue
 			endif 
