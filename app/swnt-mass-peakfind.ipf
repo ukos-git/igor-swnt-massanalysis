@@ -39,11 +39,12 @@ Function SMAsinglePeakAction(startX, endX, [source])
 	// create output waves
 	Make/O/N=(DimSize(source, 0), 1024) root:source_extracted_fit/WAVE=myfitwave = NaN
 	SetScale/I y, startX, EndX, myfitwave
-	Make/O/N=(dim0) root:source_maxHeight/WAVE=wvHeight = NaN
-	Make/O/N=(dim0) root:source_maxHeight_err/WAVE=wvHeightErr = NaN
-	Make/O/N=(dim0) root:source_maxPosition/WAVE=wvPos = NaN
-	Make/O/N=(dim0) root:source_maxPosition_err/WAVE=wvPosnErr = NaN
-	Make/O/N=(dim0) root:source_maxFWHM/WAVE=wvFwhm = NaN
+	Make/O/N=(dim0) root:peakIntensity/WAVE=wvHeight = NaN
+	Make/O/N=(dim0) root:peakIntensityErr/WAVE=wvHeightErr = NaN
+	Make/O/N=(dim0) root:peakLocation/WAVE=wvPos = NaN
+	Make/O/N=(dim0) root:peakLocationErr/WAVE=wvPosnErr = NaN
+	Make/O/N=(dim0) root:peakFWHM/WAVE=wvFwhm = NaN
+	Make/O/N=(dim0) root:peakFWHMErr/WAVE=wvFwhmErr = NaN
 
 	// do fit in specified range
 	Duplicate/FREE/R=[start, ende] wl wl_extracted
@@ -71,6 +72,7 @@ Function SMAsinglePeakAction(startX, endX, [source])
 		wvPos[i]       = result[0][%position]
 		wvPosnErr[i]   = result[0][%position_err]
 		wvFwhm[i]      = result[0][%fwhm]
+		wvFwhmErr[i]   = result[0][%fwhm_err]
 	endfor
 
 	DoWindow source_extracted_peak_height
