@@ -105,7 +105,7 @@ Function/WAVE SMApeakFind(input, [info, wvXdata, verbose, createWaves, maxPeaks,
 		minPeakPercent = 5
 	endif
 	if(ParamIsDefault(smoothingFactor))
-		smoothingFactor = 10
+		smoothingFactor = 1
 	endif
 	
 	Duplicate/FREE input, wv
