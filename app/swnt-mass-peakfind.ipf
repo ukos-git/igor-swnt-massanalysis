@@ -134,16 +134,8 @@ Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPe
 	endif
 	Utilities#KillWaveOfWaves(coef)
 
-	if(verbose > 3)
-		Duplicate/O nospikes root:nospikes
-		WAVE nopeaks = Utilities#RemovePeaks(nospikes, verbose = 0)
-		Duplicate/O nopeaks root:nopeaks
-		WAVE smoothed = Utilities#SmoothBackground(nopeaks)
-		Duplicate/O smoothed root:smoothed
-		createWaves = 1
-	endif
-
 	if(createWaves)
+		Duplicate/O nospikes root:nospikes
 		Duplicate/O wv root:original
 		//Duplicate/O nobackground root:nobackground
 		Duplicate/O nospikes root:nospikes
@@ -202,7 +194,6 @@ End
 
 Function SMAquickAnalysis()
 	variable i, dim0
-	
 	Struct PLEMd2stats stats
 	
 	dim0 = Plemd2getMapsAvailable()
@@ -215,7 +206,7 @@ Function SMAquickAnalysis()
 		Make/O/N=(dim0) root:peakLocation/WAVE=loc
 	endif
 	
-	for(i=0; i < dim0; i += 1)
+	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		
 		if(DimSize(stats.wavPLEM, 1) > 1)
