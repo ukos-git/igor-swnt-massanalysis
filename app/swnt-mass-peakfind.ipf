@@ -116,9 +116,9 @@ Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPe
 	 //WAVE nobackground = Utilities#RemoveBackground(nospikes)
 
 	if(ParamIsDefault(wvXdata))
-		WAVE guess = Utilities#PeakFind(nospikes, sorted = 1, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
+		WAVE guess = Utilities#PeakFind(nospikes, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
 	else
-		WAVE guess = Utilities#PeakFind(nospikes, wvXdata = wvXdata, sorted = 1, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
+		WAVE guess = Utilities#PeakFind(nospikes, wvXdata = wvXdata, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
 	endif
 	DFREF dfr = SMApeakfitDF()
 	WAVE/WAVE coef = Utilities#BuildCoefWv(nospikes, peaks = guess, dfr = dfr, verbose = verbose)

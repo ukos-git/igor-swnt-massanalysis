@@ -417,7 +417,7 @@ Function SMAsearchTrenches(currentImage, [trenchpitch])
 	for(i = 0; i < rangeYdelta; i += 1)
 		currentY = Ymin + trenchpitch * i
 		Duplicate/FREE/R=[][i] wavTrenches, currentTrenchAvg
-		WAVE peaks = Utilities#PeakFind(currentTrenchAvg, wvXdata = positionX, maxPeaks = 10, minPeakPercent = 90, differentiate2 = 0)
+		WAVE peaks = Utilities#PeakFind(currentTrenchAvg, wvXdata = positionX, maxPeaks = 10, minPeakPercent = 90)
 		numPeaks = DimSize(peaks, 0)
 		if(numPeaks == 0)
 			continue
