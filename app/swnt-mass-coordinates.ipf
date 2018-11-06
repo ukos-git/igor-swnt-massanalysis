@@ -181,12 +181,12 @@ Function GetCoordinates()
 			endif
 
 			wavCoordinates[numCoords][0] = i
-			wavCoordinates[numCoords][1] = peaks[j][%position]
+			wavCoordinates[numCoords][1] = peaks[j][%location]
 			wavCoordinates[numCoords][2] = stats.numPositionZ
 
 			wavLegend[numCoords][0] = wavCoordinates[numCoords][0]
 			wavLegend[numCoords][1] = wavCoordinates[numCoords][1]
-			wavLegendText[numCoords] = "i=" + num2str(peaks[j][%intensity]) + "\r f=" + num2str(peaks[j][%fwhm])
+			wavLegendText[numCoords] = "i=" + num2str(peaks[j][%height]) + "\r f=" + num2str(peaks[j][%fwhm])
 			numCoords += 1
 		endfor
 		DoUpdate
@@ -425,7 +425,7 @@ Function SMAsearchTrenches(currentImage, [trenchpitch])
 
 		Redimension/N=(numPeaks, -1) currentCoordinates, description
 		currentCoordinates[][0] = currentY
-		currentCoordinates[][1] = peaks[p][%wavelength]
+		currentCoordinates[][1] = peaks[p][%location]
 		description[] = num2str(round(peaks[p][%height]))
 
 		SMAaddCoordinates(currentCoordinates, text = description)
@@ -770,13 +770,13 @@ Function/WAVE SMAgetFocuspoints([graph, createNew])
 		numPeaks = DimSize(peakfind, 0)
 		if(numPeaks == 1)
 			pPeak = pStart - pOffset
-			FindLevel singlePeakX, peakfind[0][%position]
+			FindLevel singlePeakX, peakfind[0][%location]
 			if(!V_flag)
 				pPeak = V_LevelX
 			endif
 			focuspointsPval[i] = pPeak
 			focuspoints[i][] = coordinates[pPeak][q]
-			focuspoints[i][2] = peakfind[0][%position]
+			focuspoints[i][2] = peakfind[0][%location]
 			printf "peak%d: \t x-Axis: \t%06.2f \ty-Axis: \t%06.2f \tz-Axis: \t%06.2f\r", i, focuspoints[i][0], focuspoints[i][1], focuspoints[i][2]
 		endif
 	endfor

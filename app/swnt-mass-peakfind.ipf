@@ -39,12 +39,12 @@ Function SMAsinglePeakAction(startX, endX, [source])
 	// create output waves
 	Make/O/N=(DimSize(source, 0), 1024) root:source_extracted_fit/WAVE=myfitwave = NaN
 	SetScale/I y, startX, EndX, myfitwave
-	Make/O/N=(dim0) root:peakIntensity/WAVE=wvHeight = NaN
-	Make/O/N=(dim0) root:peakIntensityErr/WAVE=wvHeightErr = NaN
+	Make/O/N=(dim0) root:peakHeight/WAVE=wvHeight = NaN
+	Make/O/N=(dim0) root:peakHeightErr/WAVE=wvHeightErr = NaN
 	Make/O/N=(dim0) root:peakLocation/WAVE=wvPos = NaN
 	Make/O/N=(dim0) root:peakLocationErr/WAVE=wvPosnErr = NaN
-	Make/O/N=(dim0) root:peakFWHM/WAVE=wvFwhm = NaN
-	Make/O/N=(dim0) root:peakFWHMErr/WAVE=wvFwhmErr = NaN
+	Make/O/N=(dim0) root:peakWidth/WAVE=wvFwhm = NaN
+	Make/O/N=(dim0) root:peakWidthErr/WAVE=wvFwhmErr = NaN
 
 	// do fit in specified range
 	Duplicate/FREE/R=[start, ende] wl wl_extracted
@@ -67,10 +67,10 @@ Function SMAsinglePeakAction(startX, endX, [source])
 		WAVE peakfit = Utilities#CreateFitCurve(peakParam, startX, endX, 1024)
 		myfitwave[i][] = peakfit[q]
 
-		wvHeight[i]    = result[0][%intensity]
-		wvHeightErr[i] = result[0][%intensity_err]
-		wvPos[i]       = result[0][%position]
-		wvPosnErr[i]   = result[0][%position_err]
+		wvHeight[i]    = result[0][%height]
+		wvHeightErr[i] = result[0][%height_err]
+		wvPos[i]       = result[0][%location]
+		wvPosnErr[i]   = result[0][%location_err]
 		wvFwhm[i]      = result[0][%fwhm]
 		wvFwhmErr[i]   = result[0][%fwhm_err]
 	endfor
@@ -173,8 +173,8 @@ Function SMApeakAnalysis()
 	Variable dim0 = PLEMd2getMapsAvailable()
 
 	Make/O/N=(dim0) root:peakLocation/WAVE=loc = NaN
-	Make/O/N=(dim0) root:peakIntensity/WAVE=int = NaN
-	Make/O/N=(dim0) root:peakFWHM/WAVE=fwhm = NaN
+	Make/O/N=(dim0) root:peakHeight/WAVE=int = NaN
+	Make/O/N=(dim0) root:peakWidth/WAVE=fwhm = NaN
 
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
@@ -184,14 +184,14 @@ Function SMApeakAnalysis()
 		endif
 		numPeaks = DimSize(peakfind, 0)
 		for(j = 0; j < numPeaks; j += 1)
-			if(peakfind[j][%intensity] < int[i])
+			if(peakfind[j][%height] < int[i])
 				continue
 			endif
 			if((peakfind[j][%fwhm] < 5) || (peakfind[j][%fwhm] > 30))
 				continue
 			endif
-			int[i] = peakfind[j][%intensity]
-			loc[i]  = peakfind[j][%position]
+			int[i] = peakfind[j][%height]
+			loc[i]  = peakfind[j][%location]
 			fwhm[i] = peakfind[j][%fwhm]
 		endfor
 	endfor

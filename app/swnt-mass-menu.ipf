@@ -51,7 +51,7 @@ Function SMAquickAnalyse()
 	numMaps = Plemd2getMapsAvailable()
 	//smareset(power=1)
 
-	make/O/N=(numMaps) root:peakIntensity/WAVE=intensity
+	make/O/N=(numMaps) root:peakHeight/WAVE=intensity
 	if(DimSize(stats.wavPLEM, 1) > 1)
 		make/O/N=(numMaps) root:peakEmission/WAVE=emi
 		make/O/N=(numMaps) root:peakExcitation/WAVE=exc

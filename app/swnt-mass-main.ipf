@@ -82,7 +82,7 @@ Function SMAgetBestSpectra(bestEnergy)
 	variable bestEnergy
 
 	variable i, j, numPeaks
-	variable peakEnergy, peakIntensity
+	variable peakEnergy, peakHeight
 	variable bestIntensity
 	string secondBestPLEM, currentPLEM
 	string bestPLEM = ""
@@ -98,12 +98,12 @@ Function SMAgetBestSpectra(bestEnergy)
 		WAVE peaks = SMApeakFind(stats.wavPLEM, createwaves = 0)
 		numPeaks = DimSize(peaks, 0)
 		for(j = 0; j < numPeaks; j += 1)
-			peakEnergy = peaks[j][%position]
-			peakIntensity = peaks[j][%intensity]
+			peakEnergy = peaks[j][%location]
+			peakHeight = peaks[j][%height]
 			if(abs(peakEnergy - bestEnergy) < 5)
 				print currentPLEM
-				if(peakIntensity > bestIntensity)
-					bestIntensity = peakIntensity
+				if(peakHeight > bestIntensity)
+					bestIntensity = peakHeight
 					secondBestPLEM = bestPLEM
 					bestPLEM = currentPLEM
 				endif
@@ -118,7 +118,7 @@ Function SMAgetMaximum(bestEnergy)
 	variable bestEnergy
 
 	variable i, j, numPeaks
-	variable peakEnergy, peakIntensity
+	variable peakEnergy, peakHeight
 	variable bestIntensity
 	string secondBestPLEM, currentPLEM
 	string bestPLEM = ""
@@ -136,14 +136,14 @@ Function SMAgetMaximum(bestEnergy)
 		//WAVE peaks = SMApeakFind(stats.wavPLEM, createwaves = 0)
 		numPeaks = DimSize(guess, 0)
 		for(j = 0; j < numPeaks; j += 1)
-			//peakEnergy = peaks[j][%position]
-			//peakIntensity = peaks[j][%intensity]
-			peakEnergy = guess[j][%wavelength]
-			peakIntensity = guess[j][%height]
+			//peakEnergy = peaks[j][%location]
+			//peakHeight = peaks[j][%height]
+			peakEnergy = guess[j][%location]
+			peakHeight = guess[j][%height]
 			if(abs(peakEnergy - bestEnergy) < 5)
 				print currentPLEM
-				if(peakIntensity > bestIntensity)
-					bestIntensity = peakIntensity
+				if(peakHeight > bestIntensity)
+					bestIntensity = peakHeight
 					secondBestPLEM = bestPLEM
 					bestPLEM = currentPLEM
 				endif
