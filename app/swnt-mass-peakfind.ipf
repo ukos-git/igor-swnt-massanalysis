@@ -43,8 +43,8 @@ Function SMAsinglePeakAction(startX, endX, [source])
 	Make/O/N=(dim0) root:peakHeightErr/WAVE=wvHeightErr = NaN
 	Make/O/N=(dim0) root:peakLocation/WAVE=wvPos = NaN
 	Make/O/N=(dim0) root:peakLocationErr/WAVE=wvPosnErr = NaN
-	Make/O/N=(dim0) root:peakWidth/WAVE=wvFwhm = NaN
-	Make/O/N=(dim0) root:peakWidthErr/WAVE=wvFwhmErr = NaN
+	Make/O/N=(dim0) root:peakFWHM/WAVE=wvFwhm = NaN
+	Make/O/N=(dim0) root:peakFWHMErr/WAVE=wvFwhmErr = NaN
 
 	// do fit in specified range
 	Duplicate/FREE/R=[start, ende] wl wl_extracted
@@ -174,9 +174,9 @@ Function SMApeakAnalysis()
 	if(!WaveExists(int) || DimSize(int, 0) != dim0)
 		Make/O/N=(dim0) root:peakHeight/WAVE=int = NaN
 	endif
-	WAVE/Z fwhm = root:peakWidth
+	WAVE/Z fwhm = root:peakFWHM
 	if(!WaveExists(fwhm) || DimSize(fwhm, 0) != dim0)
-		Make/O/N=(dim0) root:peakWidth/WAVE=fwhm = NaN
+		Make/O/N=(dim0) root:peakFWHM/WAVE=fwhm = NaN
 	endif
 
 	for(i = 0; i < dim0; i += 1)
