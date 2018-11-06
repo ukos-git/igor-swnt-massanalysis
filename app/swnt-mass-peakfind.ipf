@@ -176,7 +176,7 @@ Function SMApeakAnalysis()
 
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		WAVE/WAVE peakfind = SMApeakFind(stats.wavPLEM, wvXdata = stats.wavWavelength, maxPeaks = 3, verbose = 0)
+		WAVE/WAVE peakfind = SMApeakFind(stats.wavPLEM, wvXdata = stats.wavWavelength, maxPeaks = 3, verbose = 1)
 		if(!WaveExists(peakfind))
 			continue
 		endif
