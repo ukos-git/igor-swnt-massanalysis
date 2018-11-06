@@ -227,3 +227,43 @@ Function SMAquickAnalysis()
 		endif
 	endfor
 End
+
+Function SMApeakAnalysisRange()
+	variable i, numItems
+
+	WAVE index = SMApeakAnalysisGetRange()
+	numItems = DimSize(index, 0)
+
+	WAVE loc = root:peakLocation
+	WAVE int = root:peakHeight
+	WAVE fwhm = root:peakFWHM
+	Make/O/N=(numItems) root:peakLocationRange = numType(index[p]) == 0 ? loc[index[p]] : NaN
+	Make/O/N=(numItems) root:peakHeightRange = numType(index[p]) == 0 ? int[index[p]] : NaN
+	Make/O/N=(numItems) root:peakFWHMRange = numType(index[p]) == 0 ? fwhm[index[p]] : NaN
+End
+
+Function/WAVE SMApeakAnalysisGetRange()
+	variable i, dim0, range, numPLEM
+	variable rangeStart, rangeEnd
+	Struct PLEMd2stats stats
+	
+	dim0 = Plemd2getMapsAvailable()
+	range = 11
+
+	WAVE int = root:peakHeight
+	Make/O/N=(round(dim0 / range)) root:peakIndex/WAVE=index = NaN
+	for(i = 0; i < dim0 / range; i += 1)
+		rangeStart = i * range
+		rangeEnd = rangeStart + range - 1
+		Duplicate/FREE/R=[rangeStart, rangeEnd] int int_range
+		WAVE/WAVE peakParam = SMApeakFind(int_range, maxPeaks = 1)
+		numPLEM = peakParam[0][%location]
+		if(numType(numPLEM) != 0)
+			continue
+		endif
+		numPLEM = max(min(round(numPLEM), rangeEnd), rangeStart)
+		index[i] = numPLEM
+	endfor
+
+	return index
+End

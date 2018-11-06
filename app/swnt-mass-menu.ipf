@@ -39,6 +39,7 @@ Menu "MassAnalysis"
 	"Simple Analysis", SMAquickAnalysis()
 	"Best Peak Analysis", SMApeakAnalysis()
 	"Single Peak Analysis", SMAsinglePeakAction(hcsr(A), hcsr(B))
+	"Analyse Exactscan", SMApeakAnalysisRange()
 
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
 End
