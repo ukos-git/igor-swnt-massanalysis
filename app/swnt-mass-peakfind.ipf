@@ -164,9 +164,20 @@ Function SMApeakAnalysis()
 	STRUCT PLEMd2Stats stats
 	Variable dim0 = PLEMd2getMapsAvailable()
 
-	Make/O/N=(dim0) root:peakLocation/WAVE=loc = NaN
-	Make/O/N=(dim0) root:peakHeight/WAVE=int = NaN
-	Make/O/N=(dim0) root:peakWidth/WAVE=fwhm = NaN
+	SMAquickAnalysis()
+
+	WAVE/Z loc = root:peakLocation
+	if(!WaveExists(loc) || DimSize(loc, 0) != dim0)
+		Make/O/N=(dim0) root:peakLocation/WAVE=loc = NaN
+	endif
+	WAVE/Z int = root:peakHeight
+	if(!WaveExists(int) || DimSize(int, 0) != dim0)
+		Make/O/N=(dim0) root:peakHeight/WAVE=int = NaN
+	endif
+	WAVE/Z fwhm = root:peakWidth
+	if(!WaveExists(fwhm) || DimSize(fwhm, 0) != dim0)
+		Make/O/N=(dim0) root:peakWidth/WAVE=fwhm = NaN
+	endif
 
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
@@ -186,5 +197,42 @@ Function SMApeakAnalysis()
 			loc[i]  = peakfind[j][%location]
 			fwhm[i] = peakfind[j][%fwhm]
 		endfor
+	endfor
+End
+
+Function SMAquickAnalysis()
+	variable i, dim0
+	
+	Struct PLEMd2stats stats
+	
+	dim0 = Plemd2getMapsAvailable()
+
+	Make/O/N=(dim0) root:peakHeight/WAVE=int
+	if(DimSize(stats.wavPLEM, 1) > 1)
+		Make/O/N=(dim0) root:peakEmission/WAVE=emi
+		Make/O/N=(dim0) root:peakExcitation/WAVE=exc
+	else
+		Make/O/N=(dim0) root:peakLocation/WAVE=loc
+	endif
+	
+	for(i=0; i < dim0; i += 1)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+		
+		if(DimSize(stats.wavPLEM, 1) > 1)
+			Duplicate/FREE/R=[][3,*] stats.wavPLEM, corrected
+		else
+			Duplicate/FREE stats.wavPLEM corrected
+			Redimension/N=(-1,0) corrected
+		endif
+		Smooth 255, corrected
+
+		WaveStats/M=1/Q corrected
+		int[i] = V_max
+		if(DimSize(stats.wavPLEM, 1) > 1)
+			emi[i] = stats.wavWavelength[V_maxRowLoc]
+			exc[i] = stats.wavExcitation[V_maxColLoc]
+		else
+			loc[i] = stats.wavWavelength[V_maxRowLoc]
+		endif
 	endfor
 End

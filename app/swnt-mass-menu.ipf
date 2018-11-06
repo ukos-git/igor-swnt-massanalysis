@@ -36,61 +36,12 @@ Menu "MassAnalysis"
 
 	"Histogram", SMAtasksHistogram()
 
-	"Simple Analysis", SMAquickAnalyse()
+	"Simple Analysis", SMAquickAnalysis()
 	"Best Peak Analysis", SMApeakAnalysis()
 	"Single Peak Analysis", SMAsinglePeakAction(hcsr(A), hcsr(B))
 
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
 End
-
-Function SMAquickAnalyse()
-	variable i, numMaps
-	
-	Struct PLEMd2stats stats
-	
-	numMaps = Plemd2getMapsAvailable()
-	//smareset(power=1)
-
-	make/O/N=(numMaps) root:peakHeight/WAVE=intensity
-	if(DimSize(stats.wavPLEM, 1) > 1)
-		make/O/N=(numMaps) root:peakEmission/WAVE=emi
-		make/O/N=(numMaps) root:peakExcitation/WAVE=exc
-	else
-		make/O/N=(numMaps) root:peakLocation/WAVE=loc
-	endif
-	
-	for(i=0; i < numMaps; i += 1)
-		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		
-		if(DimSize(stats.wavPLEM, 1) > 1)
-			Duplicate/FREE/R=[][3,*] stats.wavPLEM, corrected
-		else
-			Duplicate/FREE stats.wavPLEM corrected
-			Redimension/N=(-1,0) corrected
-		endif
-		Smooth 255, corrected
-
-		WaveStats/Q corrected
-		intensity[i] = V_max
-		if(DimSize(stats.wavPLEM, 1) > 1)
-			emi[i] = stats.wavWavelength[V_maxRowLoc]
-			exc[i] = stats.wavExcitation[V_maxColLoc]
-		else
-			loc[i] = stats.wavWavelength[V_maxRowLoc]
-		endif
-	endfor
-
-	if(DimSize(stats.wavPLEM, 1) > 1)
-		DoWindow/F SMAmapAnalysis
-		if(!V_flag)
-			Display/N=SMAmapAnalysis
-			AppendToGraph exc vs emi
-			ModifyGraph mode=3,marker=19,zColor(excitation)={intensity,*,*,YellowHot,0}
-			SetAxis bottom 800,1100
-			SetAxis left 500,750
-		endif
-	endif
-end
 
 Function SMAtasksPrintZposition()
 	print "(x,y)=", hcsr(a), ",", vcsr(a)
