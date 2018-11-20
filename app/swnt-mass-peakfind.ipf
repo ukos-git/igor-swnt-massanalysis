@@ -261,6 +261,10 @@ Function/WAVE SMApeakAnalysisGetRange()
 	range = 11
 
 	WAVE int = root:peakHeight
+	WAVE/Z index = root:peakIndex
+	if(WaveExists(index))
+		return index
+	endif
 	Make/O/N=(round(dim0 / range)) root:peakIndex/WAVE=index = NaN
 	for(i = 0; i < dim0 / range; i += 1)
 		rangeStart = i * range
