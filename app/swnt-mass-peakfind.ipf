@@ -233,6 +233,7 @@ Function SMAquickAnalysis()
 	endfor
 End
 
+// extract best Spectrum from exactscan to get only one spectrum per nanotube
 Function SMApeakAnalysisRange()
 	variable i, numItems
 
@@ -250,6 +251,7 @@ Function SMApeakAnalysisRange()
 	Make/O/N=(numItems) root:peakAreaRange = numType(index[p]) == 0 ? area[index[p]] : NaN
 End
 
+// find best spectrum from exactscan (11 scans around rough position)
 Function/WAVE SMApeakAnalysisGetRange()
 	variable i, dim0, range, numPLEM
 	variable rangeStart, rangeEnd
