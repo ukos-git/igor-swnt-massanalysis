@@ -216,14 +216,24 @@ Function SMAquickAnalysis()
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		
 		if(DimSize(stats.wavPLEM, 1) > 1)
-			Duplicate/FREE/R=[][3,*] stats.wavPLEM, corrected
+			Duplicate/FREE stats.wavPLEM, corrected
 		else
 			Duplicate/FREE stats.wavPLEM corrected
 			Redimension/N=(-1,0) corrected
 		endif
+
+		// work around IgorPro Bug using WaveStats for scaled waves
+		SetScale/P x, 0, 1, corrected
+		SetScale/P y, 0, 1, corrected
+
 		Smooth 255, corrected
 
-		WaveStats/M=1/Q corrected
+		if(DimSize(stats.wavPLEM, 1) > 1)
+			// dismiss the first 3 excitation spectra
+			WaveStats/R=[3 * DimSize(wv, 0)] corrected
+		else
+			WaveStats/M=1/Q corrected
+		endif
 		int[i] = V_max
 		if(DimSize(stats.wavPLEM, 1) > 1)
 			emi[i] = stats.wavWavelength[V_maxRowLoc]
