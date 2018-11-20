@@ -122,7 +122,11 @@ Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPe
 	endif
 	DFREF dfr = SMApeakfitDF()
 	WAVE/WAVE coef = Utilities#BuildCoefWv(nospikes, peaks = guess, dfr = dfr, verbose = verbose)
-	WAVE/WAVE peakParam = Utilities#fitGauss(nospikes, wvCoef = coef, verbose = verbose)
+	if(ParamIsDefault(wvXdata))
+		WAVE/WAVE peakParam = Utilities#fitGauss(nospikes, wvCoef = coef, verbose = verbose)
+	else
+		WAVE/WAVE peakParam = Utilities#fitGauss(nospikes, wvXdata = wvXdata, wvCoef = coef, verbose = verbose)
+	endif
 	
 	if(verbose > 2)
 		print "==COEF WAVE=="
