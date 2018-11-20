@@ -230,7 +230,7 @@ Function SMAquickAnalysis()
 
 		if(DimSize(stats.wavPLEM, 1) > 1)
 			// dismiss the first 3 excitation spectra
-			WaveStats/R=[3 * DimSize(wv, 0)] corrected
+			WaveStats/R=[3 * DimSize(corrected, 0)] corrected
 		else
 			WaveStats/M=1/Q corrected
 		endif
