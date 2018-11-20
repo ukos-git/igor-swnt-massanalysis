@@ -179,6 +179,11 @@ Function SMApeakAnalysis()
 		Make/O/N=(dim0) root:peakArea/WAVE=area = NaN
 	endif
 
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+	if(DimSize(stats.wavPLEM, 1) > 1)
+		return SMApeakAnalysisMap()
+	endif
+
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		WAVE/WAVE peakfind = SMApeakFind(stats.wavPLEM, wvXdata = stats.wavWavelength, maxPeaks = 3, verbose = 1)
@@ -198,6 +203,115 @@ Function SMApeakAnalysis()
 			fwhm[i] = peakfind[j][%fwhm]
 			area[i] = peakfind[j][%area]
 		endfor
+	endfor
+End
+
+Function SMApeakAnalysisMap()
+	variable i, j, numPeaks, numAccuracy
+	Variable fit_start, fit_end, numPoints
+
+	Variable numDelta = 100 / 2 // this is the fitting range around the initial guess
+
+	Variable V_fitOptions = 4 // used to suppress CurveFit dialog
+	Variable V_FitQuitReason  // stores the CurveFit Quit Reason
+	Variable V_FitError   // Curve Fit error
+	
+	Variable dim0 = PLEMd2getMapsAvailable()
+
+	WAVE wavelength = SMAcopyWavelengthToRoot()
+	WAVE excitation = SMAcopyExcitationToRoot()
+	
+	SMAquickAnalysis()
+
+	Make/O/N=(dim0) root:peakHeight/WAVE=peakHeight
+	Make/O/N=(dim0) root:peakEmission/WAVE=peakEmission
+	Make/O/N=(dim0) root:peakExcitation/WAVE=peakExcitation
+	
+	for(i = 0; i < dim0; i += 1)
+		WAVE wv = getMapNo(i)
+		WAVE corrected = Utilities#RemoveSpikes(wv)
+
+		// fit Excitation
+		// find p,q
+		FindValue/T=2/V=(peakEmission[i] - numDelta) wavelength
+		if(V_Value == -1)
+			fit_start = 0
+		else
+			fit_start = V_Value
+		endif
+		FindValue/T=2/V=(peakEmission[i] + numDelta) wavelength
+		if(V_Value == -1)
+			fit_end = DimSize(corrected, 0) - 1
+		else
+			fit_end = V_Value
+		endif
+		numAccuracy = 0
+		do
+			numAccuracy += 1
+			FindValue/T=(numAccuracy)/V=(peakExcitation[i]) excitation
+		while(V_Value == -1)
+
+		numPoints = abs(fit_end - fit_start) + 1
+		Make/N=(numPoints)/FREE fitEmission = corrected[fit_start + p][V_Value]
+		Make/N=(numPoints)/FREE fitEmissionX = wavelength[fit_start + p]
+
+		WAVE/WAVE peakfind = SMApeakFind(fitEmission, wvXdata = fitEmissionX, maxPeaks = 3, verbose = 1)
+		if(!WaveExists(peakfind))
+			continue
+		endif
+		numPeaks = DimSize(peakfind, 0)
+		for(j = 0; j < numPeaks; j += 1)
+			if(peakfind[j][%height] < peakHeight[i])
+				continue
+			endif
+			if((peakfind[j][%fwhm] < 5) || (peakfind[j][%fwhm] > 50))
+				continue
+			endif
+			peakHeight[i] = peakfind[j][%height]
+			peakEmission[i] = peakfind[j][%location]
+		endfor
+		WaveClear peakfind
+
+		// fit Emission
+		// find p,q
+		FindValue/T=2/V=(peakExcitation[i] - numDelta) excitation
+		if(V_Value == -1)
+			fit_start = 0
+		else
+			fit_start = V_Value
+		endif
+		FindValue/T=2/V=(peakExcitation[i] + numDelta) excitation
+		if(V_Value == -1)
+			fit_end = DimSize(corrected, 1) - 1
+		else
+			fit_end = V_Value
+		endif
+		numAccuracy = 0
+		do
+			numAccuracy += 1
+			FindValue/T=(numAccuracy)/V=(peakEmission[i]) wavelength
+		while(V_Value == -1)
+
+		numPoints = abs(fit_end - fit_start) + 1
+		Make/N=(numPoints)/FREE fitExcitation = corrected[V_Value][fit_start + p]
+		Make/N=(numPoints)/FREE fitExcitationX = excitation[fit_start + p]
+
+		WAVE/WAVE peakfind = SMApeakFind(fitExcitation, wvXdata = fitExcitationX, maxPeaks = 3, verbose = 1)
+		if(!WaveExists(peakfind))
+			continue
+		endif
+		numPeaks = DimSize(peakfind, 0)
+		for(j = 0; j < numPeaks; j += 1)
+			if(peakfind[j][%height] < peakHeight[i])
+				continue
+			endif
+			if((peakfind[j][%fwhm] < 5) || (peakfind[j][%fwhm] > 50))
+				continue
+			endif
+			peakHeight[i] = peakfind[j][%height]
+			peakExcitation[i] = peakfind[j][%location]
+		endfor
+		WaveClear peakfind
 	endfor
 End
 

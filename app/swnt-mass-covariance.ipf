@@ -152,3 +152,31 @@ Function/WAVE SMAcopyWavelengthToRoot([numPLEM])
 	
 	return wavelength
 End
+
+// copy the excitation wavelength from PLEM
+// this should be a PLEMd2 function
+//
+// @param numPLEM [optional] specify the id of the spectrum where wavelength comes from.
+Function/WAVE SMAcopyExcitationToRoot([numPLEM])
+	variable numPLEM
+
+	variable numPoints
+	STRUCT PLEMd2Stats stats
+
+	numPLEM = ParamIsDefault(numPLEM) ? 0 : numPLEM
+
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(numPLEM))
+	if(DimSize(stats.wavPLEM, 1) < 2)
+		Abort "Not a PLE map"
+	endif
+
+	Duplicate/O stats.wavWavelength root:excitation/WAVE=excitation
+
+	// @todo: delete wavelengthImage here as it adds wrong assumtion. Instead use SetScale where 2D Waves need to be plotted.
+	Duplicate/O stats.wavExcitation root:excitationImage/WAVE=excitation_image
+	numPoints = DimSize(excitation, 0)
+	Redimension/N=(numPoints + 1) excitation_image
+	excitation_image[numPoints] = excitation_image[numPoints - 1] + 1
+	
+	return excitation
+End
