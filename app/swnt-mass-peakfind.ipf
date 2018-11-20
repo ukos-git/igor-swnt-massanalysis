@@ -202,6 +202,7 @@ Function SMAquickAnalysis()
 	Struct PLEMd2stats stats
 	
 	dim0 = Plemd2getMapsAvailable()
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 
 	Make/O/N=(dim0) root:peakHeight/WAVE=int
 	if(DimSize(stats.wavPLEM, 1) > 1)
