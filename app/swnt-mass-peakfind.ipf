@@ -170,6 +170,10 @@ Function SMApeakAnalysis()
 	if(!WaveExists(fwhm) || DimSize(fwhm, 0) != dim0)
 		Make/O/N=(dim0) root:peakFWHM/WAVE=fwhm = NaN
 	endif
+	WAVE/Z area = root:peakArea
+	if(!WaveExists(area) || DimSize(area, 0) != dim0)
+		Make/O/N=(dim0) root:peakArea/WAVE=area = NaN
+	endif
 
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
@@ -188,6 +192,7 @@ Function SMApeakAnalysis()
 			int[i] = peakfind[j][%height]
 			loc[i]  = peakfind[j][%location]
 			fwhm[i] = peakfind[j][%fwhm]
+			area[i] = peakfind[j][%area]
 		endfor
 	endfor
 End
@@ -237,9 +242,12 @@ Function SMApeakAnalysisRange()
 	WAVE loc = root:peakLocation
 	WAVE int = root:peakHeight
 	WAVE fwhm = root:peakFWHM
+	WAVE area = root:peakArea
+
 	Make/O/N=(numItems) root:peakLocationRange = numType(index[p]) == 0 ? loc[index[p]] : NaN
 	Make/O/N=(numItems) root:peakHeightRange = numType(index[p]) == 0 ? int[index[p]] : NaN
 	Make/O/N=(numItems) root:peakFWHMRange = numType(index[p]) == 0 ? fwhm[index[p]] : NaN
+	Make/O/N=(numItems) root:peakAreaRange = numType(index[p]) == 0 ? area[index[p]] : NaN
 End
 
 Function/WAVE SMApeakAnalysisGetRange()
