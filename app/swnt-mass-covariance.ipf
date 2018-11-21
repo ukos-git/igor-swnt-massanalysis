@@ -74,7 +74,7 @@ Function SMAcovariance([normalized])
 		return 0
 	endif
 
-	WAVE source = SMAgetSourceWave(overwrite = 1)
+	WAVE source = SMAgetSourceWave(overwrite = 0)
 	ImageFilter NanZapMedian source
 	if(normalized)
 		MatrixoP/O source = normalizeRows(source)
