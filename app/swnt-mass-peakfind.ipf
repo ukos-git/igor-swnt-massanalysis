@@ -364,10 +364,10 @@ Function SMAquickAnalysis()
 End
 
 // extract best Spectrum from exactscan to get only one spectrum per nanotube
-Function SMApeakAnalysisRange()
+Function SMApeakAnalysisExactscan()
 	variable i, numItems
 
-	WAVE index = SMApeakAnalysisGetRange()
+	WAVE index = SMApeakAnalysisGetBestIndex()
 	numItems = DimSize(index, 0)
 
 	WAVE loc = root:peakLocation
@@ -375,10 +375,10 @@ Function SMApeakAnalysisRange()
 	WAVE fwhm = root:peakFWHM
 	WAVE area = root:peakArea
 
-	Make/O/N=(numItems) root:peakLocationRange = numType(index[p]) == 0 ? loc[index[p]] : NaN
-	Make/O/N=(numItems) root:peakHeightRange = numType(index[p]) == 0 ? int[index[p]] : NaN
-	Make/O/N=(numItems) root:peakFWHMRange = numType(index[p]) == 0 ? fwhm[index[p]] : NaN
-	Make/O/N=(numItems) root:peakAreaRange = numType(index[p]) == 0 ? area[index[p]] : NaN
+	Make/O/N=(numItems) root:peakLocationExact = numType(index[p]) == 0 ? loc[index[p]] : NaN
+	Make/O/N=(numItems) root:peakHeightExact = numType(index[p]) == 0 ? int[index[p]] : NaN
+	Make/O/N=(numItems) root:peakFWHMExact = numType(index[p]) == 0 ? fwhm[index[p]] : NaN
+	Make/O/N=(numItems) root:peakAreaExact = numType(index[p]) == 0 ? area[index[p]] : NaN
 End
 
 // find best spectrum from exactscan (11 scans around rough position)
