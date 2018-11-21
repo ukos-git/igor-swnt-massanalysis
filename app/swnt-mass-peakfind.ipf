@@ -209,6 +209,7 @@ End
 Function SMApeakAnalysisMap()
 	variable i, j, numPeaks, numAccuracy
 	Variable fit_start, fit_end, numPoints
+	Struct PLEMd2stats stats
 
 	Variable numDelta = 100 / 2 // this is the fitting range around the initial guess
 
@@ -228,8 +229,8 @@ Function SMApeakAnalysisMap()
 	Make/O/N=(dim0) root:peakExcitation/WAVE=peakExcitation
 	
 	for(i = 0; i < dim0; i += 1)
-		WAVE wv = getMapNo(i)
-		WAVE corrected = Utilities#RemoveSpikes(wv)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
+		WAVE corrected = Utilities#RemoveSpikes(stats.wavPLEM)
 
 		// fit Excitation
 		// find p,q
@@ -381,7 +382,7 @@ Function SMApeakAnalysisRange()
 End
 
 // find best spectrum from exactscan (11 scans around rough position)
-Function/WAVE SMApeakAnalysisGetRange()
+Function/WAVE SMApeakAnalysisGetBestIndex()
 	variable i, dim0, range, numPLEM
 	variable rangeStart, rangeEnd
 	Struct PLEMd2stats stats
