@@ -64,11 +64,18 @@ End
 
 Window win_SMAimageStack() : Graph
 	PauseUpdate; Silent 1		// building window...
-	Display /W=(1058.4,194,1659,632.6)
+	Display /W=(461.4,69.8,1594.8,507.8) coordinates[*][0]/TN=manual_from_image vs coordinates[*][1]
+	AppendToGraph exactcoordinates[*][0]/TN=manual_from_exactscan vs exactcoordinates[*][1]
+	AppendToGraph exactscan_full[*][0]/TN=full_exactscan vs exactscan_full[*][1]
 	AppendImage SMAimagestack
-	ModifyImage SMAimagestack ctab= {0,196.418918918919,RedWhiteBlue256,0}
+	ModifyImage SMAimagestack ctab= {0,51.6891891891892,RedWhiteBlue256,0}
 	ModifyImage SMAimagestack plane= 1
-	ModifyGraph margin(right)=170,width={Aspect,1}
+	ModifyGraph margin(right)=170,width={Plan,1,bottom,left},height=368.504
+	ModifyGraph mode(manual_from_image)=4,mode(manual_from_exactscan)=3,mode(full_exactscan)=3
+	ModifyGraph marker(manual_from_image)=5,marker(manual_from_exactscan)=8,marker(full_exactscan)=29
+	ModifyGraph rgb(manual_from_image)=(65535,65535,65535),rgb(manual_from_exactscan)=(0,0,0)
+	ModifyGraph zmrkSize(full_exactscan)={:SMAsourceGraph:peakHeight,0,600,0,10}
+	ModifyGraph zColor(full_exactscan)={:SMAsourceGraph:peakLocation,800,1300,dBZ14}
 	ModifyGraph grid(left)=1
 	ModifyGraph mirror(left)=2,mirror(bottom)=0
 	ModifyGraph nticks=10
@@ -82,18 +89,28 @@ Window win_SMAimageStack() : Graph
 	ModifyGraph tlOffset=-2
 	ModifyGraph manTick(left)={0,20,0,0},manMinor(left)={4,5}
 	ModifyGraph manTick(bottom)={0,20,0,0},manMinor(bottom)={4,0}
-	Cursor/P/I A SMAimagestack 187,193
-	ColorScale/C/N=text0/F=0/A=MC/X=67.37/Y=-25.31 image=SMAimagestack, heightPct=50
+	SetAxis left 57.2256372924628,64.199907586755
+	SetAxis bottom 203.493536547656,221.134326092952
+	ColorScale/C/N=text0/F=0/A=MC/X=55.76/Y=-20.85 image=SMAimagestack, heightPct=50
 	ColorScale/C/N=text0 axisRange={NaN,255,0}
 	TextBox/C/N=zAxis/F=0/A=LT/X=103.13/Y=0.77 "\\JL\\Z24z=147µm"
+	ControlBar 30
 	GroupBox CBSeparator0,pos={0.00,0.00},size={600.00,2.40}
 	GroupBox CBSeparator1,pos={0.00,0.00},size={597.00,2.40}
+	GroupBox CBSeparator2,pos={0.00,0.00},size={600.00,2.40}
+	Slider WMAxSlSl,pos={48.00,9.00},size={663.00,6.00},proc=WMAxisSliderProc
+	Slider WMAxSlSl,limits={0,1,0},value= 0.358058608058608,side= 0,vert= 0,ticks= 0
+	PopupMenu WMAxSlPop,pos={9.00,3.00},size={15.60,15.60},proc=WMAxSlPopProc
+	PopupMenu WMAxSlPop,mode=0,value= #"\"Instructions...;Set Axis...;Zoom Factor...;Resync position;Resize;Remove\""
 	SetDrawLayer UserFront
 	SetDrawEnv linethick= 5
-	DrawLine 1.25144203951618,0.35850622406639,1.10248370618284,0.35850622406639
+	DrawLine 1.15902958815431,0.35850622406639,1.01007125482097,0.35850622406639
 	DrawLine 148,0.1,150,0.1
 	SetDrawEnv fsize= 24
-	DrawText 1.11534780391897,0.338713821409761,"0µm"
+	DrawText 1.0229353525571,0.338713821409761,"0µm"
+	SetWindow kwTopWin,hook=CursorMagKillGraphWindowHook
+	SetWindow kwTopWin,userdata(WMZoomBrowser)=  "win_SMAimageStack"
+	SetWindow kwTopWin,userdata(SMAimagestack)=  "image_sliderLimits={*,*};"
 	NewPanel/HOST=#/EXT=0/W=(0,0,216,438.6)  as "sizeAdjustment"
 	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
 	SetDrawLayer UserBack
@@ -109,7 +126,7 @@ Window win_SMAimageStack() : Graph
 	Button save1,labelBack=(65535,65535,65535)
 	SetVariable cnumRotationAdjustment,pos={6.00,27.00},size={186.00,13.80}
 	SetVariable cnumRotationAdjustment,limits={-5,5,0.1},value= numRotationAdjustment
-	CheckBox SMAimagestack_check_fullcalc,pos={32.40,66.60},size={42.00,12.00},title="full calc"
+	CheckBox SMAimagestack_check_fullcalc,pos={30.00,66.00},size={42.00,12.00},title="full calc"
 	CheckBox SMAimagestack_check_fullcalc,variable= numFullCalcultions
 	Button sizeAdjustment,pos={24.00,111.00},size={99.00,18.00},proc=ButtonProcSizeAdjustment,title="sizeAdjustment"
 	RenameWindow #,P0
@@ -378,3 +395,184 @@ Function SMAHistogramSliderProc(sa) : SliderControl
 
 	return 0
 End
+
+Window SMAwignerHor() : Graph
+	PauseUpdate; Silent 1		// building window...
+	Display /W=(1803,147.2,2486.4,1053.2)/L=left_LineProfileHor LineProfileHor as "SMAwignerHor"
+	AppendToGraph/L=left_WignerProfileSumHor WignerProfileSumHor
+	AppendImage/L=left_WignerImageHor WignerImageHor
+	ModifyImage WignerImageHor ctab= {-10000000000,10000000000,RedWhiteBlue,0}
+	AppendImage WignerSource
+	ModifyImage WignerSource ctab= {*,*,BlueHot,0}
+	ModifyImage WignerSource minRGB=0,maxRGB=NaN
+	AppendImage/L=left_WignerHor WignerProfileHor
+	ModifyImage WignerProfileHor ctab= {-39810717055349.7,39810717055349.7,RedWhiteBlue,0}
+	ModifyGraph margin(left)=42,margin(right)=127,width={Plan,1,bottom,left}
+	ModifyGraph grid(bottom)=1,grid(left_WignerImageHor)=1,grid(left)=1
+	ModifyGraph mirror(bottom)=0,mirror(left)=0
+	ModifyGraph nticks(left_LineProfileHor)=0,nticks(bottom)=2,nticks(left_WignerProfileSumHor)=0
+	ModifyGraph nticks(left_WignerImageHor)=2,nticks(left)=2,nticks(left_WignerHor)=0
+	ModifyGraph minor(bottom)=1
+	ModifyGraph noLabel(bottom)=2,noLabel(left_WignerImageHor)=2,noLabel(left)=2
+	ModifyGraph axOffset(left)=2.61538
+	ModifyGraph gridRGB(bottom)=(34952,34952,34952),gridRGB(left_WignerImageHor)=(34952,34952,34952)
+	ModifyGraph gridRGB(left)=(34952,34952,34952)
+	ModifyGraph axRGB(bottom)=(0,0,0,0),axRGB(left_WignerProfileSumHor)=(65535,65535,65535,0)
+	ModifyGraph axRGB(left_WignerImageHor)=(0,0,0,0),axRGB(left)=(0,0,0,0)
+	ModifyGraph lblPosMode(left_LineProfileHor)=1,lblPosMode(left_WignerHor)=1
+	ModifyGraph lblPos(bottom)=49,lblPos(left)=67,lblPos(left_WignerHor)=34
+	ModifyGraph lblLatPos(left_WignerHor)=13
+	ModifyGraph freePos(left_LineProfileHor)={0,kwFraction}
+	ModifyGraph freePos(left_WignerProfileSumHor)={0,kwFraction}
+	ModifyGraph freePos(left_WignerImageHor)={0,kwFraction}
+	ModifyGraph freePos(left_WignerHor)={0,kwFraction}
+	ModifyGraph axisEnab(left_LineProfileHor)={0.25,0.4}
+	ModifyGraph axisEnab(left_WignerProfileSumHor)={0.85,1}
+	ModifyGraph axisEnab(left_WignerImageHor)={0.6,0.85}
+	ModifyGraph axisEnab(left)={0,0.25}
+	ModifyGraph axisEnab(left_WignerHor)={0.4,0.6}
+	ModifyGraph manTick(left_LineProfileHor)={0,0,0,2},manMinor(left_LineProfileHor)={0,50}
+	ModifyGraph manTick(bottom)={0,2,0,0},manMinor(bottom)={0,50}
+	ModifyGraph manTick(left_WignerProfileSumHor)={0,0,0,2},manMinor(left_WignerProfileSumHor)={0,50}
+	ModifyGraph manTick(left_WignerImageHor)={0,2,0,0},manMinor(left_WignerImageHor)={0,50}
+	ModifyGraph manTick(left)={0,2,0,0},manMinor(left)={0,0}
+	ModifyGraph manTick(left_WignerHor)={0,0,0,2},manMinor(left_WignerHor)={0,50}
+	Label left_LineProfileHor "spacial emission\rintensity [a.u]"
+	Label left_WignerHor "momentum [1/µm]\r(k-space)"
+	Cursor/P/I/S=2/H=3/NUML=2 A WignerProfileHor -1194,8
+	ColorScale/C/N=WignerProfileColorScale/F=0/A=LB/X=74.01/Y=38.01/E=2
+	ColorScale/C/N=WignerProfileColorScale image=WignerProfileHor, heightPct=25
+	ColorScale/C/N=WignerProfileColorScale nticks=1, minor=1, prescaleExp=-12
+	ColorScale/C/N=WignerProfileColorScale tickUnit=1, ZisZ=1
+	AppendText "Wigner Intensity"
+	ColorScale/C/N=WignerImageScaleBar/F=0/A=LB/X=74.45/Y=61.16/E=2
+	ColorScale/C/N=WignerImageScaleBar image=WignerImageHor, heightPct=25, nticks=3
+	ColorScale/C/N=WignerImageScaleBar highTrip=10, notation=1, ZisZ=1
+	AppendText "Wigner Intensity |8⟩"
+	ColorScale/C/N=imageColorScale/F=0/A=LB/X=74.01/Y=3.88/E=2 image=WignerSource
+	ColorScale/C/N=imageColorScale heightPct=25
+	AppendText "intensity [a.u.]"
+	SetDrawLayer UserFront
+	SetDrawEnv linethick= 4,linefgc= (65535,65535,65535),fillfgc= (0,0,0),fsize= 16,textrgb= (65535,65535,65535)
+	SetDrawEnv gstart,gname= scalebarBottom
+	DrawLine 0.1,0.777306733167082,0.3,0.777306733167082
+	SetDrawEnv fsize= 16,textrgb= (65535,65535,65535)
+	DrawText 0.133442126514132,0.800504987531172,"0µm"
+	SetDrawEnv linethick= 4,linefgc= (65535,65535,65535),fillfgc= (0,0,0),fsize= 16,textrgb= (65535,65535,65535)
+	SetDrawEnv gstop
+	SetDrawEnv gstart,gname= scalebarTop
+	SetDrawEnv linefgc= (0,0,0)
+	DrawLine 0.1,0.177556109725685,0.3,0.177556109725685
+	SetDrawEnv fsize= 16
+	DrawText 0.133442126514132,0.200754364089775,"0µm"
+	SetDrawEnv linethick= 4,linefgc= (65535,65535,65535),fillfgc= (0,0,0),fsize= 16,textrgb= (65535,65535,65535)
+	SetDrawEnv gstop
+	SetDrawEnv gstart,gname= wigner_selection
+	SetDrawEnv xcoord= prel,ycoord= left_WignerHor,fillfgc= (65535,65535,65535,32768)
+	DrawRect 0,0.51098896382061,1,0.579120825663358
+	SetDrawEnv gstop
+	NewPanel/HOST=#/EXT=1/W=(30,0,0,567) 
+	ModifyPanel fixedSize=0
+	SetDrawLayer UserBack
+	SetDrawEnv gstart,gname= wigner_selection
+	DrawRect 0.05,1.19586670935928,0.95,1.29552226847255
+	SetDrawEnv gstop
+	Slider slider0,pos={0.00,18.00},size={38.40,498.00},proc=SMASliderProcWignerHor
+	Slider slider0,limits={0,64,1},value= 8
+	RenameWindow #,P0
+	SetActiveSubwindow ##
+EndMacro
+
+Function SMASliderProcWignerHor(sa) : SliderControl
+	STRUCT WMSliderAction &sa
+
+	switch( sa.eventCode )
+		case -1: // control being killed
+			break
+		default:
+			if( sa.eventCode & 1 ) // value set
+				Variable curval = sa.curval
+				DelayUpdate
+				SMAWigner(sa.curval)
+
+				WAVE wv = root:WignerImageHor
+				Variable scaleEven = getEvenScale(wv)
+				ModifyImage/W=SMAwignerHor WignerImageHor ctab= {-1 * scaleEven, scaleEven,RedWhiteBlue,0}
+				DoWindow WignerGizmo
+				if(V_flag)
+					ModifyGizmo/N=WignerGizmo ModifyObject=WignerImage,objectType=surface,property={surfaceMaxRGBA, scaleEven, 0, 0, 1, 1}
+					ModifyGizmo/N=WignerGizmo ModifyObject=WignerImage,objectType=surface,property={surfaceMinRGBA, -1 * scaleEven, 1, 0, 0, 1}
+				endif
+				WAVE wv = root:WignerProfileHor
+				scaleEven = getEvenScale(wv)
+				ModifyImage/W=SMAwignerHor WignerProfileHor ctab= {-1 * scaleEven,scaleEven,RedWhiteBlue,0}
+
+				WAVE wv = root:WignerProfileHor
+				Cursor/W=SMAwignerHor/I A WignerProfileHor 115.42, IndexToScale(wv, sa.curval, 1)
+				ColorScale/W=SMAwignerHor/C/N=WignerImageScaleBar "Wigner Intensity |" + num2str(sa.curval) + "⟩"
+
+				SetDrawLayer/W=SMAwignerHor UserFront
+				DrawAction/W=SMAwignerHor getgroup=wigner_selection, delete
+				if(sa.curval > 26)
+					break
+				endif
+				SetDrawEnv/W=SMAwignerHor gstart, gname=wigner_selection
+					SetDrawEnv/W=SMAwignerHor xcoord= prel,ycoord= left_WignerHor
+					SetDrawEnv/W=SMAwignerHor fillfgc= (65535,65535,65535,32768)
+					Variable rectStart = DimOffset(wv, 1) + (sa.curval - 0.5) * DimDelta(wv, 1)
+					Variable rectEnd   = DimOffset(wv, 1) + (sa.curval + 0.5) * DimDelta(wv, 1)
+					DrawRect/W=SMAwignerHor 0, rectStart, 1, rectEnd
+				SetDrawEnv/W=SMAwignerHor gstop
+			endif
+			break
+	endswitch
+
+	return 0
+End
+
+
+Window WignerGizmo() : GizmoPlot
+	PauseUpdate; Silent 1		// building window...
+	// Building Gizmo 7 window...
+	NewGizmo/T="WignerGizmo"/W=(1119.6,235.4,1609.8,474.8)
+	ModifyGizmo startRecMacro=700
+	ModifyGizmo scalingOption=63
+	AppendToGizmo Surface=root:WignerImageHor,name=WignerImage
+	ModifyGizmo ModifyObject=WignerImage,objectType=surface,property={ lineColorType,1}
+	ModifyGizmo ModifyObject=WignerImage,objectType=surface,property={ fillMode,3}
+	ModifyGizmo ModifyObject=WignerImage,objectType=surface,property={ lineWidth,2}
+	ModifyGizmo ModifyObject=WignerImage,objectType=surface,property={ srcMode,0}
+	ModifyGizmo ModifyObject=WignerImage,objectType=surface,property={ lineColor,0.666667,0.666667,0.666667,1}
+	ModifyGizmo ModifyObject=WignerImage,objectType=surface,property={ surfaceCTab,RedWhiteBlue256}
+	ModifyGizmo ModifyObject=WignerImage,objectType=surface,property={ SurfaceCTABScaling,100}
+	ModifyGizmo ModifyObject=WignerImage,objectType=surface,property={ surfaceMinRGBA,-1e+10,1,0,0,1}
+	ModifyGizmo ModifyObject=WignerImage,objectType=surface,property={ surfaceMaxRGBA,1e+10,0,0,1,1}
+	ModifyGizmo modifyObject=WignerImage,objectType=Surface,property={calcNormals,1}
+	AppendToGizmo Axes=boxAxes,name=axes0
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={-1,axisScalingMode,1}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={-1,axisColor,0,0,0,1}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={0,ticks,3}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={1,ticks,3}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={2,ticks,3}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={0,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={1,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={2,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={3,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={4,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={5,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={6,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={7,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={8,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={9,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={10,visible,0}
+	ModifyGizmo ModifyObject=axes0,objectType=Axes,property={11,visible,0}
+	ModifyGizmo modifyObject=axes0,objectType=Axes,property={-1,Clipped,0}
+	ModifyGizmo setDisplayList=0, object=axes0
+	ModifyGizmo setDisplayList=1, object=WignerImage
+	ModifyGizmo autoscaling=1
+	ModifyGizmo currentGroupObject=""
+	ModifyGizmo showInfo
+	ModifyGizmo infoWindow={1863,0,2695,313}
+	ModifyGizmo endRecMacro
+	ModifyGizmo SETQUATERNION={0.551374,-0.180123,-0.254025,0.773960}
+EndMacro

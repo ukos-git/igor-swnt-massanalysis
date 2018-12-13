@@ -212,3 +212,16 @@ Function ScaleMax(wv, dim)
 		return DimOffset(wv, dim) + DimSize(wv, dim) * DimDelta(wv, dim)
 	endif
 End
+
+// get a suitable value for ColorScales to have 0 always in the middle.
+Function getEvenScale(wv)
+	WAVE wv
+
+	Variable scaleEven
+
+	Wavestats/Q/M=0 wv
+	scaleEven = max(abs(V_max), abs(V_min))
+	scaleEven = 10^(ceil(log(scaleEven)*5)/5)
+
+	return scaleEven
+End

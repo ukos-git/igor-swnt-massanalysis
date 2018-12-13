@@ -123,9 +123,9 @@ Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPe
 	DFREF dfr = SMApeakfitDF()
 	WAVE/WAVE coef = Utilities#BuildCoefWv(nospikes, peaks = guess, dfr = dfr, verbose = verbose)
 	if(ParamIsDefault(wvXdata))
-		WAVE/WAVE peakParam = Utilities#fitGauss(nospikes, wvCoef = coef, verbose = verbose)
+		WAVE/WAVE/Z peakParam = Utilities#fitGauss(nospikes, wvCoef = coef, verbose = verbose)
 	else
-		WAVE/WAVE peakParam = Utilities#fitGauss(nospikes, wvXdata = wvXdata, wvCoef = coef, verbose = verbose)
+		WAVE/WAVE/Z peakParam = Utilities#fitGauss(nospikes, wvXdata = wvXdata, wvCoef = coef, verbose = verbose)
 	endif
 	
 	if(verbose > 2)
@@ -150,8 +150,11 @@ Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPe
 		res = nospikes - peakfit
 	endif
 
-	WAVE result = Utilities#peakParamToResult(peakParam)
-	return result
+	if(!WaveExists(peakParam))
+		print "SMApeakFind Error: no peakParam"
+		return $""
+	endif
+	return Utilities#peakParamToResult(peakParam)
 End
 
 Function SMApeakAnalysis()
@@ -390,7 +393,11 @@ Function/WAVE SMApeakAnalysisGetBestIndex()
 	dim0 = Plemd2getMapsAvailable()
 	range = 11
 
-	WAVE int = root:peakHeight
+	WAVE/Z int = root:peakHeight
+	if(!WaveExists(int))
+		SMApeakAnalysis()
+		WAVE int = root:peakHeight
+	endif
 	WAVE/Z index = root:peakIndex
 	if(WaveExists(index))
 		return index
@@ -400,11 +407,16 @@ Function/WAVE SMApeakAnalysisGetBestIndex()
 		rangeStart = i * range
 		rangeEnd = rangeStart + range - 1
 		Duplicate/FREE/R=[rangeStart, rangeEnd] int int_range
-		WAVE/WAVE peakParam = SMApeakFind(int_range, maxPeaks = 1)
+		SetScale/P x, 0, 1, int_range
+		WAVE/WAVE/Z peakParam = SMApeakFind(int_range, maxPeaks = 1)
+		if(!WaveExists(peakParam))
+			continue
+		endif
 		numPLEM = peakParam[0][%location]
 		if(numType(numPLEM) != 0)
 			continue
 		endif
+		numPLEM += rangeStart
 		numPLEM = max(min(round(numPLEM), rangeEnd), rangeStart)
 		index[i] = numPLEM
 	endfor

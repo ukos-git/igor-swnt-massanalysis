@@ -481,3 +481,113 @@ Function/WAVE SMAgetMedian([overwrite])
 
 	return myMedian
 End
+
+Function/WAVE SMAWigner(numWigner, [transposed, forceReNew])
+	Variable numWigner, transposed, forceReNew
+
+	transposed = ParamIsDefault(transposed) ? 1 : !!transposed
+	forceReNew = ParamIsDefault(forceReNew) ? 0 : !!forceReNew
+
+	WAVE image = root:WignerSource
+	if(!WaveExists(image))
+		Abort "No Source defined for WignerTransform"
+	endif
+
+	if(transposed)
+		WAVE/Z complete = root:WignerFullHor
+	else
+		WAVE/Z complete = root:WignerFullVert
+	endif
+	if(forceReNew | !WaveExists(complete))
+		if(transposed)
+			WAVE complete = CreateWignerHor()
+		else
+			WAVE complete = CreateWignerVert()
+		endif
+	endif
+
+	if(transposed)
+		DelayUpdate
+		WAVE output = root:WignerImageHor
+		Multithread output = complete[p][q][numWigner]
+		MatrixOP/O root:WignerProfileSumHor/WAVE=WignerProfileSum = sqrt(sumcols((output*output)^t)^t))
+	else
+		//WIP
+		MatrixOP/O root:WignerProfileVert/WAVE=profile = sumcols(output)^t)
+	endif
+	SetScale/P x, DimOffset(image, !transposed), DimDelta(image, !transposed), WignerProfileSum
+
+	return output	
+End
+
+Function/WAVE CreateWignerVert()
+	Variable i, j, dim0, dim1, dim3
+
+	WAVE image = root:WignerSource
+
+	dim0 = DimSize(image, 0) - 1
+	dim1 = floor(DimSize(image, 1) / 2) * 2
+	dim3 = dim1 / 2 + 1
+
+	MatrixOP/O root:LineProfileVert/WAVE=LineProfileVert = sumcols(image)^t)
+	SetScale/P x, DimOffset(image, 1), DimDelta(image, 1), LineProfileVert
+	Redimension/N=(dim1) LineProfileVert
+	Make/N=(dim1)/O root:LineProfileVertXdummy = DimOffset(image, 1) + p * DimDelta(image, 1)
+
+	Make/N=(dim0, dim1)/O root:WignerProfileVert/WAVE=WignerProfileVert
+	WignerTransform/DEST=WignerProfileVert LineProfileVert
+
+	MatrixOP/O root:WignerProfileSumVert/WAVE=WignerProfileSumVert = sqrt(sumcols((WignerProfileVert*WignerProfileVert)^t)^t))
+	SetScale/P x, DimOffset(image, 1), DimDelta(image, 1), WignerProfileSumVert
+	Make/N=(dim1)/O root:WignerProfileSumVertXdummy = DimOffset(image, 1) + p * DimDelta(image, 1)
+
+	// WIP
+	Make/N=(dim0, dim1)/O root:WignerImageVert/WAVE=output
+	Make/N=(dim0, dim1, dim3)/O root:WignerFullVert/WAVE=complete
+
+	Make/N=(dim1)/O root:LineProfile/WAVE=current_line
+	Make/N=(dim1)/O root:WignerProfile/WAVE=current_wigner
+	for(i = 0; i < dim1; i += 1)
+		current_line = image[i][p]
+		WignerTransform/DEST=current_wigner current_line
+		MultiThread complete[i][][] = current_wigner[q][r]
+	endfor
+
+	output = complete[p][q][0]
+	return complete
+End
+
+Function/WAVE CreateWignerHor()
+	Variable i, j, dim0, dim1, dim3
+
+	WAVE image = root:WignerSource
+
+	dim0 = floor(DimSize(image, 0) / 2) * 2
+	dim1 = DimSize(image, 1) - 1
+	dim3 = dim0 / 2 + 1
+
+	MatrixOP/O root:LineProfileHor/WAVE=LineProfileHor = sumcols(image^t)^t)
+	SetScale/P x, DimOffset(image, 0), DimDelta(image, 0), LineProfileHor
+	Redimension/N=(dim0) LineProfileHor
+
+	Make/N=(dim0, dim1)/O root:WignerProfileHor/WAVE=WignerProfileHor
+	WignerTransform/DEST=WignerProfileHor LineProfileHor
+
+	MatrixOP/O root:WignerProfileSumHor/WAVE=WignerProfileSumHor = sqrt(sumcols((WignerProfileHor*WignerProfileHor)^t)^t))
+	SetScale/P x, DimOffset(image, 0), DimDelta(image, 0), WignerProfileSumHor
+
+	Make/N=(dim0, dim1)/O root:WignerImageHor/WAVE=output
+	CopyScales image, output
+	Make/N=(dim0, dim1, dim3)/O root:WignerFullHor/WAVE=complete
+
+	Make/N=(dim0)/O root:LineProfile/WAVE=current_line
+	Make/N=(dim0)/O root:WignerProfile/WAVE=current_wigner
+	for(i = 0; i < dim1; i += 1)
+			current_line = image[p][i]
+			WignerTransform/DEST=current_wigner current_line
+			complete[][i][] = current_wigner[p][r]
+	endfor
+
+	output = complete[p][q][0]
+	return complete
+End

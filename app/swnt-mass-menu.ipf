@@ -16,7 +16,8 @@ Menu "GraphMarquee"
 	"Erase Points", SMA_EraseMarqueeArea()
 	"Extract z-dimension", SMA_ExtractSumMarqueeArea()
 	"Display Original", SMAdisplayOriginal()
-	"Duplicate Range", SMADuplicateRangeFromMarquee()
+	"Duplicate", SMADuplicateRangeFromMarquee()
+	"Wigner", SMAtasksCreateWigner()
 End
 
 Menu "MassAnalysis"
@@ -42,6 +43,25 @@ Menu "MassAnalysis"
 	"Analyse Exactscan", SMApeakAnalysisExactscan()
 
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
+End
+
+Function SMAtasksCreateWigner()
+	WAVE wv = SMAduplicateRange(SMAgetOriginalFromMarquee())
+	if(!WaveExists(wv))
+		Abort "Could not Dupicate Image"
+	endif
+	DelayUpdate
+	Duplicate/O wv root:WignerSource
+	KillWaves/Z wv
+	SMAWigner(0, forceReNew = 1)
+	DoWindow WignerGizmo
+	if(!V_flag)
+		Execute "	WignerGizmo()"
+	endif
+	DoWindow/F SMAwignerHor
+	if(!V_flag)
+		Execute "	SMAwignerHor()"
+	endif
 End
 
 Function SMAtasksPrintZposition()
@@ -77,6 +97,7 @@ Function SMAtasksLoadExactscan()
 		SMAread()
 	endif
 	SMAgetSourceWave(overwrite = 1)
+	SMApeakAnalysisExactscan()
 End
 
 Function SMAtasksGenerateExactscan([wv])
