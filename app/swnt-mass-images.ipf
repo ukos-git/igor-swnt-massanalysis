@@ -41,7 +41,7 @@ Function/WAVE SMAmergeImages([createNew, indices])
 
 	Variable timerRefNum = StartMSTimer
 
-	wave background = root:backgroundImage
+	wave/Z background = root:backgroundImage
 	if(!WaveExists(background))
 		wave background = SMAestimateBackground()
 		Duplicate/O background root:backgroundImage
