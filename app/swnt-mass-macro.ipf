@@ -64,18 +64,10 @@ End
 
 Window win_SMAimageStack() : Graph
 	PauseUpdate; Silent 1		// building window...
-	Display /W=(461.4,69.8,1594.8,507.8) coordinates[*][0]/TN=manual_from_image vs coordinates[*][1]
-	AppendToGraph exactcoordinates[*][0]/TN=manual_from_exactscan vs exactcoordinates[*][1]
-	AppendToGraph exactscan_full[*][0]/TN=full_exactscan vs exactscan_full[*][1]
+	Display /W=(60,86,533.4,518)
 	AppendImage SMAimagestack
-	ModifyImage SMAimagestack ctab= {0,51.6891891891892,RedWhiteBlue256,0}
-	ModifyImage SMAimagestack plane= 1
-	ModifyGraph margin(right)=170,width={Plan,1,bottom,left},height=368.504
-	ModifyGraph mode(manual_from_image)=4,mode(manual_from_exactscan)=3,mode(full_exactscan)=3
-	ModifyGraph marker(manual_from_image)=5,marker(manual_from_exactscan)=8,marker(full_exactscan)=29
-	ModifyGraph rgb(manual_from_image)=(65535,65535,65535),rgb(manual_from_exactscan)=(0,0,0)
-	ModifyGraph zmrkSize(full_exactscan)={:SMAsourceGraph:peakHeight,0,600,0,10}
-	ModifyGraph zColor(full_exactscan)={:SMAsourceGraph:peakLocation,800,1300,dBZ14}
+	ModifyImage SMAimagestack ctab= {0,*,RedWhiteBlue256,0}
+	ModifyGraph width={Plan,1,bottom,left},height=396.85
 	ModifyGraph grid(left)=1
 	ModifyGraph mirror(left)=2,mirror(bottom)=0
 	ModifyGraph nticks=10
@@ -89,28 +81,6 @@ Window win_SMAimageStack() : Graph
 	ModifyGraph tlOffset=-2
 	ModifyGraph manTick(left)={0,20,0,0},manMinor(left)={4,5}
 	ModifyGraph manTick(bottom)={0,20,0,0},manMinor(bottom)={4,0}
-	SetAxis left 57.2256372924628,64.199907586755
-	SetAxis bottom 203.493536547656,221.134326092952
-	ColorScale/C/N=text0/F=0/A=MC/X=55.76/Y=-20.85 image=SMAimagestack, heightPct=50
-	ColorScale/C/N=text0 axisRange={NaN,255,0}
-	TextBox/C/N=zAxis/F=0/A=LT/X=103.13/Y=0.77 "\\JL\\Z24z=147µm"
-	ControlBar 30
-	GroupBox CBSeparator0,pos={0.00,0.00},size={600.00,2.40}
-	GroupBox CBSeparator1,pos={0.00,0.00},size={597.00,2.40}
-	GroupBox CBSeparator2,pos={0.00,0.00},size={600.00,2.40}
-	Slider WMAxSlSl,pos={48.00,9.00},size={663.00,6.00},proc=WMAxisSliderProc
-	Slider WMAxSlSl,limits={0,1,0},value= 0.358058608058608,side= 0,vert= 0,ticks= 0
-	PopupMenu WMAxSlPop,pos={9.00,3.00},size={15.60,15.60},proc=WMAxSlPopProc
-	PopupMenu WMAxSlPop,mode=0,value= #"\"Instructions...;Set Axis...;Zoom Factor...;Resync position;Resize;Remove\""
-	SetDrawLayer UserFront
-	SetDrawEnv linethick= 5
-	DrawLine 1.15902958815431,0.35850622406639,1.01007125482097,0.35850622406639
-	DrawLine 148,0.1,150,0.1
-	SetDrawEnv fsize= 24
-	DrawText 1.0229353525571,0.338713821409761,"0µm"
-	SetWindow kwTopWin,hook=CursorMagKillGraphWindowHook
-	SetWindow kwTopWin,userdata(WMZoomBrowser)=  "win_SMAimageStack"
-	SetWindow kwTopWin,userdata(SMAimagestack)=  "image_sliderLimits={*,*};"
 	NewPanel/HOST=#/EXT=0/W=(0,0,216,438.6)  as "sizeAdjustment"
 	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
 	SetDrawLayer UserBack
@@ -148,7 +118,10 @@ Function SliderProcSMAimageStackY(sa) : SliderControl
 		default:
 			if( sa.eventCode & 1 ) // value set
 				String grfName= WinName(0, 1)
-				SVAR axisName = root:Packages:WMAxisSlider:$(grfName):gAxisName
+				SVAR/Z axisName = root:Packages:WMAxisSlider:$(grfName):gAxisName
+				if(!SVAR_EXISTS(axisName))
+					break
+				endif
 				axisName = "left"
 				WMAxisSliderProc(sa.ctrlName, sa.curval, sa.eventCode)
 			endif
@@ -180,7 +153,10 @@ End
 Function ButtonProcSMAImageStackSave(ba) : ButtonControl
 	STRUCT WMButtonAction &ba
 	
-	NVAR cnumLayer = root:Packages:WM3DImageSlider:win_SMAimageStack:gLayer
+	NVAR/Z cnumLayer = root:Packages:WM3DImageSlider:win_SMAimageStack:gLayer
+	if(!NVAR_EXISTS(cnumLayer))
+		return 0
+	endif
 	
 	variable i
 	variable numLayers = 8 // hard coded
