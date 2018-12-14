@@ -31,6 +31,7 @@ Function SMAprint()
 	FILO#structureLoad(filos)
 
 	print filos.strFileList
+	printf "SMAprint: reading from %s\r", filos.strFolder
 	print filos.strFolder
 End
 
@@ -50,11 +51,13 @@ Function SMAread()
 		numFiles = ItemsInList(filos.strFileList)
 	endif
 
-	printf "SMAread: reading from %s\r", filos.strFolder
+	// load
+	SMAprint()
 	for(i = 0; i < numFiles; i += 1)
 		file = StringFromList(i, filos.strFileList)
 		PLEMd2Open(strFile = file, display = 0)
 	endfor
+
 	// hotfix for file load
 	file = StringFromList(0, filos.strFileList)
 	PLEMd2Open(strFile = file, display = 0)
