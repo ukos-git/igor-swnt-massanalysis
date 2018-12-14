@@ -22,7 +22,7 @@ End
 
 Menu "MassAnalysis"
 	"Load Spectra", SMAtasksLoadExactscan()
-	"Load CameraScan", SMAprocessImageStack()
+	"Load CameraScan", SMAtasksLoadCamerascan()
 
 	"Load Tiltscan", /Q, SMAtasksGetTiltPlane()
 	"Recalc TiltPlane", SMAcameraGetTiltPlaneParameters(createNew = 1)
@@ -43,6 +43,11 @@ Menu "MassAnalysis"
 	"Analyse Exactscan", SMApeakAnalysisExactscan()
 
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
+End
+
+Function SMAtasksLoadCamerascan()
+	SMAread()
+	SMAprocessImageStack()
 End
 
 Function SMAtasksCreateWigner()
