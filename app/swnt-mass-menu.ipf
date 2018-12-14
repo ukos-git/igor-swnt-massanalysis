@@ -48,7 +48,7 @@ End
 Function SMAtasksCreateWigner()
 	WAVE wv = SMAduplicateRange(SMAgetOriginalFromMarquee())
 	if(!WaveExists(wv))
-		Abort "Could not Dupicate Image"
+		Abort "Could not Duplicate Image"
 	endif
 	DelayUpdate
 	Duplicate/O wv root:WignerSource
