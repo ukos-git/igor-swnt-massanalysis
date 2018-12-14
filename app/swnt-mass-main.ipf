@@ -41,10 +41,12 @@ Function SMAread()
 
 	FILO#structureLoad(filos)
 
+	GetFileFolderInfo/Q/Z=1 filos.strFolder
 	numFiles = ItemsInList(filos.strFileList)
-	if(numFiles == 0)
+	if(numFiles == 0 || !V_isFolder)
 		SMAload()
 		FILO#structureLoad(filos)
+		numFiles = ItemsInList(filos.strFileList)
 	endif
 
 	printf "SMAread: reading from %s\r", filos.strFolder
