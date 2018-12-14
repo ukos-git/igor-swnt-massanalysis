@@ -35,13 +35,14 @@ Function SMAprint()
 End
 
 Function SMAread()
-	String file
+	String file, folder
 	Variable numFiles, i
 	STRUCT FILO#experiment filos
 
 	FILO#structureLoad(filos)
 
-	GetFileFolderInfo/Q/Z=1 filos.strFolder
+	folder = filos.strFolder
+	GetFileFolderInfo/Q/Z=1 folder
 	numFiles = ItemsInList(filos.strFileList)
 	if(numFiles == 0 || !V_isFolder)
 		SMAload()
