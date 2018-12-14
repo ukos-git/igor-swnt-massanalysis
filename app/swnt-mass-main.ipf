@@ -36,14 +36,32 @@ Function SMAprint()
 End
 
 Function SMAread()
-	String file, folder
+	String file, files, strPath
 	Variable numFiles, i
 	STRUCT FILO#experiment filos
 
 	FILO#structureLoad(filos)
 
-	folder = filos.strFolder
-	GetFileFolderInfo/Q/Z=1 folder
+	// update path
+	strPath = filos.strFolder
+	files = filos.strFileList
+	GetFileFolderInfo/Q/Z=1 strPath
+	if(!V_isFolder)
+		if(!cmpstr(strPath[0], "D"))
+			strPath = "W:data" + strPath[1, inf]
+			files = FILO#RemovePrefixFromListItems("D", files)
+			files = FILO#AddPrefixToListItems("W:data", files)
+			GetFileFolderInfo/Q/Z=1 strPath
+			if(!V_isFolder)
+				strPath = filos.strFolder
+				files = filos.strFileList
+			endif
+		endif
+	endif
+	filos.strFolder = strPath
+
+	// check if filos is valid
+	GetFileFolderInfo/Q/Z=1 strPath
 	numFiles = ItemsInList(filos.strFileList)
 	if(numFiles == 0 || !V_isFolder)
 		SMAload()
