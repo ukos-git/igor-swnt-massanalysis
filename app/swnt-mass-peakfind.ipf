@@ -300,7 +300,7 @@ Function SMApeakAnalysisMap()
 		Make/N=(numPoints)/FREE fitExcitation = corrected[V_Value][fit_start + p]
 		Make/N=(numPoints)/FREE fitExcitationX = excitation[fit_start + p]
 
-		WAVE/WAVE peakfind = SMApeakFind(fitExcitation, wvXdata = fitExcitationX, maxPeaks = 3, verbose = 1)
+		WAVE/WAVE peakfind = SMApeakFind(fitExcitation, wvXdata = fitExcitationX, maxPeaks = 3, verbose = 0)
 		if(!WaveExists(peakfind))
 			continue
 		endif
