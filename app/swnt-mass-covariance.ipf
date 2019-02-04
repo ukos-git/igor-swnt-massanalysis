@@ -59,6 +59,22 @@ Function/WAVE SMAgetSourceWave([overwrite, range])
 	return wv
 End
 
+Function SMARedimensionToMap(wv)
+	WAVE wv
+
+	Variable dim0, dim1v1, dim1v2, dim1
+
+	STRUCT PLEMd2Stats stats
+	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
+
+	dim0 = DimSize(stats.wavPLEM, 0)
+	dim1 = round(DimSize(wv, 0) / dim0)
+	Redimension/E=1/N=(dim0, dim1) wv
+
+	SetScale/P x, DimOffset(stats.wavPLEM, 0), DimDelta(stats.wavPLEM, 0), wv
+	SetScale/P y, DimOffset(stats.wavPLEM, 1), DimDelta(stats.wavPLEM, 1), wv
+End
+
 Function SMAcovariance([normalized])
 	Variable normalized
 

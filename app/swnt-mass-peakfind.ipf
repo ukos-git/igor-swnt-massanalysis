@@ -317,6 +317,21 @@ Function SMApeakAnalysisMap()
 		endfor
 		WaveClear peakfind
 	endfor
+
+	// create simple sum
+	WAVE source = SMAgetSourceWave()
+	MatrixOp/O root:mapsSum/WAVE=dest = sumCols(source)^t
+	SMARedimensionToMap(dest)
+
+	// display
+	DoWindow/F SMAmapsSum
+	if(!V_flag)
+		Execute "SMAmapsSum()"
+	endif
+	DoWindow/F SMApeakMaximum
+	if(!V_flag)
+		Execute "SMApeakMaximum()"
+	endif
 End
 
 Function SMAquickAnalysis()

@@ -564,3 +564,30 @@ Window WignerGizmo() : GizmoPlot
 	ModifyGizmo endRecMacro
 	ModifyGizmo SETQUATERNION={0.551374,-0.180123,-0.254025,0.773960}
 EndMacro
+
+Window SMAmapsSum() : Graph
+	PauseUpdate; Silent 1		// building window...
+	Display /W=(412.5,56.75,799.5,303.5) peakExcitation vs peakEmission as "SMAmapsSum"
+	AppendImage mapsSum
+	ModifyImage mapsSum ctab= {0,*,Spectrum,0}
+	ModifyGraph mode=3
+	ModifyGraph marker=19
+	ModifyGraph rgb=(65535,65535,65535)
+	ModifyGraph useMrkStrokeRGB=1
+	ModifyGraph zmrkSize(peakExcitation)={peakHeight,0,*,1,10}
+	ModifyGraph mirror=0
+	Label left "excitation / nm"
+	Label bottom "emission / nm"
+	SetAxis left 525,*
+EndMacro
+
+Window SMApeakMaximum() : Graph
+	PauseUpdate; Silent 1		// building window...
+	Display /W=(39,178.25,425.25,425) peakExcitation vs peakEmission as "SMApeakMaximum"
+	ModifyGraph mode=3
+	ModifyGraph marker=19
+	ModifyGraph zmrkSize(peakExcitation)={peakHeight,0,*,1,10}
+	Label left "excitation / nm"
+	Label bottom "emission / nm"
+	SetAxis left 525,765
+EndMacro
