@@ -86,12 +86,18 @@ Function SMAgetFirstImage(centerX, centerY, centerZ)
 End
 
 Function SMADuplicateRangeFromMarquee()
+	String win
+
 	WAVE wv = SMAduplicateRange(SMAgetOriginalFromMarquee())
 	if(!WaveExists(wv))
 		return 1
 	endif
-	Display
+
+	win = "win_" + NameOfWave(wv)
+	Display/N=$win as win
 	AppendImage wv
+	ModifyGraph width={Plan,1,bottom,left}
+	ModifyImage ''#0 ctab= {*,*,RedWhiteBlue256,0}
 End
 
 // read globally set offset variables and give instructions on how to update them.
