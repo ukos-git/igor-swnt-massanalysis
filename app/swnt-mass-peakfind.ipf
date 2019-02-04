@@ -396,10 +396,12 @@ Function SMApeakAnalysisExactscan()
 
 	DoWindow/F SMAexactscanImage
 	if(!V_flag)
+		Plemd2getCoordinates()
 		SetDataFolder root:
 		LoadWave/H/O "W:collection:setup:suspended:technique_exactscan:template:trenches.ibw"
 		LoadWave/H/O "W:collection:setup:suspended:technique_exactscan:template:borders.ibw"
 		Execute "SMAexactscanImage()"
+		Execute "Utilities#saveWindow(\"SMAexactscanImage\")"
 	endif
 End
 
