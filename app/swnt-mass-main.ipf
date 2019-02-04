@@ -41,10 +41,10 @@ Function SMAread()
 	STRUCT FILO#experiment filos
 
 	FILO#structureLoad(filos)
-
-	// update path
 	strPath = filos.strFolder
 	files = filos.strFileList
+
+	// update path
 	GetFileFolderInfo/Q/Z=1 strPath
 	if(!V_isFolder)
 		if(!cmpstr(strPath[0], "D"))
@@ -57,27 +57,30 @@ Function SMAread()
 				files = filos.strFileList
 			endif
 		endif
+		filos.strFolder = strPath
+		filos.strFileList = files
+		FILO#structureSave(filos)
 	endif
-	filos.strFolder = strPath
 
 	// check if filos is valid
 	GetFileFolderInfo/Q/Z=1 strPath
-	numFiles = ItemsInList(filos.strFileList)
+	numFiles = ItemsInList(files)
 	if(numFiles == 0 || !V_isFolder)
 		SMAload()
 		FILO#structureLoad(filos)
-		numFiles = ItemsInList(filos.strFileList)
+		files = filos.strFileList
+		numFiles = ItemsInList(files)
 	endif
 
 	// load
 	SMAprint()
 	for(i = 0; i < numFiles; i += 1)
-		file = StringFromList(i, filos.strFileList)
+		file = StringFromList(i, files)
 		PLEMd2Open(strFile = file, display = 0)
 	endfor
 
 	// hotfix for file load
-	file = StringFromList(0, filos.strFileList)
+	file = StringFromList(0, files)
 	PLEMd2Open(strFile = file, display = 0)
 End
 
