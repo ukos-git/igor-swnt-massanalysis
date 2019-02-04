@@ -37,8 +37,9 @@ Menu "MassAnalysis"
 
 	"Histogram", SMAtasksHistogram()
 
-	"Simple Analysis", SMAquickAnalysis()
-	"Best Peak Analysis", SMApeakAnalysis()
+	"Peak Analysis", SMApeakAnalysis()
+	"Simple Peak Analysis", SMAquickAnalysis()
+
 	"Single Peak Analysis", SMAsinglePeakAction(hcsr(A), hcsr(B))
 	"Analyse Exactscan", SMApeakAnalysisExactscan()
 
