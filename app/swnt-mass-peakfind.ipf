@@ -344,17 +344,13 @@ Function SMAquickAnalysis()
 			Redimension/N=(-1,0) corrected
 		endif
 
-		// work around IgorPro Bug using WaveStats for scaled waves
-		SetScale/P x, 0, 1, corrected
-		SetScale/P y, 0, 1, corrected
-
 		Smooth 255, corrected
 
 		if(DimSize(stats.wavPLEM, 1) > 1)
 			// dismiss the first 3 excitation spectra
-			WaveStats/R=[3 * DimSize(corrected, 0)] corrected
+			WaveStats/R=[3 * DimSize(corrected, 0)]/P/Q corrected
 		else
-			WaveStats/M=1/Q corrected
+			WaveStats/M=1/P/Q corrected
 		endif
 		int[i] = V_max
 		if(DimSize(stats.wavPLEM, 1) > 1)
