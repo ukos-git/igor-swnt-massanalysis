@@ -393,6 +393,14 @@ Function SMApeakAnalysisExactscan()
 	Make/O/N=(numItems) root:peakHeightExact = numType(index[p]) == 0 ? int[index[p]] : NaN
 	Make/O/N=(numItems) root:peakFWHMExact = numType(index[p]) == 0 ? fwhm[index[p]] : NaN
 	Make/O/N=(numItems) root:peakAreaExact = numType(index[p]) == 0 ? area[index[p]] : NaN
+
+	DoWindow/F SMAexactscanImage
+	if(!V_flag)
+		SetDataFolder root:
+		LoadWave/H/O "W:collection:setup:suspended:technique_exactscan:template:trenches.ibw"
+		LoadWave/H/O "W:collection:setup:suspended:technique_exactscan:template:borders.ibw"
+		Execute "SMAexactscanImage()"
+	endif
 End
 
 // find best spectrum from exactscan (11 scans around rough position)

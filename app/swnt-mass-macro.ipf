@@ -591,3 +591,44 @@ Window SMApeakMaximum() : Graph
 	Label bottom "emission / nm"
 	SetAxis left 525,765
 EndMacro
+
+Window SMAexactscanImage() : Graph
+	PauseUpdate; Silent 1		// building window...
+	String fldrSav0= GetDataFolder(1)
+	SetDataFolder root:PLEMd2:
+	Display /W=(963,138.5,1316.25,413.75) coordinates[*][0]/TN=AcN vs coordinates[*][1] as "SMAexactscanImage"
+	AppendImage ::borders
+	ModifyImage borders explicit= 1
+	ModifyImage borders eval={0,65535,65535,65535}
+	ModifyImage borders eval={255,-1,-1,-1}
+	ModifyImage borders eval={1,13107,13107,13107}
+	AppendImage ::trenches
+	ModifyImage trenches explicit= 1
+	ModifyImage trenches eval={0,65535,65535,65535}
+	ModifyImage trenches eval={255,-1,-1,-1}
+	ModifyImage trenches eval={1,52428,52428,52428}
+	SetDataFolder fldrSav0
+	ModifyGraph margin(left)=7,margin(bottom)=7,margin(top)=7,margin(right)=85,expand=-1
+	ModifyGraph width={Plan,1,bottom,left}
+	ModifyGraph mode=3
+	ModifyGraph marker=29
+	ModifyGraph mrkThick=0.1
+	ModifyGraph gaps=0
+	ModifyGraph mrkStrokeRGB=(0,0,0,6554)
+	ModifyGraph zmrkSize(AcN)={peakHeight,0,*,0,5}
+	ModifyGraph zColor(AcN)={peakLocation,800,1300,dBZ14}
+	ModifyGraph mirror=0
+	ModifyGraph noLabel=2
+	ModifyGraph axRGB(left)=(0,0,0,0),axRGB(bottom)=(65535,65535,65535,0)
+	ModifyGraph manTick(left)={0,40,0,0},manMinor(left)={9,5}
+	ModifyGraph manTick(bottom)={0,40,0,0},manMinor(bottom)={9,5}
+	SetAxis left -5,300
+	SetAxis bottom -5,300
+	ColorScale/C/N=text0/F=0/A=LB/X=102.55/Y=4.55 trace=AcN
+	AppendText "central emission wavelength [nm]"
+	SetDrawLayer UserFront
+	SetDrawEnv xcoord= bottom,ycoord= left,linethick= 5
+	DrawLine 308.107553969184,287.5,358.107553969184,287.5
+	SetDrawEnv xcoord= bottom,ycoord= left
+	DrawText 317.7649537407,269.625,"50µm"
+EndMacro
