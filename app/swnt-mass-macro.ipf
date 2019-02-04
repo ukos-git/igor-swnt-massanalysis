@@ -64,9 +64,9 @@ End
 
 Window win_SMAimageStack() : Graph
 	PauseUpdate; Silent 1		// building window...
-	Display /W=(60,86,533.4,518)
+	Display /W=(451.8,164.6,925.2,642.2)
 	AppendImage SMAimagestack
-	ModifyImage SMAimagestack ctab= {0,*,RedWhiteBlue256,0}
+	ModifyImage SMAimagestack ctab= {0,255,RedWhiteBlue256,0}
 	ModifyGraph width={Plan,1,bottom,left},height=396.85
 	ModifyGraph grid(left)=1
 	ModifyGraph mirror(left)=2,mirror(bottom)=0
@@ -81,24 +81,36 @@ Window win_SMAimageStack() : Graph
 	ModifyGraph tlOffset=-2
 	ModifyGraph manTick(left)={0,20,0,0},manMinor(left)={4,5}
 	ModifyGraph manTick(bottom)={0,20,0,0},manMinor(bottom)={4,0}
+	ControlBar 45
+	GroupBox CBSeparator0,pos={0.00,0.00},size={472.80,2.40}
+	Slider WMAxSlSl,pos={49.80,9.00},size={402.60,6.00},proc=WMAxisSliderProc
+	Slider WMAxSlSl,limits={0,1,0},value= 0.5,side= 0,vert= 0,ticks= 0
+	PopupMenu WMAxSlPop,pos={9.60,4.80},size={15.60,15.60},proc=WMAxSlPopProc
+	PopupMenu WMAxSlPop,mode=0,value= #"\"Instructions...;Set Axis...;Zoom Factor...;Resync position;Resize;Remove\""
 	NewPanel/HOST=#/EXT=0/W=(0,0,216,438.6)  as "sizeAdjustment"
 	ModifyPanel cbRGB=(65534,65534,65534), fixedSize=0
 	SetDrawLayer UserBack
-	DrawLine 15,135,124.2,135
-	Button mergeImageStack,pos={24.00,87.00},size={99.00,18.00},proc=ButtonProcMergeImages,title="mergeImageStack"
+	SetDrawEnv dash= 6,fillfgc= (61166,61166,61166)
+	DrawRect 15,87,186,145.8
+	DrawText 37.2,109.8,"scaling"
+	Button mergeImageStack,pos={54.00,297.00},size={99.00,18.00},proc=ButtonProcMergeImages,title="mergeImageStack"
 	SetVariable cnumSizeAdjustment,pos={6.00,12.00},size={186.00,13.80}
 	SetVariable cnumSizeAdjustment,limits={0.9,1.1,0.001},value= numSizeAdjustment
 	CheckBox checkSizeAdjustment,pos={33.00,51.00},size={80.40,12.00},title="only current stack"
 	CheckBox checkSizeAdjustment,variable= numSizeAdjustmentSingleStack
 	Button save,pos={456.00,54.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
 	Button save,labelBack=(65535,65535,65535)
-	Button save1,pos={24.00,153.00},size={75.00,24.00},proc=ButtonProcSMAImageStackSave,title="simple save"
+	Button save1,pos={54.00,343.80},size={99.00,18.00},proc=ButtonProcSMAImageStackSave,title="simple save"
 	Button save1,labelBack=(65535,65535,65535)
 	SetVariable cnumRotationAdjustment,pos={6.00,27.00},size={186.00,13.80}
 	SetVariable cnumRotationAdjustment,limits={-5,5,0.1},value= numRotationAdjustment
 	CheckBox SMAimagestack_check_fullcalc,pos={30.00,66.00},size={42.00,12.00},title="full calc"
 	CheckBox SMAimagestack_check_fullcalc,variable= numFullCalcultions
-	Button sizeAdjustment,pos={24.00,111.00},size={99.00,18.00},proc=ButtonProcSizeAdjustment,title="sizeAdjustment"
+	Button sizeAdjustment,pos={54.00,321.00},size={99.00,18.00},proc=ButtonProcSizeAdjustment,title="sizeAdjustment"
+	SetVariable cnumMin,pos={36.00,120.00},size={60.00,13.80},title="min"
+	SetVariable cnumMin,limits={0,255,1},value= numMinValue
+	SetVariable cnumMax,pos={102.00,120.00},size={60.00,13.80},title="max"
+	SetVariable cnumMax,limits={0,255,1},value= numMaxValue
 	RenameWindow #,P0
 	SetActiveSubwindow ##
 	NewPanel/HOST=#/EXT=1/W=(18.6,0,0,438.6)  as "controls"

@@ -136,6 +136,7 @@ Function/WAVE SMAmergeStack(stackCoordinates, stackNumber, stackSize, [createNew
 	Duplicate/O found 	root:found/WAVE=found
 	WAVE fullimage = SMAmergeImages(indices = found, createNew = createNew)
 
+	SMAreduceRange(fullimage, bit = 8)
 	SMAconvertWaveToUint(fullimage, bit = 8)
 
 	return fullimage
@@ -255,6 +256,40 @@ Function SMA_ExtractSumMarqueeArea()
 
 	AppendToGraph/W=$destwin wv
 	print outputname
+End
+
+// changes input wv to the maximum value, specified in root:numMaxValue.
+// The value numMaxValue is relative to the bits of the output wave.
+// Information is lost
+Function 	SMAreduceRange(wv, [bit])
+	WAVE wv
+	Variable bit
+
+	Variable wMax, wMin, numSpace
+
+	bit = ParamIsDefault(bit) ? 32 : bit
+	numSpace = 2^bit - 1
+
+	NVAR/Z numMaxValue = root:numMaxValue
+	if(!NVAR_EXISTS(numMaxValue))
+		Variable/G root:numMaxValue = numSpace
+		NVAR numMaxValue = root:numMaxValue
+	endif
+	NVAR/Z numMinValue = root:numMinValue
+	if(!NVAR_EXISTS(numMinValue))
+		Variable/G root:numMinValue = 0
+		NVAR numMinValue = root:numMinValue
+	endif
+
+	if(numMaxValue < numSpace)
+		wMax = WaveMax(wv) / numSpace * numMaxValue
+		MultiThread wv = wv[p][q] > wMax ? wMax : wv[p][q]
+	endif
+
+	if(numMinValue > 0)
+		wMin = WaveMin(wv) / numSpace * numMinValue
+		MultiThread wv = wv[p][q] < wMin ? wMin : wv[p][q]
+	endif
 End
 
 // save storage by converting image to full uint
