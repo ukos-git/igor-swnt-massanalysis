@@ -167,7 +167,12 @@ Function/WAVE SMAprocessImageStack([coordinates, createNew])
 
 	numFullImages = floor(numImages / 24)
 	Wave fullimage = SMAmergeStack(coordinates, 0, 24)
-	Duplicate/O fullimage root:SMAimagestack/WAVE=imagestack
+	WAVE/Z imagestack = root:SMAimagestack
+	if(DimSize(fullimage, 0) != DimSize(imagestack, 0) && DimSize(fullimage, 1) != DimSize(imagestack, 1))
+		Duplicate/O fullimage root:SMAimagestack/WAVE=imagestack
+	else
+		Multithread imagestack[][][0] = fullimage[p][q]
+	endif
 	Redimension/N=(-1, -1, numFullImages) imagestack
 
 	for(i = 1; i < numFullImages; i += 1)
