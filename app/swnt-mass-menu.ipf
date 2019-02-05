@@ -4,7 +4,7 @@
 Menu "CameraImage"
 	// CTRL+1 is the keyboard shortcut
 	"AddCoordinates/1", /Q, AddCoordinatesFromGraph()
-	"Zero To Cursor", Utilities#SetScaleToCursor()
+	"Zero To Cursor", SMAtasksZeroToCursor()
 	"Process xyz coordinates", SMAtasksProcessCoordinates()
 	"Merge Coordinates", SMAtasksMergeCoordinates()
 	"PeakFind for coordinates", /Q, GetCoordinates()
@@ -44,6 +44,12 @@ Menu "MassAnalysis"
 	"Analyse Exactscan", SMApeakAnalysisExactscan()
 
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
+End
+
+Function SMAtasksZeroToCursor()
+	SMAaddOffset(vCsr(a), hCsr(a))
+
+	Utilities#SetScaleToCursor()
 End
 
 Function SMAtasksLoadCamerascan()

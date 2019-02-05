@@ -105,25 +105,45 @@ End
 Function SMAgetOffset(offsetX, offsetY)
 	Variable &offsetX, &offsetY
 
-	// ! magically ! get offset from manual variables
-	// set from p cursor: offsetY=hCsr(a);offsetX=vCsr(a)
+	// manually set using: SMAtasksZeroToCursor()
 
 	NVAR/Z gOffsetX = root:offsetX
-	NVAR/Z gOffsetY = root:offsetY
-	if(!NVAR_Exists(gOffsetX) || !NVAR_Exists(gOffsetY))
-		print "set offset using\roffsetY=hCsr(a);offsetX=vCsr(a)"
+	if(NVAR_Exists(gOffsetX))
+		offsetX = gOffsetX
 	endif
+
+	NVAR/Z gOffsetY = root:offsetY
+	if(NVAR_Exists(gOffsetY))
+		offsetY = gOffsetY
+	endif
+End
+
+Function SMAsetOffset(offsetX, offsetY)
+	Variable offsetX, offsetY
+
+	NVAR/Z gOffsetX = root:offsetX
 	if(!NVAR_Exists(gOffsetX))
-		Variable/G root:offsetX = 0
+		Variable/G root:offsetX
 		NVAR gOffsetX = root:offsetX
 	endif
+
+	NVAR/Z gOffsetY = root:offsetY
 	if(!NVAR_Exists(gOffsetY))
-		Variable/G root:offsetY = 0
+		Variable/G root:offsetY
 		NVAR gOffsetY = root:offsetY
 	endif
-	
-	offsetX = gOffsetX
-	offsetY = gOffsetY
+
+	gOffsetX = offsetX
+	gOffsetY = offsetY
+End
+
+Function SMAaddOffset(addX, addY)
+	Variable addX, addY
+
+	Variable offsetX, offsetY
+	SMAgetOffset(offsetX, offsetY)
+
+	SMAsetOffset(offsetX + addX, offsetY + addY)
 End
 
 Function/WAVE SMAduplicateRange(FirstImage)
