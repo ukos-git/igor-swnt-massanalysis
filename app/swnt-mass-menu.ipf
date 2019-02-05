@@ -55,6 +55,7 @@ End
 Function SMAtasksLoadCamerascan()
 	SMAread()
 	SMAprocessImageStack()
+	Utilities#saveWindow("win_SMAimageStack")
 End
 
 Function SMAtasksCreateWigner()
