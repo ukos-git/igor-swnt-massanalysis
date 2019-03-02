@@ -21,6 +21,11 @@ Menu "GraphMarquee"
 End
 
 Menu "MassAnalysis"
+	"Load (init file links)", SMAload()
+	"Append (add file links)", SMAadd()
+	"Read (call PLEMd2)", SMAread()
+	"File Info", SMAfileInfo()
+
 	"Load Spectra", SMAtasksLoadExactscan()
 	"Load CameraScan", SMAtasksLoadCamerascan()
 
@@ -44,6 +49,7 @@ Menu "MassAnalysis"
 	"Analyse Exactscan", SMApeakAnalysisExactscan()
 
 	"Select Spectra Panel", SMAopenPanelSelectWaves()
+	"Set Base Path", SMASetBasePath()
 End
 
 Function SMAtasksZeroToCursor()

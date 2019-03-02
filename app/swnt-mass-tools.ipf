@@ -225,3 +225,10 @@ Function getEvenScale(wv)
 
 	return scaleEven
 End
+
+Function/S removePrefix(prefix, item)
+	String prefix, item
+
+	item = FILO#RemovePrefixFromListItems(prefix, item)
+	return RemoveEnding(item, ";")
+End
