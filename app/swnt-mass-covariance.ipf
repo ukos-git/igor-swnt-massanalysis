@@ -36,7 +36,7 @@ Function/WAVE SMAgetSourceWave([overwrite, range])
 	Make/O/N=(dim0, dim1 * dim2) dfr:$name/WAVE=wv
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(range[i]))
-		WAVE nospikes = Utilities#removeSpikes(stats.wavPLEM)
+		WAVE nospikes = removeSpikes(stats.wavPLEM)
 		wv[i][0, DimSize(nospikes, 0) * DimSize(nospikes, 1) - 1] = nospikes[mod(q, dim1)][floor(q / dim1)]
 	endfor
 

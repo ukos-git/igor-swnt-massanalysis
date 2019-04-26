@@ -52,9 +52,9 @@ Function SMAsinglePeakAction(startX, endX, [source])
 		Duplicate/FREE/R=[i][start, ende] source source_extracted
 		Redimension/N=(ende - start + 1) source_extracted
 
-		WAVE guess = Utilities#PeakFind(source_extracted, wvXdata = wl_extracted, maxPeaks = 1, smoothingFactor = 3) // align smoothingFactor to your needs
-		WAVE/WAVE coef = Utilities#BuildCoefWv(source_extracted, peaks = guess)
-		WAVE/WAVE peakParam = Utilities#fitGauss(source_extracted, wvXdata = wl_extracted, wvCoef = coef, cleanup = 1)
+		WAVE guess = PeakFind(source_extracted, wvXdata = wl_extracted, maxPeaks = 1, smoothingFactor = 3) // align smoothingFactor to your needs
+		WAVE/WAVE coef = BuildCoefWv(source_extracted, peaks = guess)
+		WAVE/WAVE peakParam = fitGauss(source_extracted, wvXdata = wl_extracted, wvCoef = coef, cleanup = 1)
 		if(!WaveExists(peakParam))
 			printf "SMAsinglePeakAction: error fitting %d.\r", i
 			continue
@@ -62,9 +62,9 @@ Function SMAsinglePeakAction(startX, endX, [source])
 		if(DimSize(peakParam, 0) != 1)
 			Abort "Code Inconsitency: More than one peak found."
 		endif
-		WAVE result = Utilities#peakParamToResult(peakParam)
+		WAVE result = peakParamToResult(peakParam)
 
-		WAVE peakfit = Utilities#CreateFitCurve(peakParam, startX, endX, 1024)
+		WAVE peakfit = CreateFitCurve(peakParam, startX, endX, 1024)
 		myfitwave[i][] = peakfit[q]
 
 		wvHeight[i]    = result[0][%height]
@@ -112,20 +112,20 @@ Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPe
 		printf "SMApeakFind(%s, verbose=%d)\r", GetWavesDatafolder(input, 2), verbose
 	endif
 
-	WAVE nospikes = Utilities#removeSpikes(wv)
-	 //WAVE nobackground = Utilities#RemoveBackground(nospikes)
+	WAVE nospikes = removeSpikes(wv)
+	 //WAVE nobackground = RemoveBackground(nospikes)
 
 	if(ParamIsDefault(wvXdata))
-		WAVE guess = Utilities#PeakFind(nospikes, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
+		WAVE guess = PeakFind(nospikes, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
 	else
-		WAVE guess = Utilities#PeakFind(nospikes, wvXdata = wvXdata, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
+		WAVE guess = PeakFind(nospikes, wvXdata = wvXdata, maxPeaks = maxPeaks, minPeakPercent = minPeakPercent, smoothingFactor = smoothingFactor, verbose = verbose)
 	endif
 	DFREF dfr = SMApeakfitDF()
-	WAVE/WAVE coef = Utilities#BuildCoefWv(nospikes, peaks = guess, dfr = dfr, verbose = verbose)
+	WAVE/WAVE coef = BuildCoefWv(nospikes, peaks = guess, dfr = dfr, verbose = verbose)
 	if(ParamIsDefault(wvXdata))
-		WAVE/WAVE/Z peakParam = Utilities#fitGauss(nospikes, wvCoef = coef, verbose = verbose)
+		WAVE/WAVE/Z peakParam = fitGauss(nospikes, wvCoef = coef, verbose = verbose)
 	else
-		WAVE/WAVE/Z peakParam = Utilities#fitGauss(nospikes, wvXdata = wvXdata, wvCoef = coef, verbose = verbose)
+		WAVE/WAVE/Z peakParam = fitGauss(nospikes, wvXdata = wvXdata, wvCoef = coef, verbose = verbose)
 	endif
 	
 	if(verbose > 2)
@@ -136,16 +136,16 @@ Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPe
 			print output
 		endfor
 	endif
-	Utilities#KillWaveOfWaves(coef)
+	KillWaveOfWaves(coef)
 
 	if(createWaves)
 		Duplicate/O nospikes root:nospikes
 		Duplicate/O wv root:original
 		//Duplicate/O nobackground root:nobackground
 		Duplicate/O nospikes root:nospikes
-		WAVE peakfit = Utilities#CreateFitCurve(peakParam, DimOffset(input, 0), DimOffset(input, 0) + DimSize(input, 0) * DimDelta(input, 0), 1024)
+		WAVE peakfit = CreateFitCurve(peakParam, DimOffset(input, 0), DimOffset(input, 0) + DimSize(input, 0) * DimDelta(input, 0), 1024)
 		Duplicate/O peakfit root:peakfit
-		WAVE peakfit = Utilities#CreateFitCurve(peakParam, DimOffset(input, 0), DimOffset(input, 0) + DimSize(input, 0) * DimDelta(input, 0), DimSize(input, 0))
+		WAVE peakfit = CreateFitCurve(peakParam, DimOffset(input, 0), DimOffset(input, 0) + DimSize(input, 0) * DimDelta(input, 0), DimSize(input, 0))
 		Duplicate/O peakfit root:residuum/WAVE=res
 		res = nospikes - peakfit
 	endif
@@ -154,7 +154,7 @@ Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPe
 		print "SMApeakFind Error: no peakParam"
 		return $""
 	endif
-	return Utilities#peakParamToResult(peakParam)
+	return peakParamToResult(peakParam)
 End
 
 Function SMApeakAnalysis()
@@ -233,7 +233,7 @@ Function SMApeakAnalysisMap()
 	
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		WAVE corrected = Utilities#RemoveSpikes(stats.wavPLEM)
+		WAVE corrected = RemoveSpikes(stats.wavPLEM)
 
 		// fit Excitation
 		// find p,q
@@ -402,7 +402,7 @@ Function SMApeakAnalysisExactscan()
 		LoadWave/H/O/P=SMAbasePath ":collection:suspended:technique:exactscan:template:trenches.ibw"
 		LoadWave/H/O/P=SMAbasePath ":collection:suspended:technique:exactscan:template:borders.ibw"
 		Execute "SMAexactscanImage()"
-		Execute "Utilities#saveWindow(\"SMAexactscanImage\")"
+		Execute "saveWindow(\"SMAexactscanImage\")"
 	endif
 End
 

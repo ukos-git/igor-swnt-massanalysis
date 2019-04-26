@@ -417,7 +417,7 @@ Function SMAsearchTrenches(currentImage, [trenchpitch])
 	for(i = 0; i < rangeYdelta; i += 1)
 		currentY = Ymin + trenchpitch * i
 		Duplicate/FREE/R=[][i] wavTrenches, currentTrenchAvg
-		WAVE peaks = Utilities#PeakFind(currentTrenchAvg, wvXdata = positionX, maxPeaks = 10, minPeakPercent = 90)
+		WAVE peaks = PeakFind(currentTrenchAvg, wvXdata = positionX, maxPeaks = 10, minPeakPercent = 90)
 		numPeaks = DimSize(peaks, 0)
 		if(numPeaks == 0)
 			continue
@@ -751,17 +751,17 @@ Function/WAVE SMAgetFocuspoints([graph, createNew])
 		Duplicate/FREE/R=[pStart,pEnd][2] coordinates singlePeakX
 		Redimension/N=(-1, 0) singlePeakX
 
-		WAVE guess = Utilities#PeakFind(singlePeakY, wvXdata = singlePeakX, maxPeaks = 1)
-		WAVE/WAVE coef = Utilities#BuildCoefWv(singlePeakY, wvXdata = singlePeakX, peaks = guess)
+		WAVE guess = PeakFind(singlePeakY, wvXdata = singlePeakX, maxPeaks = 1)
+		WAVE/WAVE coef = BuildCoefWv(singlePeakY, wvXdata = singlePeakX, peaks = guess)
 
-		WAVE/WAVE/Z peakParam = Utilities#fitGauss(singlePeakY, wvXdata = singlePeakX, wvCoef = coef)
+		WAVE/WAVE/Z peakParam = fitGauss(singlePeakY, wvXdata = singlePeakX, wvCoef = coef)
 		if(!WaveExists(peakParam))
 			// revert to guess
-			WAVE/WAVE coef = Utilities#BuildCoefWv(singlePeakY, wvXdata = singlePeakX, peaks = guess)
-			WAVE/WAVE peakParam = Utilities#GaussCoefToPeakParam(coef)
+			WAVE/WAVE coef = BuildCoefWv(singlePeakY, wvXdata = singlePeakX, peaks = guess)
+			WAVE/WAVE peakParam = GaussCoefToPeakParam(coef)
 		endif
 
-		WAVE peakfind = Utilities#peakParamToResult(peakParam)
+		WAVE peakfind = peakParamToResult(peakParam)
 		if(!WaveExists(peakfind))
 			print "SMAgetFocuspoints(): Please correct manually and call again."
 			Abort "Error in peakfind"
