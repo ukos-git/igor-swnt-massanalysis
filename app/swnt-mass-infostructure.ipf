@@ -21,8 +21,8 @@ static Function SMAstructureInitGlobalVariables()
 	DFREF dfrPeakFit   = SMApeakfitDF()
 
 	DFREF dfrStructure = SMAstructureDF()
-	Utilities#createNVAR("numVersion", dfr = dfrStructure, set = cversion)
-	Utilities#createNVAR("numSpectra", dfr = dfrStructure, init = 0)
+	createNVAR("numVersion", dfr = dfrStructure, set = cversion)
+	createNVAR("numSpectra", dfr = dfrStructure, init = 0)
 End
 
 static Function SMAstructureInitWaves()
@@ -65,7 +65,7 @@ Function SMAstructureLoad(info)
 	endif
 	info.numVersion = numVersion
 
-	info.numSpectra = Utilities#loadNVAR("numSpectra", dfr = info.dfrStructure)
+	info.numSpectra = loadNVAR("numSpectra", dfr = info.dfrStructure)
 
 	WAVE/WAVE/SDFR=info.dfrStructure info.wavSpectra = spectra
 	WAVE/WAVE/SDFR=info.dfrStructure info.wavPeakFind = peakfind
@@ -76,8 +76,8 @@ Function SMAstructureSave(info)
 
 	DFREF dfrstructure = SMAstructureDF()
 
-	Utilities#saveNVAR("numVersion", info.numVersion, dfr = dfrStructure)
-	Utilities#saveNVAR("numSpectra", info.numSpectra, dfr = dfrStructure)
+	saveNVAR("numVersion", info.numVersion, dfr = dfrStructure)
+	saveNVAR("numSpectra", info.numSpectra, dfr = dfrStructure)
 End
 
 static Function/S SMApackageDF()

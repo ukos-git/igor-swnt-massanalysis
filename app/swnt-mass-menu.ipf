@@ -55,13 +55,13 @@ End
 Function SMAtasksZeroToCursor()
 	SMAaddOffset(vCsr(a), hCsr(a))
 
-	Utilities#SetScaleToCursor()
+	SetScaleToCursor()
 End
 
 Function SMAtasksLoadCamerascan()
 	SMAread()
 	SMAprocessImageStack()
-	Utilities#saveWindow("win_SMAimageStack")
+	saveWindow("win_SMAimageStack")
 End
 
 Function SMAtasksCreateWigner()

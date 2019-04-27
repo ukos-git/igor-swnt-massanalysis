@@ -107,7 +107,7 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	endif
 
 	SMAbuildGraphFullImage()
-	Utilities#lap(timerRefNum, "SMAmergeImages")
+	lap(timerRefNum, "SMAmergeImages")
 
 	return fullimage
 End
@@ -226,7 +226,7 @@ Function SMA_ExtractSumMarqueeArea()
 		return 0
 	endif
 	
-	WAVE/Z image = Utilities#getTopWindowImage()
+	WAVE/Z image = getTopWindowImage()
 	pStart = ScaleToIndex(image, V_left, 0)
 	pEnd = ScaleToIndex(image, V_right, 0)
 	qStart = ScaleToIndex(image, V_bottom, 1)

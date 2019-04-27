@@ -179,7 +179,7 @@ Function/WAVE SMAduplicateRange(FirstImage)
 	Struct PLEMd2stats stats
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(FirstImage))
 
-	WAVE imagestack = Utilities#getTopWindowImage()
+	WAVE imagestack = getTopWindowImage()
 	if(WaveExists(imagestack))
 		dim2 = DimSize(imagestack, 2)
 	endif
@@ -195,7 +195,7 @@ Function/WAVE SMAduplicateRange(FirstImage)
 	endif
 	SetScale/P z, zAxis[FirstImage][2], zStep, wv
 	// set x,y Axis offset
-	Utilities#AddWaveScaleOffset(wv, offsetY, offsetX)
+	AddWaveScaleOffset(wv, offsetY, offsetX)
 
 	// write output wave
 	for(i = 0; i < dim2; i += 1)
