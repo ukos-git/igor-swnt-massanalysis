@@ -17,14 +17,15 @@
 
 strConstant cSMApackage = "swnt-mass-analysis"
 StrConstant cstrSMAroot = "root:Packages:SMA:"
-static constant cSMAupdatePath = 1 // update all paths to relative paths
 
 Function SMAload()
 	FILO#load(fileType = ".ibw", packageID = 1)
+	SMAupdatePath()
 End
 
 Function SMAadd()
 	FILO#load(fileType = ".ibw", packageID = 1, appendToList = 1)
+	SMAupdatePath()
 End
 
 Function SMAfileInfo()
@@ -40,36 +41,34 @@ Function SMAfileInfo()
 End
 
 Function SMAread()
-	String file, files, strPath
+	String file, files, strPath, file0
 	Variable numFiles, i
 
 	Struct SMAprefs prefs
 	STRUCT FILO#experiment filos
 
+	SMAupdatePath() // update old paths
+
 	SMAloadPackagePrefs(prefs)
-	SMAupdatePath()
 	FILO#structureLoad(filos)
 
-	// get path
-	strPath = filos.strFolder
-	if(!cmpstr(strPath[0], ":"))
-		strPath = prefs.strBasePath + filos.strFolder
-	endif
-	GetFileFolderInfo/Q/Z=1 strPath
-
-	// get files
+	// check files
 	numFiles = ItemsInList(filos.strFileList)
-	if(numFiles == 0 || !V_isFolder)
+	file0 = StringFromList(0, filos.strFileList)
+	if(!cmpstr(file0[0], ":"))
+		files = FILO#AddPrefixToListItems(prefs.strBasePath, filos.strFileList)
+		file0 = prefs.strBasePath + file0
+	endif
+	GetFileFolderInfo/Q/Z=1 file0
+	if(numFiles == 0 || !V_isFile)
 		SMAload()
 		FILO#structureLoad(filos)
 		numFiles = ItemsInList(filos.strFileList)
 	endif
-	files = FILO#AddPrefixToListItems(strPath, filos.strFileList)
 
 	// load files
 	SMAfileInfo()
 	for(i = 0; i < numFiles; i += 1)
-	//for(i = 0; i < 10; i += 1)
 		file = StringFromList(i, files)
 		PLEMd2Open(strFile = file, display = 0)
 	endfor
@@ -80,55 +79,15 @@ Function SMAread()
 End
 
 Function SMAupdatePath()
-	String files, strBasePath, strFolder
-
 	Struct SMAprefs prefs
 	STRUCT FILO#experiment filos
 
-	// custom hacks to update old paths
-	if(cSMAupdatePath)
-		FILO#structureLoad(filos)
-		SMAloadPackagePrefs(prefs)
+	FILO#structureLoad(filos)
+	SMAloadPackagePrefs(prefs)
 
-		strBasePath = prefs.strBasePath
-		strFolder = filos.strFolder
-		files = filos.strFileList
-
-		// test if relative folder is valid
-		if(!cmpstr(strFolder[0], ":"))
-			GetFileFolderInfo/Q/Z=1 strBasePath + strFolder
-			if(V_isFolder)
-				return 0 
-			endif
-		endif
-
-		// custom path updates for old systems
-		if(!cmpstr(strFolder[0, 1], "D:"))     // measurement pc
-			print "update paths from measurement pc"
-			strFolder = strBasePath + ":data" + strFolder[1, inf]
-			files = FILO#RemovePrefixFromListItems("D", files)
-			files = FILO#AddPrefixToListItems(strBasePath, files)
-		elseif(!cmpstr(strFolder[0, 1], "W:")) // network drive
-			print "update paths from measurement pc"
-			strFolder = strBasePath + strFolder[1, inf]
-			files = FILO#RemovePrefixFromListItems("W", files)
-			files = FILO#AddPrefixToListItems(strBasePath, files)
-		endif
-
-		// update to relative paths
-		if(!!cmpstr(strFolder[0], ":"))
-			GetFileFolderInfo/Q/Z=1 strFolder
-			if(!!V_isFolder)
-				strFolder = removePrefix(strBasePath, strFolder)
-				files = FILO#RemovePrefixFromListItems(strBasePath, files)
-				files = FILO#RemovePrefixFromListItems(strFolder, files)
-			endif
-		endif
-		
-		filos.strFolder = strFolder
-		filos.strFileList = files
-		FILO#structureSave(filos)
-	endif
+	filos.strFolder = FILO#RemovePrefixFromListItems(prefs.strBasePath, filos.strFolder)
+	filos.strFileList = FILO#RemovePrefixFromListItems(prefs.strBasePath, filos.strFileList)
+	FILO#structureSave(filos)
 End
 
 Function SMAmapInfo()
