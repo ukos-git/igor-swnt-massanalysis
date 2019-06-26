@@ -399,8 +399,8 @@ Function SMApeakAnalysisExactscan()
 		Plemd2getCoordinates()
 		SetDataFolder root:
 		SmaloadBasePath()
-		LoadWave/H/O/P=SMAbasePath ":collection:suspended:technique:exactscan:template:trenches.ibw"
-		LoadWave/H/O/P=SMAbasePath ":collection:suspended:technique:exactscan:template:borders.ibw"
+		LoadWave/H/O/P=SMAbasePath ":collection:suspended:methods:exactscan:template:trenches.ibw"
+		LoadWave/H/O/P=SMAbasePath ":collection:suspended:methods:exactscan:template:borders.ibw"
 		Execute "SMAexactscanImage()"
 		Execute "saveWindow(\"SMAexactscanImage\")"
 	endif
