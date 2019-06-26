@@ -1,4 +1,4 @@
-#pragma TextEncoding = "Windows-1252"
+#pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
 Function SMA_FindMatchingSpectra(coordinates)
