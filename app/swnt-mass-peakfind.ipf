@@ -50,7 +50,7 @@ Function SMAsinglePeakAction(startX, endX, [source])
 	Duplicate/FREE/R=[start, ende] wl wl_extracted
 	for(i = 0; i < dim0; i += 1)
 		Duplicate/FREE/R=[i][start, ende] source source_extracted
-		Redimension/N=(ende - start + 1) source_extracted
+		Redimension/N=(abs(ende - start) + 1) source_extracted
 
 		WAVE guess = PeakFind(source_extracted, wvXdata = wl_extracted, maxPeaks = 1, smoothingFactor = 3) // align smoothingFactor to your needs
 		WAVE/WAVE coef = BuildCoefWv(source_extracted, peaks = guess)
