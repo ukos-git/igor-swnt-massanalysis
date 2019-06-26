@@ -113,7 +113,8 @@ Function/WAVE CoordinateFinderXYrange(coordinates, xmin, xmax, ymin, ymax, [verb
 	return indices
 End
 
-Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose, accuracy])
+/// @brief find x,y,z values in a 3-dimensional coordinates wave.
+Function/WAVE CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose, accuracy])
 	WAVE coordinates
 	Variable xVal, yVal, zVal, verbose
 	Variable accuracy
@@ -137,7 +138,7 @@ Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose, accuracy])
 	Extract/INDX/FREE coordinateZ, indicesZ, (coordinateZ[p] == zVal)
 
 	if(!DimSize(indicesX, 0) || !DimSize(indicesY, 0) || !DimSize(indicesZ, 0))
-		return NaN
+		return $""
 	endif
 
 	Make/FREE/N=0 indicesXYZ
@@ -148,14 +149,14 @@ Function CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose, accuracy])
 
 	Extract/FREE indicesXYZ, indices, (p > 1 && (indicesXYZ[p] == indicesXYZ[p - 1]) && (indicesXYZ[p] == indicesXYZ[p - 2]))
 	if(!DimSize(indices, 0))
-		return NaN
+		return $""
 	endif
 
 	if(verbose)
 		print "CoordinateFinderXYZ: found the following indices in the input wave:"
 		print indices
 	endif
-	return indices[0]
+	return indices
 End
 
 Function/WAVE ImageDimensions([indices])

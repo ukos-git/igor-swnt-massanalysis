@@ -70,7 +70,8 @@ Function SMAgetFirstImage(centerX, centerY, centerZ)
 	WAVE coordinates = PLEMd2getcoordinates(forceRenew=1)
 	do
 		accuracy += 10
-		index = CoordinateFinderXYZ(coordinates, centerX, centerY, centerZ, accuracy = accuracy, verbose = 0)
+		WAVE indices = CoordinateFinderXYZ(coordinates, centerX, centerY, centerZ, accuracy = accuracy, verbose = 0)
+		index = indices[0]
 	while(!!numtype(index) && accuracy < 1e4)
 
 	if(index > PLEMd2getmapsavailable())

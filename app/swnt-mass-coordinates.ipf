@@ -839,9 +839,10 @@ Function SMAcameraGetTiltPlane(coordinateX, coordinateY, [zOffset])
 	return zOffset + (distance[0] - normal[0] * coordinateX - normal[1] * coordinateY) / normal[2]
 End
 
-	Variable verbose
+/// @brief Return a Wave of Waves with all matching PLEM indices for the supplied coordinates wave
 Function/WAVE SMAfindCoordinatesInPLEM(coordinates, [verbose, accuracy])
 	WAVE coordinates
+	Variable verbose, accuracy
 
 	Variable i, dim0
 
@@ -849,8 +850,8 @@ Function/WAVE SMAfindCoordinatesInPLEM(coordinates, [verbose, accuracy])
 
 	WAVE PLEMcoordinates = PLEMd2getCoordinates()
 
-	Make/FREE/N=(dim0) indices
 	dim0 = DimSize(coordinates, 0)
+	Make/FREE/WAVE/N=(dim0) indices
 	if(ParamIsDefault(accuracy))
 		indices[] = CoordinateFinderXYZ(PLEMcoordinates, coordinates[p][0], coordinates[p][1], coordinates[p][2], verbose = verbose)
 	else
