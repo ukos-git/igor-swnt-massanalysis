@@ -424,8 +424,9 @@ Function/WAVE SMApeakAnalysisGetBestIndex()
 	if(WaveExists(index))
 		return index
 	endif
-	Make/O/N=(round(dim0 / range)) root:peakIndex/WAVE=index = NaN
-	for(i = 0; i < dim0 / range; i += 1)
+	numIndex = round(dim0 / range)
+	Make/O/N=(numIndex) root:peakIndex/WAVE=index = NaN
+	for(i = 0; i < numIndex; i += 1)
 		rangeStart = i * range
 		rangeEnd = rangeStart + range - 1
 		Duplicate/FREE/R=[rangeStart, rangeEnd] int int_range
