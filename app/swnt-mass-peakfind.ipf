@@ -402,7 +402,7 @@ Function SMApeakAnalysisExactscan()
 		LoadWave/H/O/P=SMAbasePath ":collection:suspended:methods:exactscan:template:trenches.ibw"
 		LoadWave/H/O/P=SMAbasePath ":collection:suspended:methods:exactscan:template:borders.ibw"
 		Execute "SMAexactscanImage()"
-		Execute "saveWindow(\"SMAexactscanImage\")"
+		Execute "saveWindow(\"SMAexactscanImage\", saveJSON = 0, saveImages = 1, saveSVG = 0)"
 	endif
 End
 
