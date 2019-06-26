@@ -408,7 +408,7 @@ End
 
 // find best spectrum from exactscan (11 scans around rough position)
 Function/WAVE SMApeakAnalysisGetBestIndex()
-	variable i, dim0, range, numPLEM
+	variable i, dim0, range, numPLEM, numIndex
 	variable rangeStart, rangeEnd
 	Struct PLEMd2stats stats
 	
