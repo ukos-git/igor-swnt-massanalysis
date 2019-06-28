@@ -64,6 +64,7 @@ Function SMAread()
 		SMAload()
 		FILO#structureLoad(filos)
 		numFiles = ItemsInList(filos.strFileList)
+		files = FILO#AddPrefixToListItems(prefs.strBasePath, filos.strFileList)
 	endif
 
 	// load files
@@ -206,7 +207,10 @@ Function SMAreset([power, photon, background])
 		stats.booBackground = background
 		stats.booPhoton = photon
 		stats.booPower = power
-		stats.booGrating = 0
+		stats.booGrating = 1
+		stats.booQuantumEfficiency = 1
+		stats.booTime = 1
+		stats.booWavelengthPitch = 0
 		PLEMd2statsSave(stats)
 		PLEMd2BuildMaps(strPLEM)
 	endfor
