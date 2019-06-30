@@ -91,21 +91,21 @@ Function SMAcovariance([normalized])
 	Variable normalized
 
 	if(ParamIsDefault(normalized))
-		normalized=0
+		normalized = 1
 	endif
 
 	STRUCT PLEMd2Stats stats
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
 
-	if(DimSize(stats.wavPLEM, 1) > 1)
-		SMAcovarianceMaps()
-		return 0
-	endif
-
-	WAVE source = SMAgetSourceWave(overwrite = 0)
+	WAVE source = SMAgetSourceWave(overwrite = 1, fitable = 1)
 	ImageFilter NanZapMedian source
 	if(normalized)
 		MatrixoP/O source = normalizeRows(source)
+	endif
+
+	if(DimSize(stats.wavPLEM, 1) > 1)
+		SMAcovarianceMaps(source)
+		return 0
 	endif
 
 	MatrixOP/O root:covariance_sym/WAVE=sym = syncCorrelation(source)
@@ -131,13 +131,12 @@ Function SMAcovariance([normalized])
 	endif
 End
 
-Function SMAcovarianceMaps()
+Function SMAcovarianceMaps(source)
+	WAVE source
+
 	STRUCT PLEMd2Stats stats
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
 	WAVE PLEM = PLEMd2NanotubeRangePLEM(stats)
-
-	WAVE source = SMAgetSourceWave(overwrite = 1, fitable = 1)
-	ImageFilter NanZapMedian source
 
 	// skip intermediate sym, asym due to space limitations
 
