@@ -351,22 +351,11 @@ Function SMAquickAnalysis()
 	
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		
-		if(DimSize(stats.wavPLEM, 1) > 1)
-			Duplicate/FREE stats.wavPLEM, corrected
-		else
-			Duplicate/FREE stats.wavPLEM corrected
-			Redimension/N=(-1,0) corrected
-		endif
 
-		Smooth 255, corrected
+		WAVE PLEMrange = PLEMd2NanotubeRangePLEM(stats)
+		WAVE corrected = removeSpikes(PLEMrange)
+		WaveStats/M=1/P/Q corrected
 
-		if(DimSize(stats.wavPLEM, 1) > 1)
-			// dismiss the first 3 excitation spectra
-			WaveStats/R=[3 * DimSize(corrected, 0)]/P/Q corrected
-		else
-			WaveStats/M=1/P/Q corrected
-		endif
 		int[i] = V_max
 		if(DimSize(stats.wavPLEM, 1) > 1)
 			emi[i] = stats.wavWavelength[V_maxRowLoc]

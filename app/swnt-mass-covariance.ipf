@@ -5,9 +5,11 @@
 //
 // @param overwrite if set to 1: recreate the wave if it already exists
 // @param range     specify the spectra ids with a numeric, uint wave
-Function/WAVE SMAgetSourceWave([overwrite, range])
+// @param fitable   1,0 set to create a source wave with improper spectral edges removed. This will alter the data.
+Function/WAVE SMAgetSourceWave([overwrite, range, fitable])
 	Variable overwrite
 	WAVE/U/I range
+	Variable fitable
 
 	Variable i, dim1, dim2, numMarkers
 	STRUCT PLEMd2Stats stats
@@ -17,6 +19,7 @@ Function/WAVE SMAgetSourceWave([overwrite, range])
 	DFREF dfr = root:
 
 	overwrite = ParamIsDefault(overwrite) ? 1 : !!overwrite
+	fitable = ParamIsDefault(fitable) ? 0 : !!fitable
 	if(ParamIsDefault(range))
 		Make/FREE/U/I/N=(PLEMd2getMapsAvailable()) range = p
 	endif
@@ -30,14 +33,23 @@ Function/WAVE SMAgetSourceWave([overwrite, range])
 	endif
 
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(range[1]))
-	dim1 = DimSize(stats.wavPLEM, 0)
-	dim2 = DimSize(stats.wavPLEM, 1)
+	if(fitable)
+		WAVE PLEM = PLEMd2NanotubeRangePLEM(stats)
+	else
+		WAVE PLEM = stats.wavPLEM
+	endif
+	dim1 = DimSize(PLEM, 0)
+	dim2 = DimSize(PLEM, 1)
 	dim2 = dim2 == 0 ? 1 : dim2
 	Make/O/N=(dim0, dim1 * dim2) dfr:$name/WAVE=wv
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(range[i]))
-		WAVE nospikes = removeSpikes(stats.wavPLEM)
-		wv[i][0, DimSize(nospikes, 0) * DimSize(nospikes, 1) - 1] = nospikes[mod(q, dim1)][floor(q / dim1)]
+		if(fitable)
+			WAVE PLEM = removeSpikes(PLEMd2NanotubeRangePLEM(stats))
+		else
+			WAVE PLEM = stats.wavPLEM
+		endif
+		wv[i][0, DimSize(PLEM, 0) * DimSize(PLEM, 1) - 1] = PLEM[mod(q, dim1)][floor(q / dim1)]
 	endfor
 
 	DoWindow SMAsourceGraph
@@ -122,8 +134,9 @@ End
 Function SMAcovarianceMaps()
 	STRUCT PLEMd2Stats stats
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
+	WAVE PLEM = PLEMd2NanotubeRangePLEM(stats)
 
-	WAVE source = SMAgetSourceWave(overwrite = 1)
+	WAVE source = SMAgetSourceWave(overwrite = 1, fitable = 1)
 	ImageFilter NanZapMedian source
 
 	// skip intermediate sym, asym due to space limitations
@@ -132,9 +145,9 @@ Function SMAcovarianceMaps()
 	MatrixOP/O root:covariance_asym_diag/WAVE=asymdiag = getDiag(asyncCorrelation(source), 0)
 
 	// sym and asym have a non-monotonic wave scale
-	Redimension/N=(DimSize(stats.wavPLEM, 0), DimSize(stats.wavPLEM, 1)) symdiag, asymdiag
-	SetScale/P x, DimOffset(stats.wavPLEM, 0), DimDelta(stats.wavPLEM, 0), symdiag, asymdiag
-	SetScale/P y, DimOffset(stats.wavPLEM, 1), DimDelta(stats.wavPLEM, 1), symdiag, asymdiag
+	Redimension/N=(DimSize(PLEM, 0), DimSize(PLEM, 1)) symdiag, asymdiag
+	SetScale/P x, DimOffset(PLEM, 0), DimDelta(PLEM, 0), symdiag, asymdiag
+	SetScale/P y, DimOffset(PLEM, 1), DimDelta(PLEM, 1), symdiag, asymdiag
 	
 	DoWindow SMAcovarianceImage
 	if(V_flag == 0)
