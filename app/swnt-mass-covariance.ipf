@@ -87,17 +87,28 @@ Function SMARedimensionToMap(wv)
 	SetScale/P y, DimOffset(stats.wavPLEM, 1), DimDelta(stats.wavPLEM, 1), wv
 End
 
-Function SMAcovariance([normalized])
+/// @brief calculate symmetric correlation spectra
+///
+/// @param normalized  divide all spectra by its maximum
+/// @param range       specify the spectra ids with a numeric, uint wave
+Function SMAcovariance([normalized, range])
 	Variable normalized
+	WAVE/U/I range
 
 	if(ParamIsDefault(normalized))
 		normalized = 1
 	endif
 
 	STRUCT PLEMd2Stats stats
-	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
 
-	WAVE source = SMAgetSourceWave(overwrite = 1, fitable = 1)
+	if(ParamIsDefault(range))
+		WAVE source = SMAgetSourceWave(overwrite = 1, fitable = 1)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
+	else
+		WAVE source = SMAgetSourceWave(overwrite = 1, fitable = 1, range = range)
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(range[1]))
+	endif
+
 	ImageFilter NanZapMedian source
 	if(normalized)
 		MatrixoP/O source = normalizeRows(source)
