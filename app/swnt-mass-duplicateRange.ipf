@@ -147,16 +147,21 @@ Function SMAaddOffset(addX, addY)
 	SMAsetOffset(offsetX + addX, offsetY + addY)
 End
 
-Function/WAVE SMAduplicateRange(FirstImage)
+Function/WAVE SMAduplicateRange(FirstImage, [outputName])
 	Variable FirstImage
 
 	Variable i, numPLEM
 	Variable offsetX, offsetY
 
-	String outputName = "imageRange"
+	String outputName
 	Variable dim2 = 1
 	Variable StackSize = 24
 	Variable zStep = 1
+
+	if(ParamIsDefault(outputName))
+		outputName = "imageRange"
+		outputName = UniqueName(outputName, 1, 0)
+	endif
 
 	// get range from axis settings (not intuitive for marquee!)
 	GetAxis/Q left
@@ -186,7 +191,6 @@ Function/WAVE SMAduplicateRange(FirstImage)
 	endif
 
 	// prepare output wave container
-	outputName = UniqueName(outputName, 1, 0)
 	Duplicate/R=(yStart + offsetY, yEnd + offsetY)(xStart + offsetX, xEnd + offsetX) stats.wavPLEM $outputName/WAVE=wv
 	Redimension/N=(-1, -1, dim2) wv
 	// set z Axis
