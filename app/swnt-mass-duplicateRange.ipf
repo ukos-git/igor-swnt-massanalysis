@@ -148,12 +148,12 @@ Function SMAaddOffset(addX, addY)
 End
 
 Function/WAVE SMAduplicateRange(FirstImage, [outputName])
+	String outputName
 	Variable FirstImage
 
 	Variable i, numPLEM
 	Variable offsetX, offsetY
 
-	String outputName
 	Variable dim2 = 1
 	Variable StackSize = 24
 	Variable zStep = 1
