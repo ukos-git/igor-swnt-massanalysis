@@ -42,6 +42,8 @@ Function/WAVE SMAgetSourceWave([overwrite, range, fitable])
 	dim2 = DimSize(PLEM, 1)
 	dim2 = dim2 == 0 ? 1 : dim2
 	Make/O/N=(dim0, dim1 * dim2) dfr:$name/WAVE=wv
+	SetScale/P y, DimOffset(PLEM, 0), DimDelta(PLEM, 0), wv
+
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(range[i]))
 		if(fitable)
@@ -49,23 +51,15 @@ Function/WAVE SMAgetSourceWave([overwrite, range, fitable])
 		else
 			WAVE PLEM = stats.wavPLEM
 		endif
-		wv[i][0, DimSize(PLEM, 0) * DimSize(PLEM, 1) - 1] = PLEM[mod(q, dim1)][floor(q / dim1)]
+		wv[i][] = PLEM[mod(q, dim1)][floor(q / dim1)]
 	endfor
 
 	DoWindow SMAsourceGraph
 	if(V_flag == 0)
 		SMAcopyWavelengthToRoot()
 		Display/N=SMAsourceGraph
-		if(dim2 == 1)
-			AppendImage root:source vs {*, root:wavelengthImage}
-		else
-			AppendImage root:source vs {*, *}
-		endif
+		AppendImage root:source
 		ModifyImage ''#0  ctab= {*,*,YellowHot256,1}
-		numMarkers = round(DimSize(wv, 0) / 4)
-		Make/O/N=(numMarkers) root:markers_source/WAVE=markers = p * 	11 + 6
-		Make/O/N=(numMarkers)/T root:markers_sourceT/WAVE=markersT = num2str(p)
-		ModifyGraph userticks(bottom)={markers,markersT}
 	endif
 
 	return wv
