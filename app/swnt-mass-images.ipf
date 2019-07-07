@@ -4,7 +4,7 @@
 // append all Images to one big Image (fullimage)
 Function/WAVE SMAmergeImages([createNew, indices])
 	Variable createNew
-	WAVE indices
+	WAVE/U/I indices
 
 	Variable pixelX, pixelY, resolution, imageborders
 	Variable positionX, positionY
@@ -27,7 +27,7 @@ Function/WAVE SMAmergeImages([createNew, indices])
 	Variable quick = !gquick // quick fix for quick logic
 
 	if(ParamIsDefault(indices))
-		Make/FREE/N=(numMapsAvailable) indices = p
+		Make/FREE/N=(numMapsAvailable)/U/I indices = p
 	endif
 
 	createNew = ParamIsDefault(createNew) ? 1 : !!createNew
@@ -51,7 +51,7 @@ Function/WAVE SMAmergeImages([createNew, indices])
 
 	// create output image
 	resolution = (abs(DimDelta(stats.wavPLEM, 0)) + abs(DimDelta(stats.wavPLEM, 1))) / 2
-	WAVE imageRange = ImageDimensions(indices=indices)
+	WAVE imageRange = ImageDimensions(indices)
 	dim0 = abs(imageRange[%x][%max] - imageRange[%x][%min]) / resolution
 	dim1 = abs(imageRange[%y][%max] - imageRange[%y][%min]) / resolution
 	Make/O/N=(dim0, dim1) root:fullimage/WAVE=fullimage = 0
@@ -128,12 +128,11 @@ Function/WAVE SMAmergeStack(stackCoordinates, stackNumber, stackSize, [createNew
 	rangeStart = stackNumber * stackSize
 	rangeEnd   = (stackNumber + 1) * stackSize - 1
 	Duplicate/FREE/R=[rangeStart, rangeEnd][] stackCoordinates scan
-	WAVE found = SMAfindCoordinatesInPLEM(scan)
+	WAVE/U/I found = SMAreduceIndices(SMAfindCoordinatesInPLEM(scan))
 	make/free/n=(stackSize) normalnumber = numType(found[p]) == 0
 	if(sum(normalnumber) < stackSize / 4)
 		return $""
 	endif
-	Duplicate/O found 	root:found/WAVE=found
 	WAVE fullimage = SMAmergeImages(indices = found, createNew = createNew)
 
 	SMAreduceRange(fullimage, bit = 8)

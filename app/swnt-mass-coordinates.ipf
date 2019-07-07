@@ -861,3 +861,17 @@ Function/WAVE SMAfindCoordinatesInPLEM(coordinates, [verbose, accuracy])
 	return indices
 End
 
+// @brief reduce the found indices from @c SMAfindCoordinatesInPLEM  to the first match
+// @return unsigned integer wavv
+Function/WAVE SMAreduceIndices(wv)
+	WAVE/WAVE wv
+
+	Variable i, numMaps = DimSize(wv, 0)
+	Make/N=(numMaps)/U/I/FREE indices
+	for(i = 0; i < numMaps; i += 1)
+		WAVE matches = wv[i]
+		indices[i] = matches[0]
+	endfor
+
+	return indices
+End

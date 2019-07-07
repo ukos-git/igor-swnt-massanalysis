@@ -159,19 +159,17 @@ Function/WAVE CoordinateFinderXYZ(coordinates, xVal, yVal, zVal, [verbose, accur
 	return indices
 End
 
-Function/WAVE ImageDimensions([indices])
+/// @param indices Wave holding numeric ids of PLEM waves.
+Function/WAVE ImageDimensions(indices)
 	WAVE indices
 
-	variable i, numMapsAvailable
+	variable i, numMaps
 	variable xMin, xMax, yMin, yMax
 	STRUCT PLEMd2Stats stats
 
-	numMapsAvailable = PLEMd2getMapsAvailable()
-	if(ParamIsDefault(indices))
-		Make/FREE/N=(numMapsAvailable) indices = p
-	endif
+	numMaps = DimSize(indices, 0)
 
-	for(i = 0; i < DimSize(indices, 0); i += 1)
+	for(i = 0; i < numMaps; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(indices[i]))
 		xMin = min(ScaleMin(stats.wavPLEM, 0), xMin)
 		xMax = max(ScaleMax(stats.wavPLEM, 0), xMax)
