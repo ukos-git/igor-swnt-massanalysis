@@ -45,7 +45,7 @@ Function SMA_ExportCoordinates()
 
 	// quick validation if files were only loaded with SMAread()
 	if(ItemsInList(maps) != ItemsInList(filos.strFileList))
-		Abort "Missmatch"
+		Abort "SMA_ExportCoordinates: Missmatch"
 	endif
 
 	numMaps = DimSize(indices, 0)
