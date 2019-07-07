@@ -125,6 +125,7 @@ Function SMADuplicateRangeFromCoordinates(coordinates)
 		SMADisplayCoordinates(coordinates[i][0], coordinates[i][1]) // use axis for duplication coordinates
 		WAVE wv = SMAduplicateRange(SMAgetFirstImage(coordinates[i][0], coordinates[i][1], coordinates[i][2]), outputName = name)
 		Save/C/O/P=images wv
+		KillWaves/Z wv
 	endfor
 End
 
