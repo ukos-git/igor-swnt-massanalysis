@@ -23,6 +23,55 @@ Function SMA_FindMatchingSpectra(coordinates)
 	endfor
 End
 
+Function SMA_ExportCoordinates()
+	Variable i, numMaps
+	String name, file
+	String baseName, maps
+
+	SMAupdatePath()
+
+	STRUCT FILO#experiment filos
+	FILO#structureLoad(filos)
+
+	baseName = IgorInfo(1)
+	WAVE allCoordinates = PLEMd2getCoordinates(forceRenew = 1)
+	maps = PLEMd2getStrMapsAvailable()
+
+	WAVE/Z indices = root:peakIndex // one spectrum per exactscan
+	if(!WaveExists(indices))
+		numMaps = ItemsInList(maps)
+		Make/FREE/N=(numMaps) indices = p
+	endif
+
+	// quick validation if files were only loaded with SMAread()
+	if(ItemsInList(maps) != ItemsInList(filos.strFileList))
+		Abort "Missmatch"
+	endif
+
+	numMaps = DimSize(indices, 0)
+	Make/O/N=(numMaps, 3) root:$(basename + "_coordinates")/WAVE=coordinates
+	Make/T/O/N=(numMaps) root:$(basename + "_originals")/WAVE=files
+	for(i = 0; i < numMaps; i += 1)
+		name = StringFromList(indices[i], maps)
+		file = StringFromList(indices[i], filos.strFileList)
+		if(!!cmpstr(name, ParseFilePath(3, file, ":", 0, 0)))
+			Abort
+		endif
+		files[i] = file
+		coordinates[i][] = allCoordinates[indices[i]][q]
+	endfor
+
+	file = files[0]
+	if(!!cmpstr(file[0], ":"))
+		print files
+		print filos.strFolder
+		Abort "Lecacy Format detected"
+	endif
+
+	// save to home
+	Save/C/O/P=home files
+	Save/C/O/P=home coordinates
+End
 
 // see ACW_EraseMarqueeArea.
 Function SMA_EraseMarqueeArea()
