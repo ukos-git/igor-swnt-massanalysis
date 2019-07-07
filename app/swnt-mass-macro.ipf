@@ -204,8 +204,7 @@ Function ButtonProcMergeImages(ba) : ButtonControl
 
 	switch( ba.eventCode )
 		case 2: // mouse up
-
-			smareset()
+			smareset(power = 0, photon = 0)
 			WAVE coordinates = PLEMd2getCoordinates(forceRenew = 0)
 
 			if(singleStack)

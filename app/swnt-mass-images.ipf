@@ -410,8 +410,7 @@ Function SMAtestSizeAdjustment()
 	for(i = 0; i < dim4size; i += 1)
 		numSizeAdjustment = (dim4offset + i * dim4delta)
 		dim4[i] = stats.numMagnification / numSizeAdjustment
-		//SMAread()
-		SMAreset()
+		SMAreset(power = 0, photon = 0)
 		WAVE imagestack = SMAprocessImageStack(createNew = 1)
 		Multithread wv[][][][i] = imagestack[p][q][r]
 	endfor
