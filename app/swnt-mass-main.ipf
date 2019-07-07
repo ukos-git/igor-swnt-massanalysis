@@ -55,8 +55,9 @@ Function SMAread()
 	// check files
 	numFiles = ItemsInList(filos.strFileList)
 	file0 = StringFromList(0, filos.strFileList)
+	files = filos.strFileList
 	if(!cmpstr(file0[0], ":"))
-		files = FILO#AddPrefixToListItems(prefs.strBasePath, filos.strFileList)
+		files = FILO#AddPrefixToListItems(prefs.strBasePath, files)
 		file0 = prefs.strBasePath + file0
 	endif
 	GetFileFolderInfo/Q/Z=1 file0
