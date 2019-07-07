@@ -100,10 +100,12 @@ Function SMAupdatePath()
 			filos.strFileList = FILO#RemovePrefixFromListItems("D", filos.strFileList)
 			filos.strFolder = ":data" + filos.strFolder
 			filos.strFileList = FILO#AddPrefixToListItems(":data", filos.strFileList)
-		endif
-		if(!cmpstr(file[0], "Z")) // measurements were saved on drive d
+		elseif(!cmpstr(file[0], "Z"))
 			filos.strFolder = FILO#RemovePrefixFromListItems("Z", filos.strFolder)
 			filos.strFileList = FILO#RemovePrefixFromListItems("Z", filos.strFileList)
+		elseif(!cmpstr(file[0], "W"))
+			filos.strFolder = FILO#RemovePrefixFromListItems("W", filos.strFolder)
+			filos.strFileList = FILO#RemovePrefixFromListItems("W", filos.strFileList)
 		endif
 	endif
 
