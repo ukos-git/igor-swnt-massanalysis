@@ -70,7 +70,10 @@ Function SMAgetFirstImage(centerX, centerY, centerZ)
 	WAVE coordinates = PLEMd2getcoordinates(forceRenew=1)
 	do
 		accuracy += 10
-		WAVE indices = CoordinateFinderXYZ(coordinates, centerX, centerY, centerZ, accuracy = accuracy, verbose = 0)
+		WAVE/Z indices = CoordinateFinderXYZ(coordinates, centerX, centerY, centerZ, accuracy = accuracy, verbose = 0)
+		if(!WaveExists(indices))
+			continue
+		endif
 		index = indices[0]
 	while(!!numtype(index) && accuracy < 1e4)
 
@@ -99,6 +102,30 @@ Function SMADuplicateRangeFromMarquee()
 	AppendImage wv
 	ModifyGraph width={Plan,1,bottom,left}
 	ModifyImage ''#0 ctab= {*,*,RedWhiteBlue256,0}
+End
+
+Function SMADuplicateRangeFromCoordinates(coordinates)
+	WAVE coordinates
+
+	String name
+	Variable i, numCoordinates = DimSize(coordinates, 0)
+	String baseName = NameOfWave(coordinates)
+	String strPath
+
+	if(DimSize(coordinates, 1) < 3)
+		Abort "Need at least 2 coordinates"
+	endif
+
+	PathInfo home
+	strPath = S_Path + IgorInfo(1)
+	NewPath/C/O/Z images, strPath
+
+	for(i = 0; i < numCoordinates; i += 1)
+		sprintf name, "%s_image%03d", baseName, i
+		SMADisplayCoordinates(coordinates[i][0], coordinates[i][1]) // use axis for duplication coordinates
+		WAVE wv = SMAduplicateRange(SMAgetFirstImage(coordinates[i][0], coordinates[i][1], coordinates[i][2]), outputName = name)
+		Save/C/O/P=images wv
+	endfor
 End
 
 // read globally set offset variables and give instructions on how to update them.
@@ -147,6 +174,25 @@ Function SMAaddOffset(addX, addY)
 	SMAsetOffset(offsetX + addX, offsetY + addY)
 End
 
+Function SMADisplayCoordinates(xCoordinate, yCoordinate, [range])
+	Variable xCoordinate, yCoordinate
+	Variable range
+
+	String win = "win_SMAimageStack" // use this image
+	if(ParamIsDefault(range))
+		range = 2 // extract 2µm in every direction
+	endif
+
+	DoWindow/F $win
+	if(!V_flag)
+		Abort "Create SMAimageStack first"
+	endif
+
+	SetAxis/W=$win left, xCoordinate - range, xCoordinate + range
+	SetAxis/W=$win bottom, yCoordinate - range, yCoordinate + range
+	DoUpdate/W=$win
+End
+
 Function/WAVE SMAduplicateRange(FirstImage, [outputName])
 	String outputName
 	Variable FirstImage
@@ -191,7 +237,7 @@ Function/WAVE SMAduplicateRange(FirstImage, [outputName])
 	endif
 
 	// prepare output wave container
-	Duplicate/R=(yStart + offsetY, yEnd + offsetY)(xStart + offsetX, xEnd + offsetX) stats.wavPLEM $outputName/WAVE=wv
+	Duplicate/O/R=(yStart + offsetY, yEnd + offsetY)(xStart + offsetX, xEnd + offsetX) stats.wavPLEM $outputName/WAVE=wv
 	Redimension/N=(-1, -1, dim2) wv
 	// set z Axis
 	WAVE zAxis = PLEMd2getCoordinates()
@@ -209,6 +255,22 @@ Function/WAVE SMAduplicateRange(FirstImage, [outputName])
 		Duplicate/FREE/R=(yStart + offsetY, yEnd + offsetY)(xStart + offsetX, xEnd + offsetX) stats.wavPLEM image
 		wv[][][i] = image[p][q]
 	endfor
+	SMASetCoordinates(wv, (yEnd + yStart) / 2, (xEnd + xStart) / 2 )
 
 	return wv
+End
+
+Function SMASetCoordinates(wv, yCoordinate, xCoordinate)
+	WAVE wv
+	Variable yCoordinate, xCoordinate
+
+	Variable start, ende
+	String wavenote = note(wv)
+
+	start = strsearch(wavenote, "x-position", start)
+	ende  = strsearch(wavenote, "\r", start)
+	wavenote = wavenote[0, start - 1] + "x-position: " + num2str(xCoordinate) + wavenote[ende, inf]
+	start = strsearch(wavenote, "y-position", start)
+	ende  = strsearch(wavenote, "\r", start)
+	wavenote = wavenote[0, start - 1] + "y-position: " + num2str(yCoordinate) + wavenote[ende, inf]
 End
