@@ -80,6 +80,8 @@ Function SMAread()
 End
 
 Function SMAupdatePath()
+	String file, folder
+
 	Struct SMAprefs prefs
 	STRUCT FILO#experiment filos
 
@@ -88,6 +90,35 @@ Function SMAupdatePath()
 
 	filos.strFolder = FILO#RemovePrefixFromListItems(prefs.strBasePath, filos.strFolder)
 	filos.strFileList = FILO#RemovePrefixFromListItems(prefs.strBasePath, filos.strFileList)
+
+	// legacy format support
+	file = StringFromList(0, filos.strFileList)
+	if(!!cmpstr(file[0], ":"))
+		if(!cmpstr(file[0], "D")) // measurements were saved on drive d
+			filos.strFolder = FILO#RemovePrefixFromListItems("D", filos.strFolder)
+			filos.strFileList = FILO#RemovePrefixFromListItems("D", filos.strFileList)
+			filos.strFolder = ":data" + filos.strFolder
+			filos.strFileList = FILO#AddPrefixToListItems(":data", filos.strFileList)
+		endif
+		if(!cmpstr(file[0], "Z")) // measurements were saved on drive d
+			filos.strFolder = FILO#RemovePrefixFromListItems("Z", filos.strFolder)
+			filos.strFileList = FILO#RemovePrefixFromListItems("Z", filos.strFileList)
+		endif
+	endif
+
+	file = prefs.strBasePath + StringFromList(0, filos.strFileList)
+	GetFileFolderInfo/Q/Z=1 file
+	if(!V_isFile)
+		print filos.strFileList
+		Abort "File Not found"
+	endif
+
+	folder = prefs.strBasePath + filos.strFolder
+	GetFileFolderInfo/Q/Z=1 folder
+	if(!V_isFolder)
+		print filos.strFolder
+		Abort "Folder Not found"
+	endif
 	FILO#structureSave(filos)
 End
 
