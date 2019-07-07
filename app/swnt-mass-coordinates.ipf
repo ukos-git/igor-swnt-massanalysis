@@ -73,6 +73,63 @@ Function SMA_ExportCoordinates()
 	Save/C/O/P=home coordinates
 End
 
+// merge two PLEM ranges and save them as a new ibw file
+// only works for single background
+Function SMA_MergeMaps(indices0, indices1)
+	WAVE indices0, indices1
+
+	String wavenote0, wavenote1, strPath, strPLEM
+	Variable i, numMaps
+	Variable start, ende
+	STRUCT PLEMd2Stats stats
+	Variable skip = 2 // skip the last 2 entries in the first wave
+
+	if(DimSize(indices0, 0) != DimSize(indices1, 0))
+		Abort "Size Missmatch"
+	endif
+
+	PathInfo home
+	strPath = S_Path + IgorInfo(1)
+	NewPath/C/O/Z newmaps, strPath
+
+	numMaps = DimSize(indices0, 0)
+	for(i = 0; i < numMaps; i += 1)
+		strPLEM = PLEMd2strPLEM(indices0[i])
+		PLEMd2statsLoad(stats, strPLEM)
+		DFREF dfr = $(GetWavesDataFolder(stats.wavPLEM, 1) + "ORIGINAL")
+		WAVE original0 = WaveRefIndexedDFR(dfr, 0)
+
+		PLEMd2statsLoad(stats, PLEMd2strPLEM(indices1[i]))
+		DFREF dfr = $(GetWavesDataFolder(stats.wavPLEM, 1) + "ORIGINAL")
+		WAVE original1 = WaveRefIndexedDFR(dfr, 0)
+
+		Duplicate/O original0 root:$strPLEM/WAVE=dest
+		Redimension/N=(-1, DimSize(original0, 1) + DimSize(original1, 1) - 2 - skip) dest // single bg
+		dest[][DimSize(original0, 1) - skip, *] = original1[p][q - DimSize(original0, 1) + skip + 2]
+
+		wavenote0 = note(original0)
+		start = strsearch(wavenote0, "Max Central Wavelength (nm): ", start)
+		ende  = strsearch(wavenote0, "\r", start)
+		wavenote0 = wavenote0[0, start - 1] + "Max Central Wavelength (nm): " + num2str(stats.numEmissionEnd) + wavenote0[ende, inf]
+
+		wavenote1 = note(original1)
+		start = strsearch(wavenote1, "Power at Glass Plate (µW):", 0) + 28
+		ende  = strsearch(wavenote1, "\r", start) - 1
+		wavenote1 = wavenote1[start, ende]
+		start = strsearch(wavenote0, "Power at Glass Plate", 0) + 28
+		ende  = strsearch(wavenote0, "\r", start) - 9 * skip
+		wavenote0 = wavenote0[0, ende] + wavenote1 + wavenote0[ende + 9 * skip, inf]
+
+		wavenote1 = note(original1)
+		start = strsearch(wavenote1, "IGOR3:WL;BG;PL", 0) + 12 + skip * 12 + skip // skip "IGOR3:WL;BG;" and n x "PL_6875_7125"
+		wavenote0 += wavenote1[start, inf]
+		Note/K dest wavenote0
+
+		Save/C/O/P=newmaps dest
+		KillWaves dest
+	endfor
+End
+
 // see ACW_EraseMarqueeArea.
 Function SMA_EraseMarqueeArea()
 	variable dim0, numMatches, i
