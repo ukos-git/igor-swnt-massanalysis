@@ -178,47 +178,69 @@ Function SMA_EraseMarqueeArea()
 	endif
 End
 
-// @brief Delete entities in @p coordinates that are duplicate values in @p duplicates
+// @brief Delete entities in @p coordinates that are duplicate values in @p reference
 //
 // give a @p companion wave that is connected with its rows to coordinates and delete from there as well.
-Function SMAdeleteDuplicateCoordinates(coordinates, duplicates, [companion])
-	WAVE coordinates, duplicates, companion
+// @returns number of points deleted
+Function SMAdeleteDuplicateCoordinates(coordinates, reference, [companion])
+	WAVE coordinates, reference, companion
 
-	Variable i, j, numMatches, dim0, counter
+	Variable i, j, numMatches, dim0
 
 	if(ParamIsDefault(companion))
 		if(DimSize(companion, 0) != DimSize(coordinates, 0))
 			Abort "SMAdeleteDuplicateCoordinates: companion and coordinates need to have the same number of rows."
 		endif
-		Duplicate/O coordinates root:backup_companion
 	endif
-	Duplicate/O coordinates root:backup/WAVE=backup
 
-	dim0 = DimSize(duplicates, 0)
-	for(i = dim0 - 1; i > -1; i -= 1)
-		WAVE indices = CoordinateFinderXYrange(coordinates, duplicates[i][0] - 1.5, duplicates[i][0] + 1.5, duplicates[i][1] - 1, duplicates[i][1] + 1, verbose = 0)
-		numMatches = DimSize(indices, 0)
-		if(cmpstr(GetWavesDataFolder(coordinates, 2), GetWavesDataFolder(duplicates, 2))) // check if acting on the same wave
-			for(j = numMatches - 1; j > -1; j -= 1)
-				if(i == indices[j])
-					DeletePoints j, 1, indices
-					break
-				endif
-			endfor
+	dim0 = DimSize(reference, 0)
+	for(i = 0; i < dim0; i += 1)
+		WAVE duplicates = CoordinateFinderXYrange(coordinates, reference[i][0] - 1.5, reference[i][0] + 1.5, reference[i][1] - 1, reference[i][1] + 1, verbose = 0)
+
+		numMatches = DimSize(duplicates, 0)
+		if(!cmpstr(GetWavesDataFolder(coordinates, 2), GetWavesDataFolder(reference, 2))) // check if acting on the same wave
+			Extract/FREE duplicates, duplicates, (duplicates[p] > i)
 		endif
-		if(numMatches == 0 || numtype(indices[0]) == 0)
+
+		if(i == 0)
+			Duplicate/FREE duplicates indices
+		else
+			Concatenate/FREE {indices, duplicates}, dummy
+			Duplicate/FREE dummy indices
+			WaveClear dummy
+		endif
+	endfor
+
+	if(Dimsize(indices, 0) == 0)
+		return 0
+	endif
+
+	if(DimSize(indices, 0) > 1)
+		Sort indices, indices
+		FindDuplicates/FREE/RN=dummy/TOL=0 indices
+		if(!WaveExists(dummy))
+			return 0
+		endif
+		Duplicate/FREE dummy indices
+	endif
+
+	Extract/FREE indices, matches, numtype(indices[p] == 0)
+	numMatches = DimSize(matches, 0)
+	for(i = numMatches - 1; i > -1; i -= 1)
+		if(numtype(matches[i]) != 0)
+			numMatches -= 1
 			continue
 		endif
-
-		print "delete", i, indices[0], ":\t", coordinates[indices[0]][0], coordinates[indices[0]][1], ",", duplicates[i][0], duplicates[i][1]
 		if(ParamIsDefault(companion))
-			DeletePoints indices[0], 1, coordinates
+			DeletePoints matches[i], 1, coordinates
 		else
-			DeletePoints indices[0], 1, coordinates, companion
+			DeletePoints matches[i], 1, coordinates, companion
 		endif
-		counter += 1
 	endfor
-	printf "deleted %d values. Created backup wave at %s\r", counter, GetWavesDataFolder(backup, 2)
+
+	// always be verbose due to the delete
+	printf "deleted %d matches in %s.\r", numMatches, GetWavesDataFolder(coordinates, 2)
+	return numMatches
 End
 
 Function/Wave SMA_PromptTrace()
