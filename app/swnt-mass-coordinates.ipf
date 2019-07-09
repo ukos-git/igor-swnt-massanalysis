@@ -54,8 +54,8 @@ Function SMA_ExportCoordinates()
 	for(i = 0; i < numMaps; i += 1)
 		name = StringFromList(indices[i], maps)
 		file = StringFromList(indices[i], filos.strFileList)
-		if(!!cmpstr(name, ParseFilePath(3, file, ":", 0, 0)))
-			Abort
+		if(!!cmpstr(name, CleanupName(ParseFilePath(3, file, ":", 0, 0), 0)))
+			Abort "smaload not valid for " + num2str(i)
 		endif
 		files[i] = file
 		coordinates[i][] = allCoordinates[indices[i]][q]
