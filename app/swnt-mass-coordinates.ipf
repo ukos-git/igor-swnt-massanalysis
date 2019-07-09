@@ -179,11 +179,19 @@ Function SMA_EraseMarqueeArea()
 End
 
 // @brief Delete entities in @p coordinates that are duplicate values in @p duplicates
-Function SMAdeleteDuplicateCoordinates(coordinates, duplicates)
-	WAVE coordinates, duplicates
+//
+// give a @p companion wave that is connected with its rows to coordinates and delete from there as well.
+Function SMAdeleteDuplicateCoordinates(coordinates, duplicates, [companion])
+	WAVE coordinates, duplicates, companion
 
 	Variable i, dim0, counter
 
+	if(ParamIsDefault(companion))
+		if(DimSize(companion, 0) != DimSize(coordinates, 0))
+			Abort "SMAdeleteDuplicateCoordinates: companion and coordinates need to have the same number of rows."
+		endif
+		Duplicate/O coordinates root:backup_companion
+	endif
 	Duplicate/O coordinates root:backup/WAVE=backup
 
 	dim0 = DimSize(duplicates, 0)
@@ -191,11 +199,15 @@ Function SMAdeleteDuplicateCoordinates(coordinates, duplicates)
 		WAVE indices = CoordinateFinderXYrange(coordinates, duplicates[i][0] - 1.5, duplicates[i][0] + 1.5, duplicates[i][1] - 1, duplicates[i][1] + 1, verbose = 0)
 		if(DimSize(indices, 0) > 0 && numtype(indices[0]) == 0)
 			print "delete", i, indices[0], ":\t", coordinates[indices[0]][0], coordinates[indices[0]][1], ",", duplicates[i][0], duplicates[i][1]
-			DeletePoints indices[0], 1, coordinates
+			if(ParamIsDefault(companion))
+				DeletePoints indices[0], 1, coordinates
+			else
+				DeletePoints indices[0], 1, coordinates, companion
+			endif
 			counter += 1
 		endif
 	endfor
-	printf "deleted %d values. Created backup wave at %s", counter, GetWavesDataFolder(backup, 2)
+	printf "deleted %d values. Created backup wave at %s\r", counter, GetWavesDataFolder(backup, 2)
 End
 
 Function/Wave SMA_PromptTrace()
