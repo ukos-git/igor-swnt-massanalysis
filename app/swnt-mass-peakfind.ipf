@@ -395,7 +395,10 @@ Function SMApeakAnalysisExactscan()
 	endif
 End
 
-// find best spectrum from exactscan (11 scans around rough position)
+// @brief find best spectrum from exactscan
+//
+// fixed to 11 scans around central position
+// does not respect 2 different peak locations in one exactscan (too close nanotubes or bundles)
 Function/WAVE SMApeakAnalysisGetBestIndex()
 	variable i, dim0, range, numPLEM, numIndex
 	variable rangeStart, rangeEnd
@@ -409,10 +412,6 @@ Function/WAVE SMApeakAnalysisGetBestIndex()
 		SMApeakAnalysis()
 		WAVE int = root:peakHeight
 	endif
-	WAVE/Z index = root:peakIndex
-	if(WaveExists(index))
-		return index
-	endif
 	numIndex = round(dim0 / range)
 	Make/O/N=(numIndex) root:peakIndex/WAVE=index = NaN
 	for(i = 0; i < numIndex; i += 1)
@@ -421,12 +420,13 @@ Function/WAVE SMApeakAnalysisGetBestIndex()
 		Duplicate/FREE/R=[rangeStart, rangeEnd] int int_range
 		SetScale/P x, 0, 1, int_range
 		WAVE/WAVE/Z peakParam = SMApeakFind(int_range, maxPeaks = 1)
-		if(!WaveExists(peakParam))
-			continue
+		numPLEM = NaN
+		if(WaveExists(peakParam))
+			numPLEM = peakParam[0][%location]
 		endif
-		numPLEM = peakParam[0][%location]
-		if(numType(numPLEM) != 0)
-			continue
+		if(numType(numPLEM) != 0) // fall back to maximum intensity spectrum
+			Wavestats/Q/M=1/P int_range
+			numPLEM = V_maxLoc
 		endif
 		numPLEM += rangeStart
 		numPLEM = max(min(round(numPLEM), rangeEnd), rangeStart)
