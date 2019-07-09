@@ -195,7 +195,7 @@ Function SMAdeleteDuplicateCoordinates(coordinates, duplicates)
 			counter += 1
 		endif
 	endfor
-	printf "deleted %d values. Created backup wave at %s", counter, GetWavesDataFolder(backup, 1)
+	printf "deleted %d values. Created backup wave at %s", counter, GetWavesDataFolder(backup, 2)
 End
 
 Function/Wave SMA_PromptTrace()
