@@ -106,6 +106,9 @@ Function/WAVE CoordinateFinderXYrange(coordinates, xmin, xmax, ymin, ymax, [verb
 	Concatenate {indicesX, indicesY}, indicesXY
 
 	FindDuplicates/DN=indices indicesXY
+	if(DimSize(indices, 0) == 0 || numtype(indices[0]) != 0)
+		return $""
+	endif
 
 	if(verbose)
 		print indices
