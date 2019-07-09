@@ -184,7 +184,7 @@ End
 Function SMAdeleteDuplicateCoordinates(coordinates, duplicates, [companion])
 	WAVE coordinates, duplicates, companion
 
-	Variable i, dim0, counter
+	Variable i, j, numMatches, dim0, counter
 
 	if(ParamIsDefault(companion))
 		if(DimSize(companion, 0) != DimSize(coordinates, 0))
@@ -197,15 +197,26 @@ Function SMAdeleteDuplicateCoordinates(coordinates, duplicates, [companion])
 	dim0 = DimSize(duplicates, 0)
 	for(i = dim0 - 1; i > -1; i -= 1)
 		WAVE indices = CoordinateFinderXYrange(coordinates, duplicates[i][0] - 1.5, duplicates[i][0] + 1.5, duplicates[i][1] - 1, duplicates[i][1] + 1, verbose = 0)
-		if(DimSize(indices, 0) > 0 && numtype(indices[0]) == 0)
-			print "delete", i, indices[0], ":\t", coordinates[indices[0]][0], coordinates[indices[0]][1], ",", duplicates[i][0], duplicates[i][1]
-			if(ParamIsDefault(companion))
-				DeletePoints indices[0], 1, coordinates
-			else
-				DeletePoints indices[0], 1, coordinates, companion
-			endif
-			counter += 1
+		numMatches = DimSize(indices, 0)
+		if(cmpstr(GetWavesDataFolder(coordinates, 2), GetWavesDataFolder(duplicates, 2))) // check if acting on the same wave
+			for(j = numMatches - 1; j > -1; j -= 1)
+				if(i == indices[j])
+					DeletePoints j, 1, indices
+					break
+				endif
+			endfor
 		endif
+		if(numMatches == 0 || numtype(indices[0]) == 0)
+			continue
+		endif
+
+		print "delete", i, indices[0], ":\t", coordinates[indices[0]][0], coordinates[indices[0]][1], ",", duplicates[i][0], duplicates[i][1]
+		if(ParamIsDefault(companion))
+			DeletePoints indices[0], 1, coordinates
+		else
+			DeletePoints indices[0], 1, coordinates, companion
+		endif
+		counter += 1
 	endfor
 	printf "deleted %d values. Created backup wave at %s\r", counter, GetWavesDataFolder(backup, 2)
 End
