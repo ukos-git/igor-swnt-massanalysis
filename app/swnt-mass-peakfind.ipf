@@ -189,9 +189,13 @@ Function SMApeakAnalysis()
 
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
-		WAVE/WAVE peakfind = SMApeakFind(stats.wavPLEM, wvXdata = stats.wavWavelength, maxPeaks = 3, verbose = 1)
+
+		// do peakfind on ranged wave
+		WAVE PLEMrange = PLEMd2NanotubeRangePLEM(stats)
+		WAVE corrected = removeSpikes(PLEMrange)
+		WAVE/WAVE peakfind = SMApeakFind(corrected, maxPeaks = 3, verbose = 0)
 		if(!WaveExists(peakfind))
-			continue
+			continue // fall back to SMAquickAnalysis()
 		endif
 		numPeaks = DimSize(peakfind, 0)
 		for(j = 0; j < numPeaks; j += 1)
@@ -341,12 +345,12 @@ Function SMAquickAnalysis()
 	dim0 = Plemd2getMapsAvailable()
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 
-	Make/O/N=(dim0) root:peakHeight/WAVE=int
+	Make/O/N=(dim0) root:peakHeight/WAVE=int = NaN
 	if(DimSize(stats.wavPLEM, 1) > 1)
-		Make/O/N=(dim0) root:peakEmission/WAVE=emi
-		Make/O/N=(dim0) root:peakExcitation/WAVE=exc
+		Make/O/N=(dim0) root:peakEmission/WAVE=emi = NaN
+		Make/O/N=(dim0) root:peakExcitation/WAVE=exc = NaN
 	else
-		Make/O/N=(dim0) root:peakLocation/WAVE=loc
+		Make/O/N=(dim0) root:peakLocation/WAVE=loc = NaN
 	endif
 	
 	for(i = 0; i < dim0; i += 1)
@@ -354,14 +358,14 @@ Function SMAquickAnalysis()
 
 		WAVE PLEMrange = PLEMd2NanotubeRangePLEM(stats)
 		WAVE corrected = removeSpikes(PLEMrange)
-		WaveStats/M=1/P/Q corrected
+		WaveStats/M=1/Q/P corrected // explicitly get min/max in points
 
 		int[i] = V_max
 		if(DimSize(stats.wavPLEM, 1) > 1)
-			emi[i] = stats.wavWavelength[V_maxRowLoc]
-			exc[i] = stats.wavExcitation[V_maxColLoc]
+			emi[i] = stats.wavWavelength[ScaleToIndex(stats.wavPLEM, IndexToScale(corrected, V_maxRowLoc, 0), 0)]
+			exc[i] = stats.wavExcitation[ScaleToIndex(stats.wavPLEM, IndexToScale(corrected, V_maxColLoc, 1), 1)]
 		else
-			loc[i] = stats.wavWavelength[V_maxRowLoc]
+			loc[i] = stats.wavWavelength[ScaleToIndex(stats.wavPLEM, IndexToScale(corrected, V_maxRowLoc, 0), 0)]
 		endif
 	endfor
 End
