@@ -178,6 +178,26 @@ Function SMA_EraseMarqueeArea()
 	endif
 End
 
+// @brief Delete entities in @p coordinates that are duplicate values in @p duplicates
+Function SMAdeleteDuplicateCoordinates(coordinates, duplicates)
+	WAVE coordinates, duplicates
+
+	Variable i, dim0, counter
+
+	Duplicate/O coordinates root:backup/WAVE=backup
+
+	dim0 = DimSize(duplicates, 0)
+	for(i = dim0 - 1; i > -1; i -= 1)
+		WAVE indices = CoordinateFinderXYrange(coordinates, duplicates[i][0] - 1.5, duplicates[i][0] + 1.5, duplicates[i][1] - 1, duplicates[i][1] + 1, verbose = 0)
+		if(DimSize(indices, 0) > 0 && numtype(indices[0]) == 0)
+			print "delete", i, indices[0], ":\t", coordinates[indices[0]][0], coordinates[indices[0]][1], ",", duplicates[i][0], duplicates[i][1]
+			DeletePoints indices[0], 1, coordinates
+			counter += 1
+		endif
+	endfor
+	printf "deleted %d values. Created backup wave at %s", counter, GetWavesDataFolder(backup, 1)
+End
+
 Function/Wave SMA_PromptTrace()
 	String itemName
 	Variable selectedItem
