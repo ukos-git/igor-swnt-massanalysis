@@ -190,7 +190,7 @@ Function SMADisplayCoordinates(xCoordinate, yCoordinate, [range])
 	endif
 
 	SetAxis/W=$win left, xCoordinate - range, xCoordinate + range
-	SetAxis/W=$win bottom, yCoordinate - range, yCoordinate + range
+	SetAxis/W=$win bottom, yCoordinate - 2 * range, yCoordinate + 2 * range
 	DoUpdate/W=$win
 End
 
