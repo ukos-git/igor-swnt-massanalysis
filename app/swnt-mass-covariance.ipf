@@ -85,7 +85,8 @@ End
 ///
 /// @param normalized  divide all spectra by its maximum
 /// @param range       specify the spectra ids with a numeric, uint wave
-Function SMAcovariance([normalized, range])
+/// @returns a wave reference to the symmetric autocorrelation
+Function/WAVE SMAcovariance([normalized, range])
 	Variable normalized
 	WAVE/U/I range
 
@@ -109,8 +110,7 @@ Function SMAcovariance([normalized, range])
 	endif
 
 	if(DimSize(stats.wavPLEM, 1) > 1)
-		SMAcovarianceMaps(source)
-		return 0
+		return SMAcovarianceMaps(source)
 	endif
 
 	MatrixOP/O root:covariance_sym/WAVE=sym = syncCorrelation(source)
@@ -134,9 +134,11 @@ Function SMAcovariance([normalized, range])
 		Display/N=SMAcovarianceGraph
 		AppendImage/W=SMAcovarianceGraph sym
 	endif
+
+	return symdiag
 End
 
-Function SMAcovarianceMaps(source)
+Function/WAVE SMAcovarianceMaps(source)
 	WAVE source
 
 	STRUCT PLEMd2Stats stats
@@ -159,6 +161,8 @@ Function SMAcovarianceMaps(source)
 		AppendImage/W=SMAcovarianceImage symdiag
 		ModifyImage covariance_sym_diag ctab= {*,*,Terrain256,0}
 	endif
+
+	return symdiag
 End
 
 // copy the wavelength from PLEM
