@@ -193,7 +193,7 @@ Function/WAVE SMAcopyWavelengthToRoot([numPLEM])
 	numPoints = DimSize(wavelength, 0)
 	Redimension/N=(numPoints + 1) wavelength_graph
 	wavelength_graph[numPoints] = wavelength_graph[numPoints - 1] + 1
-	
+
 	return wavelength
 End
 
@@ -221,6 +221,6 @@ Function/WAVE SMAcopyExcitationToRoot([numPLEM])
 	numPoints = DimSize(excitation, 0)
 	Redimension/N=(numPoints + 1) excitation_image
 	excitation_image[numPoints] = excitation_image[numPoints - 1] + 1
-	
+
 	return excitation
 End
