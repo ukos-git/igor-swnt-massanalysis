@@ -193,6 +193,7 @@ Function SMAdeleteDuplicateCoordinates(coordinates, reference, [companion])
 		endif
 	endif
 
+	Make/FREE/N=0 indices
 	dim0 = DimSize(reference, 0)
 	for(i = 0; i < dim0; i += 1)
 		WAVE duplicates = CoordinateFinderXYrange(coordinates, reference[i][0] - 1.5, reference[i][0] + 1.5, reference[i][1] - 1, reference[i][1] + 1, verbose = 0)
@@ -201,14 +202,13 @@ Function SMAdeleteDuplicateCoordinates(coordinates, reference, [companion])
 		if(!cmpstr(GetWavesDataFolder(coordinates, 2), GetWavesDataFolder(reference, 2))) // check if acting on the same wave
 			Extract/FREE duplicates, duplicates, (duplicates[p] > i)
 		endif
-
-		if(i == 0)
-			Duplicate/FREE duplicates indices
-		else
-			Concatenate/FREE {indices, duplicates}, dummy
-			Duplicate/FREE dummy indices
-			WaveClear dummy
+		if(!WaveExists(duplicates))
+			continue
 		endif
+
+		Concatenate/FREE {indices, duplicates}, dummy
+		Duplicate/FREE dummy indices
+		WaveClear dummy
 	endfor
 
 	if(Dimsize(indices, 0) == 0)
@@ -224,7 +224,7 @@ Function SMAdeleteDuplicateCoordinates(coordinates, reference, [companion])
 		Duplicate/FREE dummy indices
 	endif
 
-	Extract/FREE indices, matches, numtype(indices[p] == 0)
+	Extract/FREE indices, matches, numtype(indices[p]) == 0
 	numMatches = DimSize(matches, 0)
 	for(i = numMatches - 1; i > -1; i -= 1)
 		if(numtype(matches[i]) != 0)
