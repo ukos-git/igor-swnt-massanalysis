@@ -110,7 +110,7 @@ Function/WAVE SMAcovariance([normalized, range])
 	endif
 
 	if(DimSize(stats.wavPLEM, 1) > 1)
-		return SMAcovarianceMaps(source)
+		return SMAcovarianceMaps(source, 0)
 	endif
 
 	MatrixOP/O root:covariance_sym/WAVE=sym = syncCorrelation(source)
@@ -138,8 +138,14 @@ Function/WAVE SMAcovariance([normalized, range])
 	return symdiag
 End
 
-Function/WAVE SMAcovarianceMaps(source)
+// @brief get the autocorrelation of a 2d maps wave
+//
+// @param source give source wave
+// @param asym   calculate asymmetric covariances
+// @return the symmetric autocorrelation
+Function/WAVE SMAcovarianceMaps(source, asym)
 	WAVE source
+	Variable asym
 
 	STRUCT PLEMd2Stats stats
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(1))
@@ -148,13 +154,14 @@ Function/WAVE SMAcovarianceMaps(source)
 	// skip intermediate sym, asym due to space limitations
 
 	MatrixOP/O root:covariance_sym_diag/WAVE=symdiag = getDiag(syncCorrelation(source), 0)
-	MatrixOP/O root:covariance_asym_diag/WAVE=asymdiag = getDiag(asyncCorrelation(source), 0)
+	Redimension/N=(DimSize(PLEM, 0), DimSize(PLEM, 1)) symdiag
+	CopyScales PLEM, symdiag
+	if(asym)
+		MatrixOP/O root:covariance_asym_diag/WAVE=asymdiag = getDiag(asyncCorrelation(source), 0)
+		Redimension/N=(DimSize(PLEM, 0), DimSize(PLEM, 1)) asymdiag
+		CopyScales PLEM, asymdiag
+	endif
 
-	// sym and asym have a non-monotonic wave scale
-	Redimension/N=(DimSize(PLEM, 0), DimSize(PLEM, 1)) symdiag, asymdiag
-	SetScale/P x, DimOffset(PLEM, 0), DimDelta(PLEM, 0), symdiag, asymdiag
-	SetScale/P y, DimOffset(PLEM, 1), DimDelta(PLEM, 1), symdiag, asymdiag
-	
 	DoWindow SMAcovarianceImage
 	if(V_flag == 0)
 		Display/N=SMAcovarianceImage
