@@ -498,7 +498,7 @@ Function SMAcalcZcoordinateFromTiltPlane([wv, zOffset])
 	wv[][2] = SMAcameraGetTiltPlane(wv[p][0], wv[p][1], zOffset = zOffset)
 End
 
-// search trenches for carbon nanotubes
+// @brief search trenches for carbon nanotubes (considered experimental)
 Function SMAgetCoordinates()
 	Variable i
 	STRUCT PLEMd2Stats stats
