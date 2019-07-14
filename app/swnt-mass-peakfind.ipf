@@ -223,18 +223,18 @@ Function SMApeakAnalysisMap()
 	Variable V_fitOptions = 4 // used to suppress CurveFit dialog
 	Variable V_FitQuitReason  // stores the CurveFit Quit Reason
 	Variable V_FitError   // Curve Fit error
-	
+
 	Variable dim0 = PLEMd2getMapsAvailable()
 
 	WAVE wavelength = SMAcopyWavelengthToRoot()
 	WAVE excitation = SMAcopyExcitationToRoot()
-	
+
 	SMAquickAnalysis()
 
 	Make/O/N=(dim0) root:peakHeight/WAVE=peakHeight
 	Make/O/N=(dim0) root:peakEmission/WAVE=peakEmission
 	Make/O/N=(dim0) root:peakExcitation/WAVE=peakExcitation
-	
+
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 		WAVE corrected = RemoveSpikes(stats.wavPLEM)
@@ -341,7 +341,7 @@ End
 Function SMAquickAnalysis()
 	variable i, dim0
 	Struct PLEMd2stats stats
-	
+
 	dim0 = Plemd2getMapsAvailable()
 	PLEMd2statsLoad(stats, PLEMd2strPLEM(0))
 
@@ -352,7 +352,7 @@ Function SMAquickAnalysis()
 	else
 		Make/O/N=(dim0) root:peakLocation/WAVE=loc = NaN
 	endif
-	
+
 	for(i = 0; i < dim0; i += 1)
 		PLEMd2statsLoad(stats, PLEMd2strPLEM(i))
 
