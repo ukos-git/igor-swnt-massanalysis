@@ -41,8 +41,9 @@ Function SMAfileInfo()
 End
 
 Function SMAread()
-	String file, files, strPath, file0
-	Variable numFiles, i
+	String file, files
+	Variable numFiles, i, error
+	String strPath = ""
 
 	Struct SMAprefs prefs
 	STRUCT FILO#experiment filos
@@ -52,24 +53,34 @@ Function SMAread()
 	SMAloadPackagePrefs(prefs)
 	FILO#structureLoad(filos)
 
-	// check files
-	numFiles = ItemsInList(filos.strFileList)
-	file0 = StringFromList(0, filos.strFileList)
-	files = filos.strFileList
-	if(!cmpstr(file0[0], ":"))
-		files = FILO#AddPrefixToListItems(prefs.strBasePath, files)
-		file0 = prefs.strBasePath + file0
-	endif
-	GetFileFolderInfo/Q/Z=1 file0
-	if(numFiles == 0 || !V_isFile)
+	if(ItemsInList(filos.strFileList) == 0)
 		SMAload()
 		FILO#structureLoad(filos)
-		numFiles = ItemsInList(filos.strFileList)
-		files = FILO#AddPrefixToListItems(prefs.strBasePath, filos.strFileList)
+	endif
+
+	files = filos.strFileList
+	file = StringFromList(0, filos.strFileList)
+	if(!cmpstr(file[0], ":"))
+		files = FILO#AddPrefixToListItems(prefs.strBasePath, files)
+	endif
+
+	// status
+	SMAfileInfo()
+	numFiles = ItemsInList(files)
+	for(i = 0; i < numFiles; i += 1)
+		file = StringFromList(i, files)
+		GetFileFolderInfo/Q/Z=1 file
+		if(!V_isFile)
+			printf "SMAread: Could not find %s\r", file
+			error += 1
+		endif
+	endfor
+	if(error > 0)
+		printf "SMAread: %d errors.", error
+		Abort "SMAread: Errors in file list"
 	endif
 
 	// load files
-	SMAfileInfo()
 	for(i = 0; i < numFiles; i += 1)
 		file = StringFromList(i, files)
 		PLEMd2Open(strFile = file, display = 0)
