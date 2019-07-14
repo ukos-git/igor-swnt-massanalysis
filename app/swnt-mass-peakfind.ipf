@@ -102,7 +102,7 @@ Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPe
 	if(ParamIsDefault(smoothingFactor))
 		smoothingFactor = 1
 	endif
-	
+
 	Duplicate/FREE input, wv
 	if(DimSize(wv, 1) == 1)
 		Redimension/N=(-1,0) wv
@@ -127,7 +127,7 @@ Function/WAVE SMApeakFind(input, [wvXdata, verbose, createWaves, maxPeaks, minPe
 	else
 		WAVE/WAVE/Z peakParam = fitGauss(nospikes, wvXdata = wvXdata, wvCoef = coef, verbose = verbose)
 	endif
-	
+
 	if(verbose > 2)
 		print "==COEF WAVE=="
 		numResults = DimSize(coef, 0)
