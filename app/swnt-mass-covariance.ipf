@@ -20,7 +20,7 @@ Function/WAVE SMAgetSourceWave([overwrite, range, destName, downsample, graph])
 	String destName
 	Variable downsample, graph
 
-	Variable i, j, dim0, dim1, dim2, numMarkers, scale, index, accuracy
+	Variable i, j, dim0, dim1, dim2, numMarkers, scale, index, accuracy, err
 	STRUCT PLEMd2Stats stats
 
 	DFREF dfr = root:
@@ -106,7 +106,13 @@ Function/WAVE SMAgetSourceWave([overwrite, range, destName, downsample, graph])
 			Redimension/N=(-1, 0) dummy
 			// T=1: linear interpolation
 			// T=3: smoothing spline interpolation
-			Interpolate2/T=1/I=3/Y=targetX stats.wavWavelength, dummy
+			try
+				Interpolate2/T=1/I=3/Y=targetX stats.wavWavelength, dummy; AbortOnRTE
+			catch
+				err = GetRTError(1)
+				printf "SMAgetSourceWave: Error in interpolate2 for %d in %s\r", j, stats.strPLEM
+				targetX = NaN
+			endtry
 			scale = IndexToScale(PLEM, j, 1)
 			index = min(dim2 - 1, max(0, ScaleToIndex(target, scale, 1)))
 			target[][index] = targetX[p]
