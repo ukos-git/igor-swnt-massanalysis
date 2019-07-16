@@ -83,6 +83,7 @@ Function SMAread()
 	// load files
 	for(i = 0; i < numFiles; i += 1)
 		file = StringFromList(i, files)
+		printf "SMAread %03d: \t%s\r", i, file
 		PLEMd2Open(strFile = file, display = 0)
 	endfor
 
