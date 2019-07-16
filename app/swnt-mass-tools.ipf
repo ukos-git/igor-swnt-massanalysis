@@ -47,9 +47,7 @@ Function/WAVE CoordinateFinderXYrange(coordinates, xmin, xmax, ymin, ymax, [verb
 	Extract/INDX/FREE coordinateX, indicesX, coordinateX > xmin && coordinateX < xmax
 	Extract/INDX/FREE coordinateY, indicesY, coordinateY > ymin && coordinateY < ymax
 
-	Make/FREE/N=0 indicesXY
-	Concatenate {indicesX, indicesY}, indicesXY
-
+	Concatenate/FREE {indicesX, indicesY}, indicesXY
 	FindDuplicates/FREE/DN=indices indicesXY
 	if(DimSize(indices, 0) == 0 || numtype(indices[0]) != 0)
 		return $""
