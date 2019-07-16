@@ -213,6 +213,22 @@ Function SMApeakAnalysis()
 	endfor
 End
 
+Function SMAatlasFit(indices, init, initT)
+	WAVE/U/I indices
+	WAVE init
+	WAVE/T initT
+
+	variable i, j, numPLEM
+
+	WAVE/T strPLEM = PLEMd2getAllstrPLEM()
+	numPLEM = DimSize(indices, 0)
+	for(i = 0; i < numPLEM; i += 1)
+		PLEMd2AtlasInit(strPLEM[indices[i]], init = init, initT = iniT)
+		PLEMd2AtlasFit3D(strPLEM[indices[i]]) // hold location
+		PLEMd2AtlasClean(strPLEM[indices[i]])
+	endfor
+End
+
 Function SMApeakAnalysisMap()
 	variable i, j, numPeaks, numAccuracy
 	Variable fit_start, fit_end, numPoints
