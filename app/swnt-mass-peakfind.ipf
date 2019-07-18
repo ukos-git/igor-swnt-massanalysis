@@ -213,19 +213,26 @@ Function SMApeakAnalysis()
 	endfor
 End
 
-Function SMAatlasFit(indices, init, initT)
+Function SMAatlasFit(indices, init, initT, [verbose])
 	WAVE/U/I indices
 	WAVE init
 	WAVE/T initT
+	Variable verbose
 
 	variable i, j, numPLEM
+
+	verbose = ParamIsDefault(verbose) ? 0 : !!verbose
 
 	WAVE/T strPLEM = PLEMd2getAllstrPLEM()
 	numPLEM = DimSize(indices, 0)
 	for(i = 0; i < numPLEM; i += 1)
+		if(verbose)
+			printf "SMAatlasFit: %02d/%02d: index: %02d name: %s\r", i, numPLEM, indices[i], strPLEM[indices[i]]
+		endif
 		PLEMd2AtlasInit(strPLEM[indices[i]], init = init, initT = iniT)
-		PLEMd2AtlasFit3D(strPLEM[indices[i]]) // hold location
+		PLEMd2AtlasFit3D(strPLEM[indices[i]])
 		PLEMd2AtlasClean(strPLEM[indices[i]])
+		PLEMd2AtlasFit2D(strPLEM[indices[i]])
 	endfor
 End
 
