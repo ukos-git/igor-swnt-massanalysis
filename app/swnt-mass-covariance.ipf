@@ -54,7 +54,6 @@ Function/WAVE SMAgetSourceWave([overwrite, range, destName, downsample, graph])
 	endif
 	s.yDelta = numtype(s.yDelta) != 0 ? abs(s.yMax - s.yMin) : s.yDelta // undefined @c numExcitationStep in spectra
 
-
 	dim1 = round(abs(s.xMax - s.xMin) / s.xDelta)
 	dim2 = max(1, round(abs(s.yMax - s.yMin) / s.yDelta))
 	if(dim0 * dim1 * dim2 > (2^32))
@@ -90,10 +89,15 @@ Function/WAVE SMAgetSourceWave([overwrite, range, destName, downsample, graph])
 		WAVE PLEM = stats.wavPLEM
 
 		// resample along excitation Δλ > 1, size < 48
-		if(DimSize(PLEM, 1) > 1)
+		if(DimSize(PLEM, 1) > 2)
 			accuracy = min(samplingAccuracy, stats.numEmissionStep / s.yDelta)
-			RatioFromNumber/MERR=(accuracy) stats.numEmissionStep / s.yDelta
-			Resample/DIM=1/UP=(V_numerator)/DOWN=(V_denominator)/N=3 PLEM
+			try
+				RatioFromNumber/MERR=(accuracy) stats.numEmissionStep / s.yDelta; AbortOnRTE
+				Resample/DIM=1/UP=(V_numerator)/DOWN=(V_denominator)/N=3 PLEM; AbortOnRTE
+			catch
+				err = GetRTError(1)
+				printf "SMAgetSourceWave: Failed to Resample %s from %d to %d/%d Error: %s\r", stats.strPLEM, DimSize(PLEM, 1), V_numerator, V_denominator, GetRTErrMessage()
+			endtry
 		endif
 
 		// interpolate along emission Δλ < 1, size > 768
