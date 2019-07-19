@@ -219,7 +219,7 @@ Function SMAatlasFit(indices, init, initT, [verbose])
 	WAVE/T initT
 	Variable verbose
 
-	variable i, j, numPLEM
+	variable i, j, numPLEM, q25
 
 	verbose = ParamIsDefault(verbose) ? 0 : !!verbose
 
@@ -231,9 +231,39 @@ Function SMAatlasFit(indices, init, initT, [verbose])
 		endif
 		PLEMd2AtlasInit(strPLEM[indices[i]], init = init, initT = iniT)
 		PLEMd2AtlasFit3D(strPLEM[indices[i]])
-		PLEMd2AtlasClean(strPLEM[indices[i]])
 		PLEMd2AtlasFit2D(strPLEM[indices[i]])
 	endfor
+
+	q25 = SMAgetLowerQuartileIntensity(indices)
+	for(i = 0; i < numPLEM; i += 1)
+		PLEMd2AtlasClean(strPLEM[indices[i]], threshold = q25)
+		PLEMd2AtlasFit3D(strPLEM[indices[i]])
+		PLEMd2AtlasFit2D(strPLEM[indices[i]])
+	endfor
+End
+
+Function SMAgetLowerQuartileIntensity(indices)
+	WAVE/U/I indices
+
+	variable i, numPLEM
+	STRUCT PLEMd2stats stats
+	String strConcatenate = ""
+
+	WAVE/T strPLEMs = PLEMd2getAllstrPLEM()
+	numPLEM = DimSize(indices, 0)
+	for(i = 0; i < numPLEM; i += 1)
+		PLEMd2statsLoad(stats, strPLEMs[indices[i]])
+		if(DimSize(stats.wav1Dfit, 0) == 0)
+			continue
+		endif
+		strConcatenate = AddListItem(GetWavesDataFolder(stats.wav1Dfit, 2), strConcatenate)
+	endfor
+	Concatenate/FREE strConcatenate, intensity
+	StatsQuantiles/Q intensity
+
+	return V_Q25
+End
+
 End
 
 Function SMApeakAnalysisMap()
