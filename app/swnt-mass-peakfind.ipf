@@ -264,6 +264,42 @@ Function SMAgetLowerQuartileIntensity(indices)
 	return V_Q25
 End
 
+Function SMAdisplayAtlasFit(indices, color)
+	WAVE/U/I indices
+	WAVE/U/W color
+
+	variable i, numPLEM
+	String strPLEM, win
+	Struct PLEMd2stats stats
+
+	if(DimSize(color, 1) != 3)
+		Abort "SMAdisplayAtlasFit: Need 3 colors"
+	endif
+
+	win = "SMAatlasFit_graph"
+	DoWindow/F $win
+	if(!V_flag)
+		Display/N=$win as "SMAatlasFit"
+		win = S_Name
+	endif
+
+	WAVE/T strPLEMs = PLEMd2getAllstrPLEM()
+	WAVE/T traces = ListToTextWave(TraceNameList(win, ";", 0x1), ";")
+
+	for(i = 0; i < numPLEM; i += 1)
+		strPLEM = strPLEMs[indices[i]]
+		FindValue/TEXT=(strPLEM) traces
+		if(V_value != -1 && V_startPos == 0)
+			continue
+		endif
+		PLEMd2statsLoad(stats, strPLEM)
+		AppendToGraph/Q/W=$win/C=(color[0][0], color[0][1], color[0][2]) stats.wavEnergyS2/TN=$strPLEM vs stats.wavEnergyS1
+		ModifyGraph rgb($strPLEM)=(color[0][0],color[0][1],color[0][2],13107),useMrkStrokeRGB($strPLEM)=1
+		//ModifyGraph zmrkSize($strPLEM)={stats.wav1Dfit,mini,maxi,0.25,2}
+		ModifyGraph zmrkSize($strPLEM)={stats.wav1Dfit,0,*,0,2}
+	endfor
+
+	ModifyGraph/W=$win mode=4, marker=19, textMarker=0, useMrkStrokeRGB=1
 End
 
 Function SMApeakAnalysisMap()
@@ -282,7 +318,7 @@ Function SMApeakAnalysisMap()
 	WAVE wavelength = SMAcopyWavelengthToRoot()
 	WAVE excitation = SMAcopyExcitationToRoot()
 
-	SMAquickAnalysis()
+	// todo: integrate with SMAatlasFit()
 
 	Make/O/N=(dim0) root:peakHeight/WAVE=peakHeight
 	Make/O/N=(dim0) root:peakEmission/WAVE=peakEmission
