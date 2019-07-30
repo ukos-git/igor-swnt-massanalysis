@@ -286,6 +286,7 @@ Function SMAdisplayAtlasFit(indices, color)
 	WAVE/T strPLEMs = PLEMd2getAllstrPLEM()
 	WAVE/T traces = ListToTextWave(TraceNameList(win, ";", 0x1), ";")
 
+	numPLEM = DimSize(indices, 0)
 	for(i = 0; i < numPLEM; i += 1)
 		strPLEM = strPLEMs[indices[i]]
 		FindValue/TEXT=(strPLEM) traces
