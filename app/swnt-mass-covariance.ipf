@@ -1,6 +1,9 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
+// https://docs.byte-physics.de/json-xop/#download-and-installation
+#include "json_functions"
+
 static constant samplingAccuracy = 5e-2 // in nanometer
 
 // Append the given spectra to a 2-dimensional wave.
