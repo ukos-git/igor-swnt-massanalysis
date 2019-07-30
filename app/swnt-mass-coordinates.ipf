@@ -1022,7 +1022,7 @@ Function/WAVE SMAfindCoordinatesInPLEM(coordinates, [verbose, accuracy])
 	WAVE PLEMcoordinates = PLEMd2getCoordinates()
 
 	dim0 = DimSize(coordinates, 0)
-	Make/FREE/WAVE/N=(dim0) indices
+	Make/FREE/U/I/WAVE/N=(dim0) indices
 	if(ParamIsDefault(accuracy))
 		indices[] = CoordinateFinderXYZ(PLEMcoordinates, coordinates[p][0], coordinates[p][1], coordinates[p][2], verbose = verbose)
 	else
