@@ -262,7 +262,11 @@ Function SMAgetLowerQuartileIntensity(indices)
 		endif
 		strConcatenate = AddListItem(GetWavesDataFolder(stats.wav1Dfit, 2), strConcatenate)
 	endfor
-	Concatenate/FREE strConcatenate, intensity
+	if(ItemsInList(strConcatenate) == 0)
+		return NaN
+	endif
+	Concatenate/FREE strConcatenate, concat
+	MatrixOp/FREE intensity = replaceNaNs(concat, 0)
 	StatsQuantiles/Q intensity
 
 	return V_Q25
