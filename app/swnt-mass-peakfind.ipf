@@ -219,7 +219,7 @@ Function SMAatlasFit(indices, init, initT, [verbose])
 	WAVE/T initT
 	Variable verbose
 
-	variable i, j, numPLEM, q25
+	variable i, numPLEM, q25
 
 	verbose = ParamIsDefault(verbose) ? 0 : !!verbose
 
@@ -229,16 +229,20 @@ Function SMAatlasFit(indices, init, initT, [verbose])
 		if(verbose)
 			printf "SMAatlasFit: %02d/%02d: index: %02d name: %s\r", i, numPLEM, indices[i], strPLEM[indices[i]]
 		endif
-		PLEMd2AtlasInit(strPLEM[indices[i]], init = init, initT = iniT)
+		PLEMd2AtlasInit(strPLEM[indices[i]], init = init, initT = initT)
+		PLEMd2AtlasFit3D(strPLEM[indices[i]])
+	endfor
+
+	q25 = DimSize(indices, 0) < 100 ? 0 : SMAgetLowerQuartileIntensity(indices)
+	for(i = 0; i < numPLEM; i += 1)
+		PLEMd2AtlasClean(strPLEM[indices[i]], threshold = q25)
+		PLEMd2AtlasFit3D(strPLEM[indices[i]])
 		PLEMd2AtlasFit3D(strPLEM[indices[i]])
 		PLEMd2AtlasFit2D(strPLEM[indices[i]])
 	endfor
 
-	q25 = SMAgetLowerQuartileIntensity(indices)
 	for(i = 0; i < numPLEM; i += 1)
-		PLEMd2AtlasClean(strPLEM[indices[i]], threshold = q25)
-		PLEMd2AtlasFit3D(strPLEM[indices[i]])
-		PLEMd2AtlasFit2D(strPLEM[indices[i]])
+		PLEMd2AtlasClean(strPLEM[indices[i]], threshold = 0)
 	endfor
 End
 
