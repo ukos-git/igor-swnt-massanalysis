@@ -14,6 +14,7 @@
 
 // requires PLEM (igor-swnt-plem)
 // https://github.com/ukos-git/igor-swnt-plem
+#include "plem"
 
 strConstant cSMApackage = "swnt-mass-analysis"
 StrConstant cstrSMAroot = "root:Packages:SMA:"
