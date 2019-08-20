@@ -102,6 +102,7 @@ Function SMAupdatePath()
 	SMAloadPackagePrefs(prefs)
 
 	filos.strFolder = FILO#RemovePrefixFromListItems(prefs.strBasePath, filos.strFolder)
+	filos.strFolder = RemoveEnding(filos.strFolder, ";")
 	filos.strFileList = FILO#RemovePrefixFromListItems(prefs.strBasePath, filos.strFileList)
 
 	// legacy format support
