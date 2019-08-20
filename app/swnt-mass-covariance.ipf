@@ -105,10 +105,10 @@ Function/WAVE SMAgetSourceWave([overwrite, range, destName, downsample, graph])
 
 		// interpolate along emission Δλ < 1, size > 768
 		//
-		// first (and last) spectrum is garbage in PLE acquisition.
+		// last spectrum is garbage in PLE acquisition.
 		// Fixed with https://github.com/ukos-git/labview-plem/commit/87b38e6f03b345e5c9823fa79b9dc358dbe251be
 		target = median(PLEM) // we should have enough noise to fill missing values with median.
-		for(j = 1; j < max(1, DimSize(PLEM, 1) - 1); j += 1)
+		for(j = 0; j < max(1, DimSize(PLEM, 1) - 1); j += 1)
 			Duplicate/FREE/R=[][j] PLEM dummy
 			Redimension/N=(-1, 0) dummy
 			// T=1: linear interpolation
@@ -267,7 +267,7 @@ Function/WAVE SMAcovariance([normalized, range, graph])
 	SetScale/P x, s.xMin, s.xDelta, sym, symdiag
 	SetScale/P y, s.xMin, s.xDelta, sym
 
-	if(graph)
+	if(!graph)
 		return symdiag
 	endif
 
