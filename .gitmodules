@@ -1,3 +1,12 @@
-[submodule "submodules/doxygen-filter-ipf"]
-	path = submodules/doxygen-filter-ipf
+[submodule "vendor/doxygen-filter-ipf"]
+	path = vendor/doxygen-filter-ipf
 	url = https://github.com/byte-physics/doxygen-filter-ipf.git
+[submodule "vendor/utilities"]
+	path = vendor/utilities
+	url = https://github.com/ukos-git/igor-common-utilities.git
+[submodule "vendor/plem"]
+	path = vendor/plem
+	url = https://github.com/ukos-git/igor-swnt-plem.git
+[submodule "vendor/filo"]
+	path = vendor/filo
+	url = https://github.com/ukos-git/igor-file-loader.git
