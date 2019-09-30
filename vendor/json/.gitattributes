@@ -1,0 +1,2 @@
+*.zip filter=lfs diff=lfs merge=lfs binary
+*.xop filter=lfs diff=lfs merge=lfs binary
