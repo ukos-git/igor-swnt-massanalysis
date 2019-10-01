@@ -61,7 +61,7 @@ End
 Function SMAtasksLoadCamerascan()
 	SMAread()
 	SMAprocessImageStack()
-	SaveWindow("win_SMAimageStack", saveJSON = 0, saveImages = 1, saveSVG = 0)
+	SaveWindow("win_SMAimageStack")
 End
 
 Function SMAtasksCreateWigner()
