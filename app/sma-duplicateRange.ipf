@@ -1,4 +1,4 @@
-﻿#pragma TextEncoding = "UTF-8"
+#pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3
 
 Function SMAdisplayOriginal([numPLEM])
@@ -107,24 +107,44 @@ End
 Function SMADuplicateRangeFromCoordinates(coordinates)
 	WAVE coordinates
 
-	String name
-	Variable i, numCoordinates = DimSize(coordinates, 0)
-	String baseName = NameOfWave(coordinates)
-	String strPath
+	String name, win, strPath
+	Variable i
+	Variable numCoordinates = DimSize(coordinates, 0)
+	String coordinatesName = NameOfWave(coordinates)
+	String experimentName = IgorInfo(1)
 
 	if(DimSize(coordinates, 1) < 3)
 		Abort "Need at least 2 coordinates"
 	endif
 
 	PathInfo home
-	strPath = S_Path + IgorInfo(1)
+	strPath = S_Path + experimentName
 	NewPath/C/O/Z images, strPath
 
 	for(i = 0; i < numCoordinates; i += 1)
-		sprintf name, "%s_image%03d", baseName, i
-		SMADisplayCoordinates(coordinates[i][0], coordinates[i][1]) // use axis for duplication coordinates
+		sprintf name, "%s_image%03d", coordinatesName, i
+		SMADisplayCoordinates(coordinates[i][0], coordinates[i][1], range = 3) // set axis for SMAduplicateRange
+		DoUpdate/W=win_SMAimageStack
 		WAVE wv = SMAduplicateRange(SMAgetFirstImage(coordinates[i][0], coordinates[i][1], coordinates[i][2]), outputName = name)
 		Save/C/O/P=images wv
+
+		// create image for standard range
+		Redimension/U/I wv
+		Display/N=temp
+		win = S_name
+		AppendImage/W=$win wv
+		ModifyImage/W=$win $"#0" ctab= {0,*,YellowHot,0}
+		ModifyGraph/W=$win nticks=0, axthick=0, margin=1, width={Plan,1,bottom,left}
+		SetDrawLayer/W=$win UserFront
+		SetDrawEnv/W=$win linethick= 5,linefgc= (56797,56797,56797)
+		DrawLine/W=$win 0.822437513922712,0.1,0.944949852649121,0.1
+		SetDrawEnv/W=$win fsize= 24,fstyle= 1,textrgb= (65535,65535,65535)
+		DrawText/W=$win 0.82122905027933,0.25,"1µm"
+		DoUpdate/W=$win
+		saveWindow(win, customName = name, path = "images", saveJSON = 1, saveTiff = 1, saveImages = 0)
+
+		// cleanup
+		KillWindow/Z $win
 		KillWaves/Z wv
 	endfor
 End
@@ -181,7 +201,7 @@ Function SMADisplayCoordinates(xCoordinate, yCoordinate, [range])
 
 	String win = "win_SMAimageStack" // use this image
 	if(ParamIsDefault(range))
-		range = 2 // extract 2µm in every direction
+		range = 2 // extract 2µm in x- and 2*2µm in y-direction
 	endif
 
 	DoWindow/F $win
